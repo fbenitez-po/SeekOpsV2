@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Crear Cliente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; }
+        .btn-primary { background: #0f172a; color: white; padding: 0.625rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #1e293b; margin-bottom: 0.375rem; }
+        .form-label .required { color: #ef4444; }
+        .form-input { width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .form-input:focus { outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
+        .row-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 768px) { .row-form { grid-template-columns: 1fr; } }
+        .section-title { font-size: 1.125rem; font-weight: 700; color: #0f172a; padding-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0; margin: 2rem 0 1.5rem 0; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto">
+        <a href="#" class="text-sm text-slate-600 hover:text-slate-900 mb-4 inline-block">← Volver</a>
+        <h1 class="text-3xl font-bold text-slate-900 mb-8">Crear cliente</h1>
+
+        <form class="bg-white rounded-lg border border-e2e8f0 p-6">
+            <div class="section-title">Información Comercial</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Nombre <span class="required">*</span></label>
+                    <input type="text" class="form-input" placeholder="Nombre del cliente">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Razón social</label>
+                    <input type="text" class="form-input" placeholder="S.A., S.R.L., etc">
+                </div>
+            </div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Razón comercial</label>
+                    <input type="text" class="form-input" placeholder="Nombre comercial">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RUC <span class="required">*</span></label>
+                    <input type="text" class="form-input" placeholder="20123456789">
+                </div>
+            </div>
+
+            <div class="section-title">Contacto</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Nombre contacto</label>
+                    <input type="text" class="form-input" placeholder="Persona de contacto">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" class="form-input" placeholder="+5165432100">
+                </div>
+            </div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Email contacto</label>
+                    <input type="email" class="form-input" placeholder="contacto@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-input" placeholder="Calle Falsa 123">
+                </div>
+            </div>
+
+            <div class="section-title">Categoría y Segmentación</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Categoría de usuario <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="">Corporativo</option>
+                        <option value="">PYME</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Segmentación <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="">Enterprise</option>
+                        <option value="">Mid Market</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Sector</label>
+                <select class="form-input">
+                    <option value="">Seleccionar...</option>
+                    <option value="">Tecnología</option>
+                    <option value="">Finanzas</option>
+                </select>
+            </div>
+
+            <div class="section-title">Estado</div>
+
+            <div class="form-group">
+                <div class="flex items-center gap-3">
+                    <input type="radio" id="activo-si" name="activo" checked>
+                    <label for="activo-si" class="text-sm font-500">Activo</label>
+                    <input type="radio" id="activo-no" name="activo">
+                    <label for="activo-no" class="text-sm font-500">Inactivo</label>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="submit" class="btn-primary">Crear cliente</button>
+                <button type="button" class="btn-secondary">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

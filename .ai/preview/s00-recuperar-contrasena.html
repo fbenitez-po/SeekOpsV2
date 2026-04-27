@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Recuperar Contraseña</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #64748b;
+            --destructive: #dc2626;
+            --success: #16a34a;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .input-base {
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            transition: all 150ms ease-in-out;
+            color: #1e293b;
+        }
+
+        .input-base::placeholder {
+            color: #cbd5e1;
+        }
+
+        .input-base:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .input-base:disabled {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            opacity: 0.5;
+        }
+
+        .btn-primary {
+            background-color: #0f172a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 150ms ease-in-out;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+        }
+
+        .btn-primary:disabled {
+            background-color: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .alert-success {
+            background-color: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            animation: slideDown 200ms ease-out;
+        }
+
+        .alert-destructive {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            animation: slideDown 200ms ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .alert-success-icon {
+            color: #16a34a;
+        }
+
+        .alert-destructive-icon {
+            color: #dc2626;
+        }
+
+        .alert-title {
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .alert-success .alert-title {
+            color: #15803d;
+        }
+
+        .alert-destructive .alert-title {
+            color: #991b1b;
+        }
+
+        .alert-description {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .alert-success .alert-description {
+            color: #166534;
+        }
+
+        .alert-destructive .alert-description {
+            color: #7f1d1d;
+        }
+
+        .label-base {
+            display: block;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .link-secondary {
+            color: #0f172a;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 150ms ease-in-out;
+            border-bottom: 1px solid transparent;
+        }
+
+        .link-secondary:hover {
+            border-bottom-color: #0f172a;
+            opacity: 0.8;
+        }
+
+        .text-error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.375rem;
+        }
+
+        .text-muted {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .logo-box {
+            width: 3rem;
+            height: 3rem;
+            background-color: #0f172a;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+        }
+
+        .logo-text {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .heading-base {
+            color: #0f172a;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subheading-base {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 0.875rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+        <div class="w-full max-w-sm">
+            <!-- Logo y título -->
+            <div class="text-center mb-8">
+                <div class="flex justify-center mb-4">
+                    <div class="logo-box">
+                        <span class="logo-text">S</span>
+                    </div>
+                </div>
+                <h1 class="heading-base text-3xl mb-1">Seekops</h1>
+                <p class="subheading-base">Recupera tu contraseña</p>
+            </div>
+
+            <!-- Alert de éxito (estado) -->
+            <div id="successAlert" class="alert-success mb-6 hidden">
+                <svg class="alert-icon alert-success-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <div class="flex-1">
+                    <div class="alert-title">Verifica tu correo</div>
+                    <div class="alert-description">Hemos enviado un enlace de recuperación a <span id="emailDisplay"></span></div>
+                </div>
+            </div>
+
+            <!-- Alert de error -->
+            <div id="errorAlert" class="alert-destructive mb-6 hidden">
+                <svg class="alert-icon alert-destructive-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <div class="flex-1">
+                    <div class="alert-title">No encontramos una cuenta con ese correo</div>
+                    <div class="alert-description">Verifica el correo e intenta de nuevo.</div>
+                </div>
+                <button onclick="document.getElementById('errorAlert').classList.add('hidden')" class="text-red-600 hover:text-red-700 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+
+            <!-- Formulario (visible en estado default) -->
+            <div id="formSection">
+                <p class="text-muted mb-5 text-center">Ingresa tu correo para recibir un enlace de restablecimiento</p>
+
+                <form id="recoveryForm" class="space-y-4">
+                    <!-- Campo Correo -->
+                    <div>
+                        <label for="email" class="label-base">Correo electrónico</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="nombre@ejemplo.com"
+                            class="input-base w-full"
+                            required
+                        >
+                        <p id="emailError" class="text-error hidden">Formato de correo no válido</p>
+                    </div>
+
+                    <!-- Botón Enviar -->
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="btn-primary w-full mt-6"
+                        disabled
+                    >
+                        <span id="submitText">ENVIAR ENLACE</span>
+                        <svg id="spinner" class="spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Contenido de éxito (visible cuando se envía) -->
+            <div id="successSection" class="hidden space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-800">
+                        <strong>El enlace expira en 24 horas.</strong> Si no recibiste el correo, revisa tu bandeja de spam.
+                    </p>
+                </div>
+
+                <div class="space-y-2 text-center">
+                    <button onclick="resetForm()" class="link-secondary w-full block py-2">Enviar otro correo</button>
+                    <a href="#" class="link-secondary block py-2">Volver a login</a>
+                </div>
+            </div>
+
+            <!-- Link Volver a login (siempre visible) -->
+            <div class="text-center mt-6">
+                <a href="#" class="link-secondary">← Volver a login</a>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-12 pt-6 border-t border-slate-200">
+                <p class="text-xs text-slate-500">
+                    © 2026 Seek Global. Todos los derechos reservados
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const recoveryForm = document.getElementById('recoveryForm');
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
+        const emailError = document.getElementById('emailError');
+        const spinner = document.getElementById('spinner');
+        const submitText = document.getElementById('submitText');
+        const formSection = document.getElementById('formSection');
+        const successSection = document.getElementById('successSection');
+        const emailDisplay = document.getElementById('emailDisplay');
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function updateButtonState() {
+            const emailValid = isValidEmail(emailInput.value.trim());
+            submitBtn.disabled = !emailValid;
+        }
+
+        emailInput.addEventListener('input', () => {
+            updateButtonState();
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+            } else {
+                emailError.classList.add('hidden');
+            }
+            if (!errorAlert.classList.contains('hidden')) {
+                errorAlert.classList.add('hidden');
+            }
+        });
+
+        emailInput.addEventListener('blur', () => {
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+            }
+        });
+
+        recoveryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (!isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+                return;
+            }
+
+            // Mostrar loading
+            submitBtn.disabled = true;
+            emailInput.disabled = true;
+            submitText.textContent = '';
+            spinner.classList.remove('hidden');
+
+            // Simular request (éxito)
+            setTimeout(() => {
+                // Mostrar éxito
+                submitBtn.disabled = false;
+                submitText.textContent = 'ENVIAR ENLACE';
+                spinner.classList.add('hidden');
+
+                emailDisplay.textContent = emailInput.value.trim();
+                formSection.classList.add('hidden');
+                successSection.classList.remove('hidden');
+                successAlert.classList.remove('hidden');
+            }, 1500);
+        });
+
+        function resetForm() {
+            emailInput.value = '';
+            emailInput.disabled = false;
+            successAlert.classList.add('hidden');
+            formSection.classList.remove('hidden');
+            successSection.classList.add('hidden');
+            updateButtonState();
+        }
+
+        updateButtonState();
+    </script>
+</body>
+</html>

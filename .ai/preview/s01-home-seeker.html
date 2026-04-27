@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Home Seeker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; }
+
+        .btn-primary {
+            background: #0f172a; color: white; padding: 0.625rem 1rem;
+            border-radius: 0.5rem; font-weight: 500; border: none; cursor: pointer;
+        }
+        .btn-primary:hover { background: #1e293b; }
+
+        .btn-secondary {
+            background: white; color: #0f172a; border: 1px solid #e2e8f0;
+            padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer;
+        }
+        .btn-secondary:hover { background: #f8fafc; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;
+        }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-pending { background: #e5e7eb; color: #374151; }
+        .badge-error { background: #fee2e2; color: #7f1d1d; }
+
+        .section {
+            background: white; border-radius: 0.75rem; padding: 1.5rem;
+            margin-bottom: 1.5rem; border: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block; font-size: 0.875rem; font-weight: 600;
+            color: #1e293b; margin-bottom: 0.375rem;
+        }
+
+        .form-input {
+            width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0;
+            border-radius: 0.5rem; font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .row-form {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .row-form { grid-template-columns: 1fr; }
+        }
+
+        .week-badges {
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+        }
+
+        .pending-item {
+            padding: 0.75rem; background: #fff5f5; border-left: 3px solid #ef4444;
+            border-radius: 0.375rem; margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8 bg-white p-4 rounded-lg border border-e2e8f0">
+            <div class="flex items-center gap-3">
+                <div class="text-2xl font-bold text-slate-900">Seekops</div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <div class="font-500 text-sm">Juan Pérez</div>
+                    <div class="text-xs text-gray-600">Seeker</div>
+                </div>
+                <div class="w-10 h-10 bg-slate-300 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: Semanas Pendientes -->
+        <div class="section">
+            <h2 class="text-lg font-600 text-slate-900 mb-4">Tienes pendientes estas semanas:</h2>
+            <div class="week-badges">
+                <div class="badge badge-warning">S15/24</div>
+                <div class="badge badge-warning">S16/24</div>
+                <div class="badge badge-warning">S17/24</div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: Horas Observadas -->
+        <div class="section">
+            <h2 class="text-lg font-600 text-slate-900 mb-4">Requieren tu atención:</h2>
+            <div class="pending-item">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-500">• ProyA - S14/24: 🔍 Observado</div>
+                        <div class="text-sm text-gray-600">El gestor dejó comentarios</div>
+                    </div>
+                    <button class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;">Ajustar</button>
+                </div>
+            </div>
+            <div class="pending-item">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-500">• ProyB - S13/24: 🔍 Observado</div>
+                        <div class="text-sm text-gray-600">Requiere revisión</div>
+                    </div>
+                    <button class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;">Ajustar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: Histórico -->
+        <div class="section">
+            <h2 class="text-lg font-600 text-slate-900 mb-4">Histórico últimas 3 semanas:</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-500">S14/24 - Aprobadas: 40h</div>
+                        <span class="badge badge-success" style="margin-top: 0.25rem;">✓ Aprobado</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-500">S13/24 - Observadas: 35h</div>
+                        <span class="badge badge-warning" style="margin-top: 0.25rem;">🔍 Observado</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-500">S12/24 - Aprobadas: 40h</div>
+                        <span class="badge badge-success" style="margin-top: 0.25rem;">✓ Aprobado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 4: Acciones Rápidas -->
+        <div class="section">
+            <h2 class="text-lg font-600 text-slate-900 mb-4">Acciones rápidas</h2>
+            <button class="btn-primary" style="width: 100%; padding: 0.75rem;">+ Cargar nuevas horas</button>
+        </div>
+    </div>
+</body>
+</html>

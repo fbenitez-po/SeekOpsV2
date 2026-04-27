@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Editar Proyecto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; }
+        .btn-primary { background: #0f172a; color: white; padding: 0.625rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #1e293b; margin-bottom: 0.375rem; }
+        .form-label .required { color: #ef4444; }
+        .form-input { width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; }
+        .form-input:focus { outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
+        .row-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 768px) { .row-form { grid-template-columns: 1fr; } }
+        .section-title { font-size: 1.125rem; font-weight: 700; color: #0f172a; padding-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0; margin: 2rem 0 1.5rem 0; }
+        .chip { display: inline-block; background: #e5e7eb; padding: 0.375rem 0.75rem; border-radius: 9999px; margin-right: 0.5rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-3xl mx-auto">
+        <a href="#" class="text-sm text-slate-600 hover:text-slate-900 mb-4 inline-block">← Volver</a>
+        <h1 class="text-3xl font-bold text-slate-900 mb-8">Editar proyecto: ProyA</h1>
+
+        <form class="bg-white rounded-lg border border-e2e8f0 p-6">
+            <div class="section-title">Información Básica</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Código <span class="required">*</span></label>
+                    <input type="text" class="form-input" value="PROJA">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre <span class="required">*</span></label>
+                    <input type="text" class="form-input" value="ProyA Development">
+                </div>
+            </div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Cliente <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar cliente...</option>
+                        <option value="" selected>Acme Corp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-input" rows="3">Desarrollo de plataforma web para Acme</textarea>
+                </div>
+            </div>
+
+            <div class="section-title">Configuración</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Segmentación <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="" selected>Enterprise</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría ingreso <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="" selected>Desarrollo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Capa de productividad</label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="" selected>Tier 1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de servicio</label>
+                    <select class="form-input">
+                        <option value="">Seleccionar...</option>
+                        <option value="" selected>Consultoría</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Gestor <span class="required">*</span></label>
+                    <select class="form-input">
+                        <option value="">Seleccionar gestor...</option>
+                        <option value="" selected>Carlos López</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado <span class="required">*</span></label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <input type="radio" id="activo" name="estado" checked>
+                        <label for="activo" class="text-sm">Activo</label>
+                        <input type="radio" id="inactivo" name="estado">
+                        <label for="inactivo" class="text-sm">Inactivo</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Fechas</div>
+
+            <div class="row-form">
+                <div class="form-group">
+                    <label class="form-label">Fecha inicio</label>
+                    <input type="date" class="form-input" value="2023-01-15">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha fin</label>
+                    <input type="date" class="form-input" value="2024-12-31">
+                </div>
+            </div>
+
+            <div class="section-title">Usuarios Asignados</div>
+
+            <div class="form-group">
+                <div class="mb-3">
+                    <span class="chip">Juan Pérez - Seeker</span>
+                    <span class="chip">María López - Gestor</span>
+                    <button type="button" class="btn-secondary">+ Agregar</button>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="submit" class="btn-primary">Guardar</button>
+                <button type="button" class="btn-secondary">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

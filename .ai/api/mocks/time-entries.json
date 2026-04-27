@@ -1,0 +1,337 @@
+{
+  "GET /time-entries (Seeker — listado propio)": {
+    "response_200": {
+      "data": [
+        {
+          "id": "te01-uuid-aaaa-bbbb-ccccddddeeee",
+          "semana": "S16/26",
+          "estado": "PENDIENTE",
+          "fecha_carga": "2026-04-21T09:15:00Z",
+          "usuario": {
+            "id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+            "nombres": "Juan",
+            "apellidos": "Pérez"
+          },
+          "lineas": [
+            {
+              "id": "tel01-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj01-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Alpha", "codigo": "PRJ-001" },
+              "categoria_ingreso": null,
+              "horas": 8,
+              "horas_extra": 0,
+              "comentario": ""
+            },
+            {
+              "id": "tel02-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj02-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Beta", "codigo": "PRJ-002" },
+              "categoria_ingreso": { "id": "cat01-uuid", "nombre": "Consultoría" },
+              "horas": 4,
+              "horas_extra": 2,
+              "comentario": "Sprint planning y refinamiento"
+            }
+          ],
+          "total_horas": 12,
+          "total_extras": 2,
+          "aprobaciones": []
+        },
+        {
+          "id": "te02-uuid-aaaa-bbbb-ccccddddeeee",
+          "semana": "S15/26",
+          "estado": "OBSERVADO",
+          "fecha_carga": "2026-04-14T10:30:00Z",
+          "usuario": {
+            "id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+            "nombres": "Juan",
+            "apellidos": "Pérez"
+          },
+          "lineas": [
+            {
+              "id": "tel03-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj01-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Alpha", "codigo": "PRJ-001" },
+              "categoria_ingreso": null,
+              "horas": 10,
+              "horas_extra": 3,
+              "comentario": "Trabajo intensivo de cierre"
+            }
+          ],
+          "total_horas": 10,
+          "total_extras": 3,
+          "aprobaciones": [
+            {
+              "id": "tea01-uuid",
+              "accion": "OBSERVADO",
+              "comentario": "Las horas extras necesitan justificación más detallada",
+              "sugerencia_horas": 8,
+              "sugerencia_extras": 1,
+              "realizado_por": { "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7", "nombres": "María", "apellidos": "López" },
+              "fecha": "2026-04-15T11:00:00Z"
+            }
+          ]
+        },
+        {
+          "id": "te03-uuid-aaaa-bbbb-ccccddddeeee",
+          "semana": "S14/26",
+          "estado": "APROBADO",
+          "fecha_carga": "2026-04-07T08:00:00Z",
+          "usuario": {
+            "id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+            "nombres": "Juan",
+            "apellidos": "Pérez"
+          },
+          "lineas": [
+            {
+              "id": "tel04-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj01-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Alpha", "codigo": "PRJ-001" },
+              "categoria_ingreso": null,
+              "horas": 8,
+              "horas_extra": 0,
+              "comentario": ""
+            }
+          ],
+          "total_horas": 8,
+          "total_extras": 0,
+          "aprobaciones": [
+            {
+              "id": "tea02-uuid",
+              "accion": "APROBADO",
+              "comentario": null,
+              "sugerencia_horas": null,
+              "sugerencia_extras": null,
+              "realizado_por": { "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7", "nombres": "María", "apellidos": "López" },
+              "fecha": "2026-04-08T09:30:00Z"
+            }
+          ]
+        },
+        {
+          "id": "te04-uuid-aaaa-bbbb-ccccddddeeee",
+          "semana": "S13/26",
+          "estado": "RECHAZADO",
+          "fecha_carga": "2026-03-31T14:00:00Z",
+          "usuario": {
+            "id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+            "nombres": "Juan",
+            "apellidos": "Pérez"
+          },
+          "lineas": [
+            {
+              "id": "tel05-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj02-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Beta", "codigo": "PRJ-002" },
+              "categoria_ingreso": null,
+              "horas": 12,
+              "horas_extra": 4,
+              "comentario": "Trabajo de emergencia"
+            }
+          ],
+          "total_horas": 12,
+          "total_extras": 4,
+          "aprobaciones": [
+            {
+              "id": "tea03-uuid",
+              "accion": "RECHAZADO",
+              "comentario": "Las horas reportadas no corresponden con la actividad del sprint",
+              "razon_rechazo": "Las horas reportadas no corresponden con la actividad del sprint",
+              "sugerencia_horas": null,
+              "sugerencia_extras": null,
+              "realizado_por": { "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7", "nombres": "María", "apellidos": "López" },
+              "fecha": "2026-04-01T10:00:00Z"
+            }
+          ]
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 4,
+        "pages": 1
+      }
+    }
+  },
+  "GET /time-entries (Gestor — pendientes equipo)": {
+    "query": "?estado=PENDIENTE",
+    "response_200": {
+      "data": [
+        {
+          "id": "te01-uuid-aaaa-bbbb-ccccddddeeee",
+          "semana": "S16/26",
+          "estado": "PENDIENTE",
+          "fecha_carga": "2026-04-21T09:15:00Z",
+          "usuario": {
+            "id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+            "nombres": "Juan",
+            "apellidos": "Pérez"
+          },
+          "lineas": [
+            {
+              "id": "tel01-uuid-aaaa-bbbb-ccccddddeeee",
+              "proyecto": { "id": "prj01-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Alpha", "codigo": "PRJ-001" },
+              "categoria_ingreso": null,
+              "horas": 8,
+              "horas_extra": 0,
+              "comentario": ""
+            }
+          ],
+          "total_horas": 8,
+          "total_extras": 0,
+          "aprobaciones": []
+        }
+      ],
+      "pagination": { "page": 1, "limit": 20, "total": 1, "pages": 1 }
+    }
+  },
+  "POST /time-entries": {
+    "request": {
+      "semana": "S17/26",
+      "lineas": [
+        {
+          "proyecto_id": "prj01-uuid-aaaa-bbbb-ccccddddeeee",
+          "categoria_ingreso_id": null,
+          "horas": 8,
+          "horas_extra": 0,
+          "comentario": ""
+        },
+        {
+          "proyecto_id": "prj02-uuid-aaaa-bbbb-ccccddddeeee",
+          "categoria_ingreso_id": "cat01-uuid",
+          "horas": 6,
+          "horas_extra": 1,
+          "comentario": "Reunión de kickoff"
+        }
+      ]
+    },
+    "response_201": {
+      "id": "te05-uuid-aaaa-bbbb-ccccddddeeee",
+      "usuario_id": "aa1b2c3d-e5f6-7g8i-9j0k-l1m2n3o4p5q6",
+      "semana": "S17/26",
+      "estado": "PENDIENTE",
+      "fecha_carga": "2026-04-24T12:00:00Z",
+      "lineas": [
+        {
+          "id": "tel06-uuid-aaaa-bbbb-ccccddddeeee",
+          "proyecto_id": "prj01-uuid-aaaa-bbbb-ccccddddeeee",
+          "categoria_ingreso_id": null,
+          "horas": 8,
+          "horas_extra": 0,
+          "comentario": ""
+        },
+        {
+          "id": "tel07-uuid-aaaa-bbbb-ccccddddeeee",
+          "proyecto_id": "prj02-uuid-aaaa-bbbb-ccccddddeeee",
+          "categoria_ingreso_id": "cat01-uuid",
+          "horas": 6,
+          "horas_extra": 1,
+          "comentario": "Reunión de kickoff"
+        }
+      ],
+      "total_horas": 14,
+      "total_extras": 1
+    },
+    "response_400_horas": {
+      "error": "horas debe ser entre 0 y 24"
+    },
+    "response_400_duplicado": {
+      "error": "No se puede repetir el mismo proyecto en una carga"
+    },
+    "response_400_semana": {
+      "error": "Ya existe un registro para la semana S17/26 en estado PENDIENTE o APROBADO"
+    },
+    "response_422_categoria": {
+      "error": "El proyecto 'Area' requiere una categoría de ingreso"
+    }
+  },
+  "PUT /time-entries/:id (ajuste de observado)": {
+    "path_params": { "id": "te02-uuid-aaaa-bbbb-ccccddddeeee" },
+    "request": {
+      "lineas": [
+        {
+          "id": "tel03-uuid-aaaa-bbbb-ccccddddeeee",
+          "horas": 8,
+          "horas_extra": 1,
+          "comentario": "Corrección según sugerencia del gestor — cierre de sprint"
+        }
+      ]
+    },
+    "response_200": {
+      "id": "te02-uuid-aaaa-bbbb-ccccddddeeee",
+      "semana": "S15/26",
+      "estado": "PENDIENTE",
+      "lineas": [
+        {
+          "id": "tel03-uuid-aaaa-bbbb-ccccddddeeee",
+          "proyecto_id": "prj01-uuid-aaaa-bbbb-ccccddddeeee",
+          "horas": 8,
+          "horas_extra": 1,
+          "comentario": "Corrección según sugerencia del gestor — cierre de sprint"
+        }
+      ],
+      "actualizado_en": "2026-04-24T10:00:00Z"
+    },
+    "response_403_estado": {
+      "error": "Solo se pueden editar registros en estado OBSERVADO"
+    }
+  },
+  "POST /time-entries/:id/aprobar": {
+    "path_params": { "id": "te01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "response_200": {
+      "id": "te01-uuid-aaaa-bbbb-ccccddddeeee",
+      "estado": "APROBADO",
+      "aprobado_por": {
+        "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7",
+        "nombres": "María",
+        "apellidos": "López"
+      },
+      "aprobado_en": "2026-04-24T11:00:00Z"
+    },
+    "response_403_estado": {
+      "error": "Solo se pueden aprobar registros en estado PENDIENTE"
+    },
+    "response_403_permiso": {
+      "error": "Solo el gestor del proyecto o un administrador puede aprobar"
+    }
+  },
+  "POST /time-entries/:id/observar": {
+    "path_params": { "id": "te01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "request": {
+      "comentario_observacion": "Las horas extras del miércoles no cuadran con el reporte del equipo",
+      "sugerencia_horas": 8,
+      "sugerencia_extras": null
+    },
+    "response_200": {
+      "id": "te01-uuid-aaaa-bbbb-ccccddddeeee",
+      "estado": "OBSERVADO",
+      "observado_por": {
+        "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7",
+        "nombres": "María",
+        "apellidos": "López"
+      },
+      "observado_en": "2026-04-24T11:30:00Z",
+      "comentario_observacion": "Las horas extras del miércoles no cuadran con el reporte del equipo",
+      "sugerencia_horas": 8,
+      "sugerencia_extras": null
+    },
+    "response_400": {
+      "error": "comentario_observacion es requerido"
+    }
+  },
+  "POST /time-entries/:id/rechazar": {
+    "path_params": { "id": "te01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "request": {
+      "razon_rechazo": "Las horas reportadas no corresponden a ninguna tarea activa del proyecto",
+      "permitir_reenvio": false
+    },
+    "response_200": {
+      "id": "te01-uuid-aaaa-bbbb-ccccddddeeee",
+      "estado": "RECHAZADO",
+      "rechazado_por": {
+        "id": "bb2c3d4e-f6g7-8h9i-0j1k-m2n3o4p5q6r7",
+        "nombres": "María",
+        "apellidos": "López"
+      },
+      "rechazado_en": "2026-04-24T11:45:00Z",
+      "razon_rechazo": "Las horas reportadas no corresponden a ninguna tarea activa del proyecto",
+      "permitir_reenvio": false
+    },
+    "response_400": {
+      "error": "razon_rechazo es requerida"
+    }
+  }
+}

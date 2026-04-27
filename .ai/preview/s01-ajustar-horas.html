@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Ajustar Horas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; }
+        .input-base, .select-base { background: white; border: 1px solid #e2e8f0; padding: 0.625rem 0.875rem; border-radius: 0.5rem; font-size: 0.875rem; transition: all 150ms; }
+        .input-base:focus, .select-base:focus { outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); }
+        .input-base:disabled, .select-base:disabled { background: #f8fafc; color: #94a3b8; opacity: 0.5; }
+        .label-base { display: block; font-weight: 500; font-size: 0.875rem; color: #1e293b; margin-bottom: 0.5rem; }
+        .btn-primary { background: #0f172a; color: white; padding: 0.625rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; transition: all 150ms; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; padding: 0.625rem 1.5rem; border-radius: 0.5rem; cursor: pointer; }
+        .btn-secondary:hover { background: #f8fafc; }
+        .form-container { background: white; max-width: 500px; margin: 2rem auto; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        .form-section { margin-bottom: 1.5rem; }
+        .button-group { display: flex; gap: 1rem; }
+        .button-group button { flex: 1; }
+        .alert-warning { background: #fed7aa; border: 1px solid #fb923c; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; }
+        .alert-warning-title { font-weight: 600; color: #92400e; }
+        .alert-warning-text { color: #78350f; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Ajustar horas</h1>
+            <p style="color: #64748b; font-size: 0.875rem;">Revisa el comentario del gestor y corrige las horas</p>
+        </div>
+
+        <!-- Alert de observación -->
+        <div class="alert-warning">
+            <div class="alert-warning-title">Observación del gestor:</div>
+            <div class="alert-warning-text" style="margin-top: 0.5rem;">"Revisar cantidad de horas: parece excesivo para los días de la semana. Verificar con el cliente."</div>
+            <div style="font-size: 0.75rem; color: #92400e; margin-top: 0.5rem;">Revisado por: María García - 22 ago 2024</div>
+        </div>
+
+        <form id="adjustForm" onsubmit="handleSubmit(event)">
+            <!-- Semana (readonly) -->
+            <div class="form-section">
+                <label class="label-base">Semana</label>
+                <input type="text" value="S50/2024" class="input-base w-full" disabled>
+            </div>
+
+            <!-- Proyecto (readonly) -->
+            <div class="form-section">
+                <label class="label-base">Proyecto</label>
+                <input type="text" value="Proyecto A" class="input-base w-full" disabled>
+            </div>
+
+            <!-- Horas (editable) -->
+            <div class="form-section">
+                <label class="label-base">Horas</label>
+                <input type="number" class="input-base w-full" value="8" min="0" max="24" required>
+            </div>
+
+            <!-- Horas Extra (editable) -->
+            <div class="form-section">
+                <label class="label-base">Horas extras</label>
+                <input type="number" class="input-base w-full" value="0" min="0" max="8">
+            </div>
+
+            <!-- Comentario (editable) -->
+            <div class="form-section">
+                <label class="label-base">Comentario adicional</label>
+                <textarea class="input-base w-full" rows="3" placeholder="Agrega cualquier aclaración (opcional)"></textarea>
+            </div>
+
+            <!-- Botones -->
+            <div class="button-group">
+                <button type="submit" class="btn-primary">GUARDAR AJUSTE</button>
+                <button type="button" class="btn-secondary" onclick="window.history.back()">CANCELAR</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('Ajuste guardado. Redirigiendo...');
+            window.location.href = 's01-confirmacion-ajuste.html';
+        }
+    </script>
+</body>
+</html>

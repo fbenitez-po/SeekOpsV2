@@ -1,0 +1,70 @@
+{
+  "GET /config/equipos": {
+    "response_200": [
+      { "id": "equipo01-uuid", "nombre": "Tech", "activo": true },
+      { "id": "equipo02-uuid", "nombre": "Consultoría", "activo": true },
+      { "id": "equipo03-uuid", "nombre": "Diseño", "activo": true },
+      { "id": "equipo04-uuid", "nombre": "Data", "activo": true },
+      { "id": "equipo05-uuid", "nombre": "Comercial", "activo": false }
+    ]
+  },
+  "GET /config/areas": {
+    "response_200": [
+      { "id": "area01-uuid", "nombre": "Desarrollo", "activo": true },
+      { "id": "area02-uuid", "nombre": "Gestión", "activo": true },
+      { "id": "area03-uuid", "nombre": "IT", "activo": true },
+      { "id": "area04-uuid", "nombre": "Producto", "activo": true },
+      { "id": "area05-uuid", "nombre": "Operaciones", "activo": true }
+    ]
+  },
+  "GET /config/grupos": {
+    "response_200": [
+      { "id": "grupo01-uuid", "codigo": "SEEKERS", "nombre": "Seekers" },
+      { "id": "grupo02-uuid", "codigo": "GESTORES", "nombre": "Gestores" },
+      { "id": "grupo03-uuid", "codigo": "ADMINISTRADORES", "nombre": "Administradores" }
+    ]
+  },
+  "GET /config/categorias-ingreso": {
+    "response_200": [
+      { "id": "cat01-uuid", "nombre": "Consultoría", "activo": true },
+      { "id": "cat02-uuid", "nombre": "Desarrollo", "activo": true },
+      { "id": "cat03-uuid", "nombre": "Soporte", "activo": true },
+      { "id": "cat04-uuid", "nombre": "Capacitación", "activo": true },
+      { "id": "cat05-uuid", "nombre": "Auditoría", "activo": false }
+    ]
+  },
+  "GET /config/segmentaciones": {
+    "response_200": [
+      { "id": "seg01-uuid", "nombre": "Enterprise", "activo": true },
+      { "id": "seg02-uuid", "nombre": "Mid Market", "activo": true },
+      { "id": "seg03-uuid", "nombre": "SMB", "activo": true }
+    ]
+  },
+  "GET /config/sectores": {
+    "response_200": [
+      { "id": "sec01-uuid", "nombre": "Tecnología", "activo": true },
+      { "id": "sec02-uuid", "nombre": "Finanzas", "activo": true },
+      { "id": "sec03-uuid", "nombre": "Retail", "activo": true },
+      { "id": "sec04-uuid", "nombre": "Salud", "activo": true },
+      { "id": "sec05-uuid", "nombre": "Educación", "activo": true },
+      { "id": "sec06-uuid", "nombre": "Gobierno", "activo": true },
+      { "id": "sec07-uuid", "nombre": "Manufactura", "activo": false }
+    ]
+  },
+  "GET /config/tipos-servicio": {
+    "response_200": [
+      { "id": "ts01-uuid", "nombre": "Desarrollo", "activo": true },
+      { "id": "ts02-uuid", "nombre": "Consultoría", "activo": true },
+      { "id": "ts03-uuid", "nombre": "Soporte", "activo": true },
+      { "id": "ts04-uuid", "nombre": "Capacitación", "activo": true }
+    ]
+  },
+  "GET /config/categorias-usuario (clientes)": {
+    "response_200": [
+      { "id": "catcli01-uuid", "nombre": "Corporativo", "activo": true },
+      { "id": "catcli02-uuid", "nombre": "PYME", "activo": true },
+      { "id": "catcli03-uuid", "nombre": "Startup", "activo": true },
+      { "id": "catcli04-uuid", "nombre": "ONG", "activo": true }
+    ]
+  }
+}

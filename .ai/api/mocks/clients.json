@@ -1,0 +1,149 @@
+{
+  "GET /clients": {
+    "response_200": {
+      "data": [
+        {
+          "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee",
+          "nombre": "Empresa ABC",
+          "razon_social": "Empresa ABC S.A.C.",
+          "razon_comercial": "ABC Solutions",
+          "ruc": "20123456789",
+          "nombre_contacto": "Pedro Ramos",
+          "email_contacto": "pedro@empresaabc.com",
+          "telefono": "+5112345678",
+          "direccion": "Av. Principal 123, Lima",
+          "categoria_usuario": { "id": "catcli01-uuid", "nombre": "Corporativo" },
+          "segmentacion": { "id": "seg01-uuid", "nombre": "Enterprise" },
+          "sector": { "id": "sec01-uuid", "nombre": "Tecnología" },
+          "activo": true,
+          "proyectos_count": 3,
+          "creado_en": "2024-01-10T08:00:00Z"
+        },
+        {
+          "id": "cli02-uuid-aaaa-bbbb-ccccddddeeee",
+          "nombre": "Empresa XYZ",
+          "razon_social": "XYZ Corporación S.A.",
+          "razon_comercial": null,
+          "ruc": "20987654321",
+          "nombre_contacto": "Ana Torres",
+          "email_contacto": "ana@xyz.com",
+          "telefono": "+5187654321",
+          "direccion": "Jr. Los Pinos 456, Miraflores",
+          "categoria_usuario": { "id": "catcli02-uuid", "nombre": "PYME" },
+          "segmentacion": { "id": "seg02-uuid", "nombre": "Mid Market" },
+          "sector": { "id": "sec02-uuid", "nombre": "Finanzas" },
+          "activo": true,
+          "proyectos_count": 1,
+          "creado_en": "2024-06-15T10:00:00Z"
+        },
+        {
+          "id": "cli03-uuid-aaaa-bbbb-ccccddddeeee",
+          "nombre": "Startup Delta",
+          "razon_social": "Delta Innovations E.I.R.L.",
+          "razon_comercial": "Delta",
+          "ruc": "10555666777",
+          "nombre_contacto": null,
+          "email_contacto": null,
+          "telefono": null,
+          "direccion": null,
+          "categoria_usuario": { "id": "catcli03-uuid", "nombre": "Startup" },
+          "segmentacion": { "id": "seg03-uuid", "nombre": "SMB" },
+          "sector": { "id": "sec03-uuid", "nombre": "Retail" },
+          "activo": false,
+          "proyectos_count": 0,
+          "creado_en": "2023-09-01T09:00:00Z"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 3,
+        "pages": 1
+      }
+    }
+  },
+  "POST /clients": {
+    "request": {
+      "nombre": "Nueva Empresa S.A.",
+      "razon_social": "Nueva Empresa S.A.",
+      "razon_comercial": "NE Group",
+      "ruc": "20111222333",
+      "nombre_contacto": "Luis Mendoza",
+      "email_contacto": "luis@nuevaempresa.com",
+      "telefono": "+5111222333",
+      "direccion": "Av. Nuevo Mundo 789, San Isidro",
+      "categoria_usuario_id": "catcli01-uuid",
+      "segmentacion_id": "seg02-uuid",
+      "sector_id": "sec01-uuid",
+      "activo": true
+    },
+    "response_201": {
+      "id": "cli04-uuid-aaaa-bbbb-ccccddddeeee",
+      "nombre": "Nueva Empresa S.A.",
+      "ruc": "20111222333",
+      "activo": true,
+      "creado_en": "2026-04-24T12:00:00Z"
+    },
+    "response_400_ruc": {
+      "error": "El RUC ya está registrado en otro cliente"
+    }
+  },
+  "GET /clients/:id": {
+    "path_params": { "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "response_200": {
+      "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee",
+      "nombre": "Empresa ABC",
+      "razon_social": "Empresa ABC S.A.C.",
+      "razon_comercial": "ABC Solutions",
+      "ruc": "20123456789",
+      "nombre_contacto": "Pedro Ramos",
+      "email_contacto": "pedro@empresaabc.com",
+      "telefono": "+5112345678",
+      "direccion": "Av. Principal 123, Lima",
+      "categoria_usuario": { "id": "catcli01-uuid", "nombre": "Corporativo" },
+      "segmentacion": { "id": "seg01-uuid", "nombre": "Enterprise" },
+      "sector": { "id": "sec01-uuid", "nombre": "Tecnología" },
+      "activo": true,
+      "proyectos": [
+        { "id": "prj01-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Alpha", "codigo": "PRJ-001", "activo": true },
+        { "id": "prj03-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Gamma", "codigo": "PRJ-003", "activo": true },
+        { "id": "prj04-uuid-aaaa-bbbb-ccccddddeeee", "nombre": "Proyecto Sigma", "codigo": "PRJ-004", "activo": false }
+      ],
+      "creado_en": "2024-01-10T08:00:00Z",
+      "actualizado_en": "2026-04-10T10:00:00Z"
+    },
+    "response_404": {
+      "error": "Cliente no encontrado"
+    }
+  },
+  "PUT /clients/:id": {
+    "path_params": { "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "request": {
+      "nombre": "Empresa ABC Actualizada",
+      "nombre_contacto": "Pedro Ramos Jr.",
+      "email_contacto": "pedro.jr@empresaabc.com",
+      "telefono": "+5112345699"
+    },
+    "response_200": {
+      "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee",
+      "nombre": "Empresa ABC Actualizada",
+      "actualizado_en": "2026-04-24T14:00:00Z"
+    }
+  },
+  "PATCH /clients/:id/toggle-activo (desactivar)": {
+    "path_params": { "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee" },
+    "response_200": {
+      "id": "cli01-uuid-aaaa-bbbb-ccccddddeeee",
+      "activo": false,
+      "actualizado_en": "2026-04-24T14:30:00Z"
+    }
+  },
+  "PATCH /clients/:id/toggle-activo (reactivar)": {
+    "path_params": { "id": "cli03-uuid-aaaa-bbbb-ccccddddeeee" },
+    "response_200": {
+      "id": "cli03-uuid-aaaa-bbbb-ccccddddeeee",
+      "activo": true,
+      "actualizado_en": "2026-04-24T14:30:00Z"
+    }
+  }
+}

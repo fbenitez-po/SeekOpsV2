@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Color palette shadcn/ui */
+        :root {
+            --primary: #0f172a;
+            --primary-fg: #f8fafc;
+            --secondary: #64748b;
+            --destructive: #dc2626;
+            --muted: #f1f5f9;
+            --muted-fg: #64748b;
+            --border: #e2e8f0;
+            --input-border: #e2e8f0;
+            --ring: #0f172a;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        input, textarea, select {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-base {
+            background-color: white;
+            border: 1px solid var(--input-border);
+            border-radius: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            transition: all 150ms ease-in-out;
+            color: #1e293b;
+        }
+
+        .input-base::placeholder {
+            color: #cbd5e1;
+        }
+
+        .input-base:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .input-base:disabled {
+            background-color: #f8fafc;
+            color: #94a3b8;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .input-error {
+            border-color: #fca5a5;
+            background-color: #fef2f2;
+        }
+
+        .input-error:focus {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        .btn-primary {
+            background-color: #0f172a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 150ms ease-in-out;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            background-color: #0f172a;
+        }
+
+        .btn-primary:disabled {
+            background-color: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .alert-destructive {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            animation: slideDown 200ms ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-destructive-icon {
+            color: #dc2626;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .alert-destructive-title {
+            color: #991b1b;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .alert-destructive-description {
+            color: #7f1d1d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-base {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--input-border);
+            background-color: white;
+            cursor: pointer;
+            transition: all 150ms ease-in-out;
+            accent-color: #0f172a;
+        }
+
+        .checkbox-base:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .checkbox-base:hover {
+            border-color: #0f172a;
+            background-color: #f8fafc;
+        }
+
+        .text-error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.375rem;
+        }
+
+        .label-base {
+            display: block;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .link-secondary {
+            color: #0f172a;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 150ms ease-in-out;
+            border-bottom: 1px solid transparent;
+        }
+
+        .link-secondary:hover {
+            border-bottom-color: #0f172a;
+            opacity: 0.8;
+        }
+
+        .spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-box {
+            width: 3rem;
+            height: 3rem;
+            background-color: #0f172a;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+        }
+
+        .logo-text {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .heading-base {
+            color: #0f172a;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subheading-base {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 0.875rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+        <div class="w-full max-w-sm">
+            <!-- Logo y título -->
+            <div class="text-center mb-8">
+                <div class="flex justify-center mb-4">
+                    <div class="logo-box">
+                        <span class="logo-text">S</span>
+                    </div>
+                </div>
+                <h1 class="heading-base text-3xl mb-1">Seekops</h1>
+                <p class="subheading-base">Ingresa tus credenciales</p>
+            </div>
+
+            <!-- Alert de error -->
+            <div id="errorAlert" class="alert-destructive mb-6 hidden">
+                <svg class="alert-destructive-icon w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <div class="flex-1">
+                    <div class="alert-destructive-title">Credenciales inválidas</div>
+                    <div class="alert-destructive-description">Verifica correo y contraseña.</div>
+                </div>
+                <button onclick="document.getElementById('errorAlert').classList.add('hidden')" class="text-red-600 hover:text-red-700 flex-shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+
+            <!-- Formulario -->
+            <form id="loginForm" class="space-y-4">
+                <!-- Campo Correo -->
+                <div>
+                    <label for="email" class="label-base">Correo electrónico</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="nombre@ejemplo.com"
+                        class="input-base w-full"
+                        required
+                    >
+                    <p id="emailError" class="text-error hidden">Formato de correo no válido</p>
+                </div>
+
+                <!-- Campo Contraseña -->
+                <div>
+                    <label for="password" class="label-base">Contraseña</label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="••••••••"
+                            class="input-base w-full pr-10"
+                            required
+                        >
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition"
+                            aria-label="Mostrar contraseña"
+                            tabindex="-1"
+                        >
+                            <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Checkbox Mostrar contraseña -->
+                <div class="flex items-center gap-2.5">
+                    <input
+                        type="checkbox"
+                        id="showPassword"
+                        class="checkbox-base"
+                    >
+                    <label for="showPassword" class="text-sm text-slate-700 cursor-pointer font-medium">
+                        Mostrar contraseña
+                    </label>
+                </div>
+
+                <!-- Botón Ingresar -->
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="btn-primary w-full mt-6"
+                    disabled
+                >
+                    <span id="submitText">INGRESAR</span>
+                    <svg id="spinner" class="spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Link Recuperar contraseña -->
+            <div class="text-center mt-4">
+                <a href="#" class="link-secondary">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-12 pt-6 border-t border-slate-200">
+                <p class="text-xs text-slate-500">
+                    © 2026 Seek Global. Todos los derechos reservados
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const showPasswordCheckbox = document.getElementById('showPassword');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const submitBtn = document.getElementById('submitBtn');
+        const loginForm = document.getElementById('loginForm');
+        const errorAlert = document.getElementById('errorAlert');
+        const emailError = document.getElementById('emailError');
+        const spinner = document.getElementById('spinner');
+        const submitText = document.getElementById('submitText');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function updateButtonState() {
+            const emailValid = isValidEmail(emailInput.value.trim());
+            const passwordHasContent = passwordInput.value.length > 0;
+            submitBtn.disabled = !(emailValid && passwordHasContent);
+        }
+
+        emailInput.addEventListener('input', () => {
+            updateButtonState();
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+            } else {
+                emailError.classList.add('hidden');
+            }
+            if (!errorAlert.classList.contains('hidden')) {
+                errorAlert.classList.add('hidden');
+            }
+        });
+
+        emailInput.addEventListener('blur', () => {
+            if (emailInput.value.trim() && !isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+            }
+        });
+
+        passwordInput.addEventListener('input', () => {
+            updateButtonState();
+            if (!errorAlert.classList.contains('hidden')) {
+                errorAlert.classList.add('hidden');
+            }
+        });
+
+        function togglePasswordVisibility() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-4.753 4.753m4.753-4.753L9.172 9.172"></path>';
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            }
+        }
+
+        showPasswordCheckbox.addEventListener('change', togglePasswordVisibility);
+        togglePasswordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPasswordCheckbox.checked = !showPasswordCheckbox.checked;
+            togglePasswordVisibility();
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (!isValidEmail(emailInput.value.trim())) {
+                emailError.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            emailInput.disabled = true;
+            passwordInput.disabled = true;
+            submitText.textContent = '';
+            spinner.classList.remove('hidden');
+
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                emailInput.disabled = false;
+                passwordInput.disabled = false;
+                submitText.textContent = 'INGRESAR';
+                spinner.classList.add('hidden');
+                errorAlert.classList.remove('hidden');
+            }, 1500);
+        });
+
+        [emailInput, passwordInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !submitBtn.disabled) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+
+        updateButtonState();
+    </script>
+</body>
+</html>

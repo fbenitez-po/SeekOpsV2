@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Asignar Usuarios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: rgba(0, 0, 0, 0.5); }
+        .modal { background: white; border-radius: 0.5rem; width: 90%; max-width: 600px; margin: 5vh auto; padding: 2rem; }
+        .btn-primary { background: #0f172a; color: white; padding: 0.625rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; }
+        .btn-secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; padding: 0.625rem 1.5rem; border-radius: 0.5rem; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; }
+        .select-role { padding: 0.375rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 1.5rem;">Asignar usuarios a Proyecto A</h2>
+
+        <form onsubmit="handleSubmit(event)">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="checkbox" checked></td>
+                        <td>Juan Díaz</td>
+                        <td>juan@seek.co</td>
+                        <td><select class="select-role"><option>Seeker</option><option>Gestor</option></select></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td>María García</td>
+                        <td>maria@seek.co</td>
+                        <td><select class="select-role" disabled><option>Gestor</option></select></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td>Carlos López</td>
+                        <td>carlos@seek.co</td>
+                        <td><select class="select-role"><option>Seeker</option><option>Gestor</option></select></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn-primary" style="flex: 1;">GUARDAR ASIGNACIONES</button>
+                <button type="button" class="btn-secondary" style="flex: 1;" onclick="window.close()">CANCELAR</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('Usuarios asignados. Emails enviados.');
+            window.close();
+        }
+    </script>
+</body>
+</html>

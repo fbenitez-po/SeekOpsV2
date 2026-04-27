@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seekops - Detalles de Hora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: rgba(0, 0, 0, 0.5); }
+        .modal { background: white; border-radius: 0.5rem; width: 90%; max-width: 600px; margin: 5vh auto; padding: 2rem; }
+        .info-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0; }
+        .info-label { font-weight: 500; color: #64748b; }
+        .info-value { color: #1e293b; }
+        .btn-primary { background: #0f172a; color: white; padding: 0.625rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; }
+        .btn-secondary { background: white; color: #0f172a; border: 1px solid #e2e8f0; padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; }
+        .btn-danger { background: #dc2626; color: white; padding: 0.625rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; }
+        .badge { display: inline-block; padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pending { background: #f3f4f6; color: #374151; }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 1.5rem;">Detalles de carga</h2>
+
+        <div style="margin-bottom: 2rem;">
+            <div class="info-row">
+                <span class="info-label">Seeker</span>
+                <span class="info-value">Juan Díaz</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Correo</span>
+                <span class="info-value">juan@seek.co</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Proyecto</span>
+                <span class="info-value">Proyecto A</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Semana</span>
+                <span class="info-value">S50/2024</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Horas</span>
+                <span class="info-value">8h</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Horas extra</span>
+                <span class="info-value">0h</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Comentario</span>
+                <span class="info-value" style="text-align: right;">Tareas de desarrollo completadas</span>
+            </div>
+            <div class="info-row" style="border-bottom: none;">
+                <span class="info-label">Estado</span>
+                <span class="info-value"><span class="badge badge-pending">⏳ Pendiente</span></span>
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.5rem;"><strong>Historial:</strong></p>
+            <div style="font-size: 0.75rem; color: #94a3b8;">
+                <div>📝 Cargado por Juan Díaz - 22 ago 2024 10:30</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <button class="btn-primary" style="flex: 1;" onclick="alert('Aprobación registrada')">APROBAR</button>
+            <button class="btn-secondary" style="flex: 1;" onclick="alert('Observación registrada')">OBSERVAR</button>
+            <button class="btn-danger" style="flex: 1;" onclick="alert('Rechazo registrado')">RECHAZAR</button>
+        </div>
+
+        <button style="width: 100%; margin-top: 1rem; padding: 0.625rem; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #64748b;" onclick="window.close()">CERRAR</button>
+    </div>
+</body>
+</html>
