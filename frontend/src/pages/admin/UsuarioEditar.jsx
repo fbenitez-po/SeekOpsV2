@@ -8,11 +8,47 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Badge } from '../../components/ui/badge';
+import { formatearFechaHora } from '../../lib/utils';
+
+function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
+  function toggle(id) {
+    if (seleccionados.includes(id)) {
+      if (seleccionados.length <= minimo) return;
+      onChange(seleccionados.filter((s) => s !== id));
+    } else {
+      onChange([...seleccionados, id]);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(opciones || []).map((o) => {
+        const activo = seleccionados.includes(o.id);
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => toggle(o.id)}
+            className="rounded-md px-3 py-1.5 text-sm font-medium border transition-colors"
+            style={{
+              backgroundColor: activo ? '#0f172a' : '#ffffff',
+              color: activo ? '#ffffff' : '#0f172a',
+              borderColor: activo ? '#0f172a' : '#e2e8f0',
+            }}
+          >
+            {o.nombre}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function SelectorGrupos({ grupos, seleccionados, onChange }) {
   function toggle(codigo) {
     if (seleccionados.includes(codigo)) {
-      if (seleccionados.length === 1) return; // al menos uno siempre
+      if (seleccionados.length === 1) return;
       onChange(seleccionados.filter((c) => c !== codigo));
     } else {
       onChange([...seleccionados, codigo]);
@@ -42,8 +78,6 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
     </div>
   );
 }
-import { Badge } from '../../components/ui/badge';
-import { formatearFechaHora } from '../../lib/utils';
 
 export default function UsuarioEditar() {
   const { id } = useParams();
@@ -66,7 +100,7 @@ export default function UsuarioEditar() {
         puesto: usuario.puesto,
         celular: usuario.celular || '',
         equipo_id: usuario.equipo?.id || '',
-        area_id: usuario.area?.id || '',
+        areas: (usuario.areas || []).map((a) => a.id),
         fecha_ingreso: usuario.fecha_ingreso ? usuario.fecha_ingreso.split('T')[0] : '',
         activo: usuario.activo,
         grupos: usuario.grupos,
@@ -84,6 +118,16 @@ export default function UsuarioEditar() {
   });
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target?.value ?? e }));
+
+  function manejarSubmit(e) {
+    e.preventDefault();
+    setError('');
+    if (form.areas.length === 0) {
+      setError('Debe seleccionar al menos un área');
+      return;
+    }
+    mutation.mutate(form);
+  }
 
   if (!form) return <Layout><p className="text-muted-foreground">Cargando...</p></Layout>;
 
@@ -105,7 +149,7 @@ export default function UsuarioEditar() {
           </CardContent>
         </Card>
 
-        <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate(form); }} className="space-y-4">
+        <form onSubmit={manejarSubmit} className="space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base">Información personal</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
@@ -143,11 +187,20 @@ export default function UsuarioEditar() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Área *</Label>
-                <Select value={form.area_id} onValueChange={set('area_id')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
-                </Select>
+                <Label>Fecha de ingreso *</Label>
+                <Input type="date" value={form.fecha_ingreso} onChange={set('fecha_ingreso')} required max={new Date().toISOString().split('T')[0]} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, podés seleccionar varias)</span></Label>
+                <SelectorMultiple
+                  opciones={areas}
+                  seleccionados={form.areas}
+                  onChange={(v) => setForm((f) => ({ ...f, areas: v }))}
+                  minimo={1}
+                />
+                {form.areas.length === 0 && (
+                  <p className="text-xs" style={{ color: '#dc2626' }}>Seleccioná al menos un área.</p>
+                )}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Grupos / Roles *</Label>

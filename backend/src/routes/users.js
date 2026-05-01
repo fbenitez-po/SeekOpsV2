@@ -13,7 +13,8 @@ const validacionesBase = [
   body('puesto').notEmpty().isLength({ max: 100 }).withMessage('puesto es requerido (max 100)'),
   body('celular').optional({ checkFalsy: true }).isMobilePhone('any').withMessage('celular con formato inválido'),
   body('equipo_id').isUUID().withMessage('equipo_id inválido'),
-  body('area_id').isUUID().withMessage('area_id inválido'),
+  body('areas').isArray({ min: 1 }).withMessage('areas debe tener al menos un elemento'),
+  body('areas.*').isUUID().withMessage('cada área debe ser un UUID válido'),
   body('fecha_ingreso').isDate().withMessage('fecha_ingreso inválida'),
   body('grupos').isArray({ min: 1 }).withMessage('grupos debe tener al menos un elemento'),
 ];

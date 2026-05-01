@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d seekops -c \"\\\\dt\")",
+      "Bash(where psql *)",
+      "Bash(wsl -d Ubuntu -- bash -c \"psql -U postgres -d seekops -c \\\\\"SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;\\\\\" 2>&1\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\ferbe\\.claude\\projects\\c--Users-ferbe-Desktop-Proyectos---IA-SeekOpsV2\\memory"
+    ]
+  }
+}

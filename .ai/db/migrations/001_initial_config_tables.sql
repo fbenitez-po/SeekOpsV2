@@ -10,30 +10,6 @@
 
 BEGIN;
 
--- Tabla: roles (define los roles del sistema: SEEKER, GESTOR, ADMIN)
-CREATE TABLE roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  activo BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_roles_codigo ON roles(codigo);
-
--- Tabla: approval_statuses (estados posibles de un time_entry)
-CREATE TABLE approval_statuses (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_approval_statuses_codigo ON approval_statuses(codigo);
-
 -- Tabla: income_categories (categorías de ingreso para proyectos y líneas)
 -- Columna: name (no nombre) — coincide con lo que usa el data layer
 CREATE TABLE income_categories (
@@ -133,20 +109,6 @@ CREATE INDEX idx_areas_codigo ON areas(codigo);
 -- SEEDS: Data inicial de configuración
 -- ============================================
 
--- Roles del sistema
-INSERT INTO roles (codigo, nombre, descripcion) VALUES
-('SEEKER', 'Seeker', 'Empleado que registra horas'),
-('GESTOR', 'Gestor', 'Líder que aprueba horas'),
-('ADMIN', 'Admin', 'Administrador del sistema'),
-('SUPERVISOR', 'Supervisor', 'Supervisor de equipos');
-
--- Estados de aprobación
-INSERT INTO approval_statuses (codigo, nombre, descripcion) VALUES
-('PENDIENTE', 'Pendiente', 'Esperando aprobación'),
-('APROBADO', 'Aprobado', 'Aprobado por gestor'),
-('OBSERVADO', 'Observado', 'Con observaciones del gestor'),
-('RECHAZADO', 'Rechazado', 'Rechazado por gestor');
-
 -- Categorías de ingreso
 INSERT INTO income_categories (codigo, name, descripcion) VALUES
 ('CONSULTORIA', 'Consultoría', ''),
@@ -155,11 +117,25 @@ INSERT INTO income_categories (codigo, name, descripcion) VALUES
 ('SOPORTE', 'Soporte', '');
 
 -- Categorías de cliente
-INSERT INTO client_categories (codigo, name, descripcion) VALUES
-('CONSULTORIA', 'Consultoría', ''),
-('DESARROLLO', 'Desarrollo', ''),
-('MANTENIMIENTO', 'Mantenimiento', ''),
-('SOPORTE', 'Soporte', '');
+INSERT INTO client_categories (codigo, name) VALUES
+('ESTRATEGIA',             'Estrategia'),
+('GESTORES_GESTION',       'Gestores - Gestión y planeamiento'),
+('UX_RESEARCH',            'User Experience - Research'),
+('UI',                     'User Interface'),
+('DEV_FRONTEND',           'Development - Front End'),
+('SEO',                    'SEO'),
+('DEV_BACKEND',            'Development - Back - End'),
+('DEV_QA',                 'Development - QA'),
+('UX_PROTOTYPE',           'User Experience - Prototype'),
+('DISENIO_SOCIAL_MEDIA',   'Diseño Social Media'),
+('APOYO',                  'Apoyo'),
+('UI_PROTOTYPE',           'User Interface - Prototype'),
+('UX_TESTING',             'User Experience - Testing'),
+('LIDERES_GESTION',        'Líderes - Gestión'),
+('PRODUCT_MANAGEMENT',     'Product Management'),
+('CAPACITACIONES',         'Capacitaciones'),
+('PROPUESTAS_COMERCIALES', 'Propuestas Comerciales'),
+('RECLUTAMIENTO',          'Reclutamiento');
 
 -- Tipos de servicio
 INSERT INTO service_types (codigo, nombre, descripcion) VALUES
@@ -167,26 +143,78 @@ INSERT INTO service_types (codigo, nombre, descripcion) VALUES
 ('DESARROLLO', 'Desarrollo', ''),
 ('SOPORTE', 'Soporte Técnico', '');
 
--- Segmentaciones
-INSERT INTO segmentations (codigo, nombre, descripcion) VALUES
-('ENTERPRISE', 'Enterprise', 'Clientes grandes'),
-('MID_MARKET', 'Mid Market', 'Clientes medianos'),
-('SMB', 'SMB', 'Pequeñas y medianas empresas');
+-- Segmentaciones de cliente
+INSERT INTO segmentations (codigo, nombre) VALUES
+('CUENTA_CLAVE',          'Cuenta Clave'),
+('CUENTA_INTERNACIONAL',  'Cuenta Internacional'),
+('CUENTA_DESARROLLO',     'Cuenta Desarrollo'),
+('CUENTA_CASUAL',         'Cuenta Casual'),
+('CUENTA_INACTIVA',       'Cuenta Inactiva'),
+('CUENTA_EXCLUIDA',       'Cuenta Excluida'),
+('NUEVOS_CLIENTES',       'Nuevos Clientes');
+
+-- Sectores de cliente
+INSERT INTO sectors (codigo, nombre) VALUES
+('CONSULTORIA',          'Consultoría'),
+('BANCA_FINANCIERO',     'Banca y Servicios Financieros'),
+('TECNOLOGIA',           'Tecnología'),
+('TRANSPORTE',           'Transporte'),
+('ALIMENTACION',         'Alimentación'),
+('CUIDADO_PERSONAL',     'Cuidado Personal'),
+('INST_EDUCATIVAS',      'Instituciones Educativas'),
+('RETAIL',               'Retail'),
+('CONSTRUCCION',         'Construcción'),
+('SALUD_FARMA',          'Salud y Farma'),
+('VARIOS',               'Varios'),
+('PESCA',                'Pesca'),
+('GOBIERNO',             'Gobierno'),
+('INMOBILIARIO',         'Inmobiliario'),
+('ACELERADORA',          'Aceleradora'),
+('MARKETING',            'Marketing'),
+('PUBLICIDAD',           'Publicidad'),
+('LOGISTICA_SUMINISTRO', 'Logistica y Suministro'),
+('SEGUROS',              'Seguros'),
+('TELECOMUNICACIONES',   'Telecomunicaciones'),
+('CONSUMO_MASIVO',       'Consumo Masivo'),
+('HIDROCARBUROS',        'Hidrocarburos'),
+('SERVICIOS',            'Servicios'),
+('HOTELERIA_TURISMO',    'Hoteleria y Turismo'),
+('INDUSTRIAL',           'Industrial'),
+('ENERGIA',              'Energía'),
+('CEMENTOS',             'Cementos'),
+('EDUCACION',            'Educación'),
+('MINERIA',              'Minería'),
+('INST_DEPORTIVAS',      'Instituciones Deportivas'),
+('AUTOMOTRIZ',           'Automotriz'),
+('ONG',                  'ONG'),
+('BELLEZA',              'Belleza');
 
 -- Equipos de trabajo
-INSERT INTO teams (codigo, name, descripcion) VALUES
-('BACKEND', 'Backend', 'Equipo de Backend'),
-('FRONTEND', 'Frontend', 'Equipo de Frontend'),
-('QA', 'QA', 'Quality Assurance'),
-('DEVOPS', 'DevOps', 'DevOps'),
-('FULLSTACK', 'Fullstack', 'Equipo Fullstack');
+INSERT INTO teams (codigo, name) VALUES
+('UI',                 'U.Interface'),
+('UX',                 'U.Experience'),
+('BRANDING',           'Branding'),
+('CLIENTE',            'Cliente'),
+('DIRECTOR',           'Director'),
+('SEO',                'SEO'),
+('OUTSOURCING',        'Outsourcing'),
+('ADMINISTRATIVO',     'Administrativo'),
+('SOCIAL_MEDIA',       'Social Media'),
+('ESTRATEGIA',         'Estrategia'),
+('PRODUCTO',           'Producto'),
+('DISENIO_EXPERIENCIA','Diseño de Experiencia'),
+('TECNOLOGIA',         'Tecnología');
 
 -- Áreas funcionales
-INSERT INTO areas (codigo, name, descripcion) VALUES
-('DESARROLLO', 'Desarrollo', 'Área de Desarrollo'),
-('OPERACIONES', 'Operaciones', 'Área de Operaciones'),
-('RECURSOS', 'Recursos Humanos', 'Área de RRHH'),
-('DELIVERY', 'Delivery', 'Área de Delivery');
+INSERT INTO areas (codigo, name) VALUES
+('TALENTO_CULTURA',    'Talento & Cultura'),
+('COMERCIAL',          'Comercial'),
+('PRODUCTO',           'Producto'),
+('TECNOLOGIA',         'Tecnología'),
+('ESTRATEGIA',         'Estrategia'),
+('ADMINISTRACION',     'Administración'),
+('DISENIO_EXPERIENCIA','Diseño de Experiencia'),
+('OUTSOURCING',        'Outsourcing');
 
 COMMIT;
 
@@ -202,6 +230,4 @@ COMMIT;
 -- DROP TABLE IF EXISTS service_types CASCADE;
 -- DROP TABLE IF EXISTS client_categories CASCADE;
 -- DROP TABLE IF EXISTS income_categories CASCADE;
--- DROP TABLE IF EXISTS approval_statuses CASCADE;
--- DROP TABLE IF EXISTS roles CASCADE;
 -- COMMIT;

@@ -90,6 +90,9 @@ export const configApi = {
   sectores: () => api.get('/config/sectores'),
   tiposServicio: () => api.get('/config/tipos-servicio'),
   categoriasUsuario: () => api.get('/config/categorias-usuario'),
+  segmentacionesProyecto: () => api.get('/config/segmentaciones-proyecto'),
+  categoriasProyecto: () => api.get('/config/categorias-proyecto'),
+  capasProductividad: () => api.get('/config/capas-productividad'),
 };
 
 export default api;

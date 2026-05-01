@@ -4,7 +4,7 @@ const data = require('../data/userData');
 const authData = require('../data/authData');
 const emailService = require('./emailService');
 
-function formatearUsuario(u, grupos, proyectos) {
+function formatearUsuario(u, grupos, areas) {
   return {
     id: u.id,
     email: u.email,
@@ -18,7 +18,7 @@ function formatearUsuario(u, grupos, proyectos) {
     staff: u.staff,
     super_usuario: u.super_usuario,
     equipo: u.equipo_id ? { id: u.equipo_id, nombre: u.equipo_nombre } : null,
-    area: u.area_id ? { id: u.area_id, nombre: u.area_nombre } : null,
+    areas: areas || [],
     grupos: grupos || [],
     fecha_ingreso: u.fecha_ingreso,
     creado_en: u.created_at,
@@ -31,15 +31,15 @@ async function listar(filtros) {
   const limite = Math.min(parseInt(filtros.limit) || 20, 100);
   const pagina = parseInt(filtros.page) || 1;
 
-  const usuariosConGrupos = await Promise.all(
+  const usuariosFormateados = await Promise.all(
     usuarios.map(async (u) => {
       const grupos = await data.obtenerGruposDeUsuario(u.id);
-      return formatearUsuario(u, grupos);
+      return formatearUsuario(u, grupos, u.areas || []);
     })
   );
 
   return {
-    data: usuariosConGrupos,
+    data: usuariosFormateados,
     pagination: { page: pagina, limit: limite, total, pages: Math.ceil(total / limite) },
   };
 }
@@ -48,13 +48,14 @@ async function obtenerPorId(id) {
   const usuario = await data.buscarUsuarioPorId(id);
   if (!usuario) throw new ErrorApp('Usuario no encontrado', 404);
 
-  const [grupos, proyectos] = await Promise.all([
+  const [grupos, areas, proyectos] = await Promise.all([
     data.obtenerGruposDeUsuario(id),
+    data.obtenerAreasDeUsuario(id),
     data.obtenerProyectosDeUsuario(id),
   ]);
 
   return {
-    ...formatearUsuario(usuario, grupos),
+    ...formatearUsuario(usuario, grupos, areas),
     proyectos: proyectos.map((p) => ({
       id: p.id,
       nombre: p.nombre,
@@ -80,9 +81,12 @@ async function crear(datos) {
     throw new ErrorApp('fecha_ingreso no puede ser futura', 400);
   }
 
+  if (!datos.areas || datos.areas.length === 0) {
+    throw new ErrorApp('Debe seleccionar al menos un área', 400);
+  }
+
   const usuario = await data.crearUsuario(datos);
 
-  // Generar token de activación válido 48 horas y enviar email de bienvenida
   const token = uuidv4();
   const expiracion = new Date(Date.now() + 48 * 60 * 60 * 1000);
   await authData.guardarTokenReset(usuario.id, token, expiracion);
@@ -97,6 +101,10 @@ async function actualizar(id, datos) {
 
   if (datos.numero_documento && await data.documentoExiste(datos.numero_documento, id)) {
     throw new ErrorApp('numero_documento ya está en uso por otro usuario', 400);
+  }
+
+  if (datos.areas !== undefined && datos.areas.length === 0) {
+    throw new ErrorApp('Debe seleccionar al menos un área', 400);
   }
 
   return data.actualizarUsuario(id, datos);

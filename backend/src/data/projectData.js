@@ -43,15 +43,17 @@ async function listarProyectos(filtros, usuarioId, roles) {
            c.id as cliente_id, c.nombre as cliente_nombre,
            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
            s.id as seg_id, s.nombre as seg_nombre,
-           ic.id as cat_id, ic.name as cat_nombre,
+           (SELECT pc.id FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_id,
+           (SELECT pc.nombre FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_nombre,
            ts.id as ts_id, ts.nombre as ts_nombre,
+           a.id as area_id, a.name as area_nombre,
            (SELECT COUNT(*) FROM project_users pu WHERE pu.project_id = p.id) as usuarios_count
     FROM projects p
     JOIN clients c ON c.id = p.client_id
     JOIN users g ON g.id = p.gestor_id
-    LEFT JOIN segmentations s ON s.id = p.segmentation_id
-    LEFT JOIN income_categories ic ON ic.id = p.income_category_id
+    LEFT JOIN project_segmentation s ON s.id = p.project_segmentation_id
     LEFT JOIN service_types ts ON ts.id = p.service_type_id
+    LEFT JOIN areas a ON a.id = p.area_id
     ${where}
     ORDER BY p.nombre
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -75,14 +77,16 @@ async function buscarProyectoPorId(id) {
             c.id as cliente_id, c.nombre as cliente_nombre, c.ruc,
             g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
             s.id as seg_id, s.nombre as seg_nombre,
-            ic.id as cat_id, ic.name as cat_nombre,
-            ts.id as ts_id, ts.nombre as ts_nombre
+            (SELECT pc.id FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_id,
+            (SELECT pc.nombre FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_nombre,
+            ts.id as ts_id, ts.nombre as ts_nombre,
+            a.id as area_id, a.name as area_nombre
      FROM projects p
      JOIN clients c ON c.id = p.client_id
      JOIN users g ON g.id = p.gestor_id
-     LEFT JOIN segmentations s ON s.id = p.segmentation_id
-     LEFT JOIN income_categories ic ON ic.id = p.income_category_id
+     LEFT JOIN project_segmentation s ON s.id = p.project_segmentation_id
      LEFT JOIN service_types ts ON ts.id = p.service_type_id
+     LEFT JOIN areas a ON a.id = p.area_id
      WHERE p.id = $1`,
     [id]
   );
@@ -114,21 +118,41 @@ async function usuarioTieneRolGestor(usuarioId) {
 }
 
 async function crearProyecto(datos) {
-  const { rows: [proyecto] } = await pool.query(
-    `INSERT INTO projects (code, nombre, client_id, descripcion, segmentation_id,
-                           income_category_id, productivity_layer_id, service_type_id,
-                           gestor_id, fecha_inicio, fecha_fin, activo)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-     RETURNING id, code as codigo, nombre, activo, created_at`,
-    [
-      datos.codigo, datos.nombre, datos.cliente_id, datos.descripcion || null,
-      datos.segmentacion_id, datos.categoria_ingreso_id,
-      datos.capa_productividad_id || null, datos.tipo_servicio_id || null,
-      datos.gestor_id, datos.fecha_inicio || null, datos.fecha_fin || null,
-      datos.activo !== false,
-    ]
-  );
-  return proyecto;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows: [proyecto] } = await client.query(
+      `INSERT INTO projects (code, nombre, client_id, descripcion, project_segmentation_id,
+                             productivity_layer_id, service_type_id,
+                             gestor_id, area_id, fecha_inicio, fecha_fin, activo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id, code as codigo, nombre, activo, created_at`,
+      [
+        datos.codigo, datos.nombre, datos.cliente_id, datos.descripcion || null,
+        datos.segmentacion_id || null,
+        datos.capa_productividad_id || null, datos.tipo_servicio_id || null,
+        datos.gestor_id, datos.area_id || null,
+        datos.fecha_inicio || null, datos.fecha_fin || null,
+        datos.activo !== false,
+      ]
+    );
+
+    if (datos.categoria_proyecto_id) {
+      await client.query(
+        `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [proyecto.id, datos.categoria_proyecto_id]
+      );
+    }
+
+    await client.query('COMMIT');
+    return proyecto;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function actualizarProyecto(id, datos) {
@@ -141,11 +165,11 @@ async function actualizarProyecto(id, datos) {
     nombre: datos.nombre,
     client_id: datos.cliente_id,
     descripcion: datos.descripcion,
-    segmentation_id: datos.segmentacion_id,
-    income_category_id: datos.categoria_ingreso_id,
+    project_segmentation_id: datos.segmentacion_id,
     productivity_layer_id: datos.capa_productividad_id,
     service_type_id: datos.tipo_servicio_id,
     gestor_id: datos.gestor_id,
+    area_id: datos.area_id !== undefined ? (datos.area_id || null) : undefined,
     fecha_inicio: datos.fecha_inicio,
     fecha_fin: datos.fecha_fin,
     activo: datos.activo,
@@ -158,15 +182,37 @@ async function actualizarProyecto(id, datos) {
     }
   }
 
-  if (!campos.length) return buscarProyectoPorId(id);
-  campos.push(`updated_at = NOW()`);
-  params.push(id);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const { rows: [proyecto] } = await pool.query(
-    `UPDATE projects SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, nombre, updated_at`,
-    params
-  );
-  return proyecto;
+    if (campos.length) {
+      campos.push(`updated_at = NOW()`);
+      params.push(id);
+      await client.query(
+        `UPDATE projects SET ${campos.join(', ')} WHERE id = $${idx}`,
+        params
+      );
+    }
+
+    if (datos.categoria_proyecto_id !== undefined) {
+      await client.query(`DELETE FROM project_project_categories WHERE project_id = $1`, [id]);
+      if (datos.categoria_proyecto_id) {
+        await client.query(
+          `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [id, datos.categoria_proyecto_id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    return buscarProyectoPorId(id);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function toggleActivo(id) {

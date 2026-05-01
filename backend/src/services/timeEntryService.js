@@ -106,7 +106,7 @@ async function crear(usuarioId, roles, body) {
   }
 
   for (const linea of lineas) {
-    if (linea.horas < 0 || linea.horas > 24) throw new ErrorApp('horas debe ser entre 0 y 24', 400);
+    if (linea.horas < 0) throw new ErrorApp('horas debe ser mayor o igual a 0', 400);
     if (linea.horas_extra !== undefined && (linea.horas_extra < 0 || linea.horas_extra > 8)) {
       throw new ErrorApp('horas_extra debe ser entre 0 y 8', 400);
     }
@@ -128,7 +128,7 @@ async function ajustar(id, usuarioId, lineas) {
   if (entrada.estado !== 'OBSERVADO') throw new ErrorApp('Solo se pueden editar registros en estado OBSERVADO', 403);
 
   for (const linea of lineas) {
-    if (linea.horas < 0 || linea.horas > 24) throw new ErrorApp('horas debe ser entre 0 y 24', 400);
+    if (linea.horas < 0) throw new ErrorApp('horas debe ser mayor o igual a 0', 400);
     if (linea.horas_extra !== undefined && (linea.horas_extra < 0 || linea.horas_extra > 8)) {
       throw new ErrorApp('horas_extra debe ser entre 0 y 8', 400);
     }

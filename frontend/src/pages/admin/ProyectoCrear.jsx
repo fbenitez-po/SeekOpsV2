@@ -14,19 +14,24 @@ export default function ProyectoCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     codigo: '', nombre: '', cliente_id: '', descripcion: '',
-    segmentacion_id: '', categoria_ingreso_id: '', tipo_servicio_id: '',
+    segmentacion_id: '', categoria_proyecto_id: '', tipo_servicio_id: '',
     gestor_id: '', fecha_inicio: '', fecha_fin: '', activo: true,
+    tiene_area: false, area_id: '',
   });
   const [error, setError] = useState('');
 
   const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
   const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTORES', activo: true, limit: 100 }).then((r) => r.data.data) });
-  const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones'], queryFn: () => configApi.segmentaciones().then((r) => r.data) });
-  const { data: categorias } = useQuery({ queryKey: ['categorias-ingreso'], queryFn: () => configApi.categoriasIngreso().then((r) => r.data) });
+  const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
+  const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });
+  const { data: areas } = useQuery({ queryKey: ['areas'], queryFn: () => configApi.areas().then((r) => r.data) });
 
   const mutation = useMutation({
-    mutationFn: (datos) => projectApi.crear(datos),
+    mutationFn: (datos) => {
+      const { tiene_area, ...resto } = datos;
+      return projectApi.crear({ ...resto, area_id: tiene_area ? resto.area_id || null : null });
+    },
     onSuccess: () => navigate('/admin/proyectos'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear proyecto'),
   });
@@ -82,8 +87,8 @@ export default function ProyectoCrear() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Categoría de ingreso *</Label>
-                <Select value={form.categoria_ingreso_id} onValueChange={set('categoria_ingreso_id')}>
+                <Label>Categoría</Label>
+                <Select value={form.categoria_proyecto_id} onValueChange={set('categoria_proyecto_id')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
                   <SelectContent>{(categorias || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
@@ -103,6 +108,31 @@ export default function ProyectoCrear() {
                 <Label>Fecha fin</Label>
                 <Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Área aplicable</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.tiene_area}
+                  onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
+                  className="h-4 w-4 rounded border"
+                  style={{ accentColor: '#0f172a' }}
+                />
+                <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
+              </label>
+              {form.tiene_area && (
+                <div className="space-y-2">
+                  <Label>Área *</Label>
+                  <Select value={form.area_id} onValueChange={set('area_id')}>
+                    <SelectTrigger><SelectValue placeholder="Seleccioná el área" /></SelectTrigger>
+                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -9,6 +9,40 @@ import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
+function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
+  function toggle(id) {
+    if (seleccionados.includes(id)) {
+      if (seleccionados.length <= minimo) return;
+      onChange(seleccionados.filter((s) => s !== id));
+    } else {
+      onChange([...seleccionados, id]);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(opciones || []).map((o) => {
+        const activo = seleccionados.includes(o.id);
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => toggle(o.id)}
+            className="rounded-md px-3 py-1.5 text-sm font-medium border transition-colors"
+            style={{
+              backgroundColor: activo ? '#0f172a' : '#ffffff',
+              color: activo ? '#ffffff' : '#0f172a',
+              borderColor: activo ? '#0f172a' : '#e2e8f0',
+            }}
+          >
+            {o.nombre}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function SelectorGrupos({ grupos, seleccionados, onChange }) {
   function toggle(codigo) {
     if (seleccionados.includes(codigo)) {
@@ -47,7 +81,7 @@ export default function UsuarioCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     email: '', nombres: '', apellidos: '', numero_documento: '',
-    puesto: '', celular: '', equipo_id: '', area_id: '',
+    puesto: '', celular: '', equipo_id: '', areas: [],
     fecha_ingreso: '', activo: true, staff: false, super_usuario: false,
     grupos: ['SEEKER'],
   });
@@ -68,6 +102,10 @@ export default function UsuarioCrear() {
   function manejarSubmit(e) {
     e.preventDefault();
     setError('');
+    if (form.areas.length === 0) {
+      setError('Debe seleccionar al menos un área');
+      return;
+    }
     mutation.mutate(form);
   }
 
@@ -118,15 +156,20 @@ export default function UsuarioCrear() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Área *</Label>
-                <Select value={form.area_id} onValueChange={set('area_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná área" /></SelectTrigger>
-                  <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
                 <Label>Fecha de ingreso *</Label>
                 <Input type="date" value={form.fecha_ingreso} onChange={set('fecha_ingreso')} required max={new Date().toISOString().split('T')[0]} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, podés seleccionar varias)</span></Label>
+                <SelectorMultiple
+                  opciones={areas}
+                  seleccionados={form.areas}
+                  onChange={(v) => setForm((f) => ({ ...f, areas: v }))}
+                  minimo={1}
+                />
+                {form.areas.length === 0 && (
+                  <p className="text-xs" style={{ color: '#dc2626' }}>Seleccioná al menos un área.</p>
+                )}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Grupos / Roles *</Label>

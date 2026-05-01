@@ -18,7 +18,6 @@ function construirFiltros(filtros) {
     condiciones.push(`u.team_id = $${idx++}`);
   }
 
-
   return { params, condiciones };
 }
 
@@ -33,10 +32,13 @@ async function listarUsuarios(filtros) {
            u.celular, u.avatar_url, u.activo, u.staff, u.super_usuario,
            u.fecha_ingreso, u.created_at, u.updated_at,
            t.id as equipo_id, t.name as equipo_nombre,
-           a.id as area_id, a.name as area_nombre
+           (
+             SELECT JSON_AGG(json_build_object('id', a.id, 'nombre', a.name) ORDER BY a.name)
+             FROM user_areas ua JOIN areas a ON a.id = ua.area_id
+             WHERE ua.user_id = u.id
+           ) as areas
     FROM users u
     LEFT JOIN teams t ON t.id = u.team_id
-    LEFT JOIN areas a ON a.id = u.area_id
     ${where}
     ORDER BY u.apellidos, u.nombres
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -62,6 +64,16 @@ async function obtenerGruposDeUsuario(usuarioId) {
   return filas.map((f) => f.codigo);
 }
 
+async function obtenerAreasDeUsuario(usuarioId) {
+  return consultar(
+    `SELECT a.id, a.name as nombre
+     FROM areas a JOIN user_areas ua ON ua.area_id = a.id
+     WHERE ua.user_id = $1
+     ORDER BY a.name`,
+    [usuarioId]
+  );
+}
+
 async function obtenerProyectosDeUsuario(usuarioId) {
   return consultar(
     `SELECT p.id, p.nombre, p.code as codigo, c.nombre as cliente, pu.rol, p.activo
@@ -78,11 +90,9 @@ async function buscarUsuarioPorId(id) {
     `SELECT u.id, u.email, u.nombres, u.apellidos, u.numero_documento, u.puesto,
             u.celular, u.avatar_url, u.activo, u.staff, u.super_usuario,
             u.fecha_ingreso, u.created_at, u.updated_at, u.deactivated_at,
-            t.id as equipo_id, t.name as equipo_nombre,
-            a.id as area_id, a.name as area_nombre
+            t.id as equipo_id, t.name as equipo_nombre
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
-     LEFT JOIN areas a ON a.id = u.area_id
      WHERE u.id = $1`,
     [id]
   );
@@ -111,18 +121,25 @@ async function crearUsuario(datos) {
 
     const { rows: [usuario] } = await client.query(
       `INSERT INTO users (email, password_hash, nombres, apellidos, numero_documento, puesto,
-                          celular, avatar_url, team_id, area_id, fecha_ingreso, activo, staff, super_usuario)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                          celular, avatar_url, team_id, fecha_ingreso, activo, staff, super_usuario)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING id, email, nombres, apellidos, activo, created_at`,
       [
         datos.email,
-        '$placeholder$', // se actualiza tras confirmar contraseña via reset
+        '$placeholder$',
         datos.nombres, datos.apellidos, datos.numero_documento,
         datos.puesto, datos.celular || null, datos.avatar_url || null,
-        datos.equipo_id, datos.area_id, datos.fecha_ingreso,
+        datos.equipo_id, datos.fecha_ingreso,
         datos.activo !== false, datos.staff || false, datos.super_usuario || false,
       ]
     );
+
+    for (const areaId of (datos.areas || [])) {
+      await client.query(
+        `INSERT INTO user_areas (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [usuario.id, areaId]
+      );
+    }
 
     for (const grupoCodigo of (datos.grupos || [])) {
       await client.query(
@@ -143,54 +160,73 @@ async function crearUsuario(datos) {
 }
 
 async function actualizarUsuario(id, datos) {
-  const campos = [];
-  const params = [];
-  let idx = 1;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const mapeados = {
-    nombres: datos.nombres,
-    apellidos: datos.apellidos,
-    numero_documento: datos.numero_documento,
-    puesto: datos.puesto,
-    celular: datos.celular,
-    avatar_url: datos.avatar_url,
-    team_id: datos.equipo_id,
-    area_id: datos.area_id,
-    fecha_ingreso: datos.fecha_ingreso,
-    activo: datos.activo,
-    staff: datos.staff,
-    super_usuario: datos.super_usuario,
-  };
+    const campos = [];
+    const params = [];
+    let idx = 1;
 
-  for (const [campo, valor] of Object.entries(mapeados)) {
-    if (valor !== undefined) {
-      campos.push(`${campo} = $${idx++}`);
-      params.push(valor);
+    const mapeados = {
+      nombres: datos.nombres,
+      apellidos: datos.apellidos,
+      numero_documento: datos.numero_documento,
+      puesto: datos.puesto,
+      celular: datos.celular,
+      avatar_url: datos.avatar_url,
+      team_id: datos.equipo_id,
+      fecha_ingreso: datos.fecha_ingreso,
+      activo: datos.activo,
+      staff: datos.staff,
+      super_usuario: datos.super_usuario,
+    };
+
+    for (const [campo, valor] of Object.entries(mapeados)) {
+      if (valor !== undefined) {
+        campos.push(`${campo} = $${idx++}`);
+        params.push(valor);
+      }
     }
-  }
 
-  if (!campos.length) return buscarUsuarioPorId(id);
-
-  campos.push(`updated_at = NOW()`);
-  params.push(id);
-
-  const { rows: [usuario] } = await pool.query(
-    `UPDATE users SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, nombres, apellidos, updated_at`,
-    params
-  );
-
-  if (datos.grupos) {
-    await pool.query(`DELETE FROM user_group_members WHERE user_id = $1`, [id]);
-    for (const grupoCodigo of datos.grupos) {
-      await pool.query(
-        `INSERT INTO user_group_members (user_id, group_id)
-         SELECT $1, id FROM user_groups WHERE codigo = $2 ON CONFLICT DO NOTHING`,
-        [id, grupoCodigo]
+    if (campos.length) {
+      campos.push(`updated_at = NOW()`);
+      params.push(id);
+      await client.query(
+        `UPDATE users SET ${campos.join(', ')} WHERE id = $${idx}`,
+        params
       );
     }
-  }
 
-  return usuario;
+    if (datos.areas) {
+      await client.query(`DELETE FROM user_areas WHERE user_id = $1`, [id]);
+      for (const areaId of datos.areas) {
+        await client.query(
+          `INSERT INTO user_areas (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [id, areaId]
+        );
+      }
+    }
+
+    if (datos.grupos) {
+      await client.query(`DELETE FROM user_group_members WHERE user_id = $1`, [id]);
+      for (const grupoCodigo of datos.grupos) {
+        await client.query(
+          `INSERT INTO user_group_members (user_id, group_id)
+           SELECT $1, id FROM user_groups WHERE codigo = $2 ON CONFLICT DO NOTHING`,
+          [id, grupoCodigo]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    return buscarUsuarioPorId(id);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function toggleActivo(id) {
@@ -209,6 +245,7 @@ async function toggleActivo(id) {
 module.exports = {
   listarUsuarios,
   obtenerGruposDeUsuario,
+  obtenerAreasDeUsuario,
   obtenerProyectosDeUsuario,
   buscarUsuarioPorId,
   emailExiste,

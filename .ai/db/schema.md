@@ -12,7 +12,9 @@
 ┌─────────────────────────────────────────────────────────┐
 │                    CONFIGURACIÓN                         │
 ├─────────────────────────────────────────────────────────┤
-│ • roles                    • approval_statuses            │
+│ • income_categories        • service_types               │
+│ • segmentations            • sectors                      │
+│ • teams                    • areas                        │
 │ • income_categories        • service_types               │
 │ • segmentations           • sectors                       │
 │ • teams                   • areas                         │
@@ -24,6 +26,7 @@
 │                                                           │
 │  users ──→ [Multiple roles] ←──┐                         │
 │    ├─→ user_group_members      │                         │
+│    ├─→ user_areas (M2M)        │                         │
 │    ├─→ project_users ──────┐   │                         │
 │    └─→ time_entry_approvals│   │                         │
 │                             │   │                         │
@@ -39,107 +42,63 @@
 
 ## Entidades Identificadas
 
-- **roles:** Tipos de rol del sistema (Seeker, Gestor, Admin, Supervisor)
-- **approval_statuses:** Estados de aprobación de time entries (PENDIENTE, APROBADO, OBSERVADO, RECHAZADO)
-- **income_categories:** Categorías de ingreso para proyectos tipo "Area"
+### Configuración de Clientes
+- **client_categories:** Categorías de cliente (renombrado de `income_categories` para clientes)
+- **client_segmentations:** Segmentaciones de clientes (renombrado de `segmentations`)
+- **client_sectors:** Sectores económicos del cliente (renombrado de `sectors`)
+
+### Configuración de Proyectos
+- **income_categories:** Categorías de ingreso usadas en líneas de carga de horas (`time_entry_lines`)
+- **project_categories:** Categorías de ingreso del proyecto (multi-select, M2M con projects)
+- **project_segmentation:** Segmentación del proyecto (tabla propia, separada de clientes)
+- **productivity_layers:** Capa de productividad del proyecto (tabla propia)
 - **service_types:** Tipos de servicio (Consultoría, Desarrollo, etc.)
-- **segmentations:** Segmentaciones de mercado (Enterprise, Mid Market, SMB)
-- **sectors:** Sectores económicos (Tecnología, Finanzas, etc.)
+
+### Configuración General
 - **teams:** Equipos de trabajo
 - **areas:** Áreas funcionales de la empresa
+
+### Core
 - **users:** Usuarios del sistema (Seekers, Gestores, Admins)
 - **user_groups:** Grupos de permisos (Administradores, Seekers, Gestores)
 - **user_group_members:** Relación M2M entre usuarios y grupos
 - **clients:** Clientes para los que se trabaja
 - **projects:** Proyectos de clientes
+
+### Relaciones
+- **user_areas:** Relación M2M entre usuarios y áreas (mínimo 1 requerida)
 - **project_users:** Relación M2M entre usuarios y proyectos con roles asignados
+- **project_project_categories:** Relación M2M entre proyectos y sus categorías (multi-select)
+
+### Transaccional
 - **time_entries:** Registros semanales de horas (cabecera)
-- **time_entry_lines:** Líneas detalladas de horas por proyecto dentro de cada entrada
-- **time_entry_approvals:** Historial de acciones (aprobación, observación, rechazo) en time entries
+- **time_entry_lines:** Líneas detalladas de horas por proyecto
+- **time_entry_approvals:** Historial de acciones (aprobación, observación, rechazo)
 
 ---
 
 ## Tablas de Configuración
 
-### roles
-
-**Descripción:** Tipos de rol disponibles en el sistema (read-only, prellenada).
-
-```sql
-CREATE TABLE roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  activo BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Data seed:
--- ('SEEKER', 'Seeker', 'Empleado que registra horas'),
--- ('GESTOR', 'Gestor', 'Líder que aprueba horas'),
--- ('ADMIN', 'Admin', 'Administrador del sistema'),
--- ('SUPERVISOR', 'Supervisor', 'Supervisor de equipos')
-```
-
-**Índices:**
-- `idx_roles_codigo`: búsqueda por código (asignación de roles)
-
-```sql
-CREATE INDEX idx_roles_codigo ON roles(codigo);
-```
-
----
-
-### approval_statuses
-
-**Descripción:** Estados posibles de un time entry (read-only, prellenada).
-
-```sql
-CREATE TABLE approval_statuses (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Data seed:
--- ('PENDIENTE', 'Pendiente', 'Esperando aprobación'),
--- ('APROBADO', 'Aprobado', 'Aprobado por gestor'),
--- ('OBSERVADO', 'Observado', 'Con observaciones del gestor'),
--- ('RECHAZADO', 'Rechazado', 'Rechazado por gestor')
-```
-
-**Índices:**
-- `idx_approval_statuses_codigo`: búsqueda por código
-
-```sql
-CREATE INDEX idx_approval_statuses_codigo ON approval_statuses(codigo);
-```
-
----
-
 ### income_categories
 
-**Descripción:** Categorías de ingreso para proyectos tipo "Area".
+**Descripción:** Categorías de ingreso usadas en líneas de carga de horas (`time_entry_lines`). No se usa directamente en proyectos.
 
 ```sql
 CREATE TABLE income_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
+  name VARCHAR(100) NOT NULL,
   descripcion TEXT,
   activo BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Data seed examples:
--- ('CONSULTORÍA', 'Consultoría', ''),
--- ('DESARROLLO', 'Desarrollo', ''),
--- ('MANTENIMIENTO', 'Mantenimiento', '')
+INSERT INTO income_categories (codigo, name) VALUES
+  ('CONSULTORIA',   'Consultoría'),
+  ('DESARROLLO',    'Desarrollo'),
+  ('MANTENIMIENTO', 'Mantenimiento'),
+  ('SOPORTE',       'Soporte');
 ```
 
 **Índices:**
@@ -147,6 +106,237 @@ CREATE TABLE income_categories (
 
 ```sql
 CREATE INDEX idx_income_categories_codigo ON income_categories(codigo);
+```
+
+---
+
+### client_categories
+
+**Descripción:** Categorías de cliente (ej: tipo de relación comercial). Exclusivo de `clients`.
+
+```sql
+CREATE TABLE client_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO client_categories (codigo, name) VALUES
+  ('ESTRATEGIA',             'Estrategia'),
+  ('GESTORES_GESTION',       'Gestores - Gestión y planeamiento'),
+  ('UX_RESEARCH',            'User Experience - Research'),
+  ('UI',                     'User Interface'),
+  ('DEV_FRONTEND',           'Development - Front End'),
+  ('SEO',                    'SEO'),
+  ('DEV_BACKEND',            'Development - Back - End'),
+  ('DEV_QA',                 'Development - QA'),
+  ('UX_PROTOTYPE',           'User Experience - Prototype'),
+  ('DISENIO_SOCIAL_MEDIA',   'Diseño Social Media'),
+  ('APOYO',                  'Apoyo'),
+  ('UI_PROTOTYPE',           'User Interface - Prototype'),
+  ('UX_TESTING',             'User Experience - Testing'),
+  ('LIDERES_GESTION',        'Líderes - Gestión'),
+  ('PRODUCT_MANAGEMENT',     'Product Management'),
+  ('CAPACITACIONES',         'Capacitaciones'),
+  ('PROPUESTAS_COMERCIALES', 'Propuestas Comerciales'),
+  ('RECLUTAMIENTO',          'Reclutamiento');
+```
+
+**Índices:**
+- `idx_client_categories_codigo`
+
+```sql
+CREATE INDEX idx_client_categories_codigo ON client_categories(codigo);
+```
+
+---
+
+### client_segmentations
+
+**Descripción:** Segmentación de mercado del cliente (Enterprise, Mid Market, SMB). Exclusivo de `clients`. *(Renombrado de `segmentations` en migration 005.)*
+
+```sql
+CREATE TABLE client_segmentations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO client_segmentations (codigo, nombre) VALUES
+  ('CUENTA_CLAVE',          'Cuenta Clave'),
+  ('CUENTA_INTERNACIONAL',  'Cuenta Internacional'),
+  ('CUENTA_DESARROLLO',     'Cuenta Desarrollo'),
+  ('CUENTA_CASUAL',         'Cuenta Casual'),
+  ('CUENTA_INACTIVA',       'Cuenta Inactiva'),
+  ('CUENTA_EXCLUIDA',       'Cuenta Excluida'),
+  ('NUEVOS_CLIENTES',       'Nuevos Clientes');
+```
+
+**Índices:**
+- `idx_client_segmentations_codigo`
+
+```sql
+CREATE INDEX idx_client_segmentations_codigo ON client_segmentations(codigo);
+```
+
+---
+
+### client_sectors
+
+**Descripción:** Sector económico del cliente (Tecnología, Finanzas, etc.). Exclusivo de `clients`. *(Renombrado de `sectors` en migration 005.)*
+
+```sql
+CREATE TABLE client_sectors (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO client_sectors (codigo, nombre) VALUES
+  ('CONSULTORIA',          'Consultoría'),
+  ('BANCA_FINANCIERO',     'Banca y Servicios Financieros'),
+  ('TECNOLOGIA',           'Tecnología'),
+  ('TRANSPORTE',           'Transporte'),
+  ('ALIMENTACION',         'Alimentación'),
+  ('CUIDADO_PERSONAL',     'Cuidado Personal'),
+  ('INST_EDUCATIVAS',      'Instituciones Educativas'),
+  ('RETAIL',               'Retail'),
+  ('CONSTRUCCION',         'Construcción'),
+  ('SALUD_FARMA',          'Salud y Farma'),
+  ('VARIOS',               'Varios'),
+  ('PESCA',                'Pesca'),
+  ('GOBIERNO',             'Gobierno'),
+  ('INMOBILIARIO',         'Inmobiliario'),
+  ('ACELERADORA',          'Aceleradora'),
+  ('MARKETING',            'Marketing'),
+  ('PUBLICIDAD',           'Publicidad'),
+  ('LOGISTICA_SUMINISTRO', 'Logistica y Suministro'),
+  ('SEGUROS',              'Seguros'),
+  ('TELECOMUNICACIONES',   'Telecomunicaciones'),
+  ('CONSUMO_MASIVO',       'Consumo Masivo'),
+  ('HIDROCARBUROS',        'Hidrocarburos'),
+  ('SERVICIOS',            'Servicios'),
+  ('HOTELERIA_TURISMO',    'Hoteleria y Turismo'),
+  ('INDUSTRIAL',           'Industrial'),
+  ('ENERGIA',              'Energía'),
+  ('CEMENTOS',             'Cementos'),
+  ('EDUCACION',            'Educación'),
+  ('MINERIA',              'Minería'),
+  ('INST_DEPORTIVAS',      'Instituciones Deportivas'),
+  ('AUTOMOTRIZ',           'Automotriz'),
+  ('ONG',                  'ONG'),
+  ('BELLEZA',              'Belleza');
+```
+
+**Índices:**
+- `idx_client_sectors_codigo`
+
+```sql
+CREATE INDEX idx_client_sectors_codigo ON client_sectors(codigo);
+```
+
+---
+
+### project_segmentation
+
+**Descripción:** Segmentación del proyecto. Tabla propia, separada de la segmentación de clientes. Exclusivo de `projects`.
+
+```sql
+CREATE TABLE project_segmentation (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO project_segmentation (codigo, nombre, descripcion) VALUES
+  ('ENTERPRISE', 'Enterprise',  'Proyectos de clientes grandes'),
+  ('MID_MARKET', 'Mid Market',  'Proyectos de clientes medianos'),
+  ('SMB',        'SMB',         'Proyectos de clientes pequeños');
+```
+
+**Índices:**
+- `idx_project_segmentation_codigo`
+
+```sql
+CREATE INDEX idx_project_segmentation_codigo ON project_segmentation(codigo);
+```
+
+---
+
+### project_categories
+
+**Descripción:** Categorías de ingreso del proyecto. Multi-select: un proyecto puede tener varias. Se relaciona vía `project_project_categories` (M2M).
+
+```sql
+CREATE TABLE project_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO project_categories (codigo, nombre) VALUES
+  ('CONSULTORIA',   'Consultoría'),
+  ('DESARROLLO',    'Desarrollo'),
+  ('MANTENIMIENTO', 'Mantenimiento'),
+  ('SOPORTE',       'Soporte');
+```
+
+**Índices:**
+- `idx_project_categories_codigo`
+
+```sql
+CREATE INDEX idx_project_categories_codigo ON project_categories(codigo);
+```
+
+---
+
+### productivity_layers
+
+**Descripción:** Capa de productividad del proyecto. Tabla propia, separada de `income_categories`. Exclusivo de `projects`.
+
+```sql
+CREATE TABLE productivity_layers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(50) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion TEXT,
+  activo BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Seeds iniciales — ajustar según definición de negocio
+INSERT INTO productivity_layers (codigo, nombre) VALUES
+  ('ALTA',  'Alta'),
+  ('MEDIA', 'Media'),
+  ('BAJA',  'Baja');
+```
+
+**Índices:**
+- `idx_productivity_layers_codigo`
+
+```sql
+CREATE INDEX idx_productivity_layers_codigo ON productivity_layers(codigo);
 ```
 
 ---
@@ -165,11 +355,6 @@ CREATE TABLE service_types (
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
--- Data seed examples:
--- ('CONSULTORÍA', 'Consultoría'),
--- ('DESARROLLO', 'Desarrollo'),
--- ('SOPORTE', 'Soporte Técnico')
 ```
 
 **Índices:**
@@ -177,66 +362,6 @@ CREATE TABLE service_types (
 
 ```sql
 CREATE INDEX idx_service_types_codigo ON service_types(codigo);
-```
-
----
-
-### segmentations
-
-**Descripción:** Segmentaciones de mercado (Enterprise, Mid Market, SMB).
-
-```sql
-CREATE TABLE segmentations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  activo BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Data seed:
--- ('ENTERPRISE', 'Enterprise', 'Clientes grandes'),
--- ('MID_MARKET', 'Mid Market', 'Clientes medianos'),
--- ('SMB', 'SMB', 'Pequeñas y medianas empresas')
-```
-
-**Índices:**
-- `idx_segmentations_codigo`: búsqueda por código
-
-```sql
-CREATE INDEX idx_segmentations_codigo ON segmentations(codigo);
-```
-
----
-
-### sectors
-
-**Descripción:** Sectores económicos (Tecnología, Finanzas, etc.).
-
-```sql
-CREATE TABLE sectors (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(50) NOT NULL UNIQUE,
-  nombre VARCHAR(100) NOT NULL,
-  descripcion TEXT,
-  activo BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- Data seed examples:
--- ('TECNOLOGÍA', 'Tecnología'),
--- ('FINANZAS', 'Finanzas'),
--- ('RETAIL', 'Retail')
-```
-
-**Índices:**
-- `idx_sectors_codigo`: búsqueda por código
-
-```sql
-CREATE INDEX idx_sectors_codigo ON sectors(codigo);
 ```
 
 ---
@@ -256,10 +381,20 @@ CREATE TABLE teams (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Data seed examples:
--- ('BACKEND', 'Backend'),
--- ('FRONTEND', 'Frontend'),
--- ('QA', 'Quality Assurance')
+INSERT INTO teams (codigo, name) VALUES
+  ('UI',                 'U.Interface'),
+  ('UX',                 'U.Experience'),
+  ('BRANDING',           'Branding'),
+  ('CLIENTE',            'Cliente'),
+  ('DIRECTOR',           'Director'),
+  ('SEO',                'SEO'),
+  ('OUTSOURCING',        'Outsourcing'),
+  ('ADMINISTRATIVO',     'Administrativo'),
+  ('SOCIAL_MEDIA',       'Social Media'),
+  ('ESTRATEGIA',         'Estrategia'),
+  ('PRODUCTO',           'Producto'),
+  ('DISENIO_EXPERIENCIA','Diseño de Experiencia'),
+  ('TECNOLOGIA',         'Tecnología');
 ```
 
 **Índices:**
@@ -286,10 +421,15 @@ CREATE TABLE areas (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Data seed examples:
--- ('DESARROLLO', 'Desarrollo'),
--- ('OPERACIONES', 'Operaciones'),
--- ('RECURSOS', 'Recursos Humanos')
+INSERT INTO areas (codigo, name) VALUES
+  ('TALENTO_CULTURA',    'Talento & Cultura'),
+  ('COMERCIAL',          'Comercial'),
+  ('PRODUCTO',           'Producto'),
+  ('TECNOLOGIA',         'Tecnología'),
+  ('ESTRATEGIA',         'Estrategia'),
+  ('ADMINISTRACION',     'Administración'),
+  ('DISENIO_EXPERIENCIA','Diseño de Experiencia'),
+  ('OUTSOURCING',        'Outsourcing');
 ```
 
 **Índices:**
@@ -319,7 +459,7 @@ CREATE TABLE users (
   avatar_url VARCHAR(500),
   
   equipo_id UUID NOT NULL REFERENCES teams(id),
-  area_id UUID NOT NULL REFERENCES areas(id),
+  -- area_id eliminado: reemplazado por tabla user_areas (M2M)
   fecha_ingreso DATE NOT NULL,
   
   activo BOOLEAN NOT NULL DEFAULT true,
@@ -416,34 +556,34 @@ CREATE TABLE clients (
   razon_social VARCHAR(150),
   razon_comercial VARCHAR(150),
   ruc VARCHAR(14) NOT NULL UNIQUE,
-  
+
   nombre_contacto VARCHAR(100),
   email_contacto VARCHAR(255),
   telefono VARCHAR(20),
   direccion VARCHAR(200),
-  
-  categoria_usuario_id UUID NOT NULL REFERENCES income_categories(id),
-  segmentacion_id UUID NOT NULL REFERENCES segmentations(id),
-  sector_id UUID REFERENCES sectors(id),
-  
+
+  client_category_id  UUID NOT NULL REFERENCES client_categories(id),
+  segmentation_id     UUID NOT NULL REFERENCES client_segmentations(id),
+  sector_id           UUID REFERENCES client_sectors(id),
+
   activo BOOLEAN NOT NULL DEFAULT true,
-  
+
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by UUID NOT NULL REFERENCES users(id),
-  updated_by UUID NOT NULL REFERENCES users(id)
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_clients_ruc ON clients(ruc);
-CREATE INDEX idx_clients_activo ON clients(activo);
-CREATE INDEX idx_clients_segmentacion_id ON clients(segmentacion_id);
-CREATE INDEX idx_clients_sector_id ON clients(sector_id);
+CREATE INDEX idx_clients_ruc            ON clients(ruc);
+CREATE INDEX idx_clients_activo         ON clients(activo);
+CREATE INDEX idx_clients_segmentation_id ON clients(segmentation_id);
+CREATE INDEX idx_clients_sector_id      ON clients(sector_id);
 ```
 
 **Índices:**
 - `idx_clients_ruc`: búsqueda por RUC (unicidad)
 - `idx_clients_activo`: filtrar clientes activos
-- `idx_clients_segmentacion_id`: listar clientes por segmentación
+- `idx_clients_segmentation_id`: listar clientes por segmentación
 - `idx_clients_sector_id`: listar clientes por sector
 
 ---
@@ -452,48 +592,71 @@ CREATE INDEX idx_clients_sector_id ON clients(sector_id);
 
 **Descripción:** Proyectos de clientes. Soft delete con campo `activo`.
 
+**Nota:** `project_categories` es multi-select y se maneja vía la tabla M2M `project_project_categories`.
+
 ```sql
 CREATE TABLE projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  codigo VARCHAR(20) NOT NULL UNIQUE,
+  code VARCHAR(20) NOT NULL UNIQUE,
   nombre VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  
-  cliente_id UUID NOT NULL REFERENCES clients(id),
-  segmentacion_id UUID NOT NULL REFERENCES segmentations(id),
-  categoria_ingreso_id UUID NOT NULL REFERENCES income_categories(id),
-  capa_productividad_id UUID REFERENCES income_categories(id),
-  tipo_servicio_id UUID REFERENCES service_types(id),
-  
+
+  client_id               UUID NOT NULL REFERENCES clients(id),
+  project_segmentation_id UUID NOT NULL REFERENCES project_segmentation(id),
+  productivity_layer_id   UUID REFERENCES productivity_layers(id),
+  service_type_id         UUID REFERENCES service_types(id),
+
   gestor_id UUID NOT NULL REFERENCES users(id),
-  
+  area_id   UUID REFERENCES areas(id),  -- opcional: área específica del proyecto
+
   fecha_inicio DATE,
-  fecha_fin DATE,
-  
+  fecha_fin    DATE,
+
   activo BOOLEAN NOT NULL DEFAULT true,
-  
+
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by UUID NOT NULL REFERENCES users(id),
-  updated_by UUID NOT NULL REFERENCES users(id),
-  
-  CONSTRAINT check_fecha_fin_mayor_inicio 
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+
+  CONSTRAINT check_fecha_fin_mayor_inicio
     CHECK (fecha_fin IS NULL OR fecha_inicio IS NULL OR fecha_fin >= fecha_inicio)
 );
 
-CREATE INDEX idx_projects_codigo ON projects(codigo);
-CREATE INDEX idx_projects_cliente_id ON projects(cliente_id);
-CREATE INDEX idx_projects_gestor_id ON projects(gestor_id);
-CREATE INDEX idx_projects_activo ON projects(activo);
-CREATE INDEX idx_projects_categoria_ingreso_id ON projects(categoria_ingreso_id);
+CREATE INDEX idx_projects_code                    ON projects(code);
+CREATE INDEX idx_projects_client_id               ON projects(client_id);
+CREATE INDEX idx_projects_gestor_id               ON projects(gestor_id);
+CREATE INDEX idx_projects_activo                  ON projects(activo);
+CREATE INDEX idx_projects_project_segmentation_id ON projects(project_segmentation_id);
+CREATE INDEX idx_projects_area_id                 ON projects(area_id);
+```
+
+### project_project_categories
+
+**Descripción:** Relación M2M entre proyectos y sus categorías de ingreso. Un proyecto puede tener múltiples categorías seleccionadas.
+
+```sql
+CREATE TABLE project_project_categories (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id          UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  project_category_id UUID NOT NULL REFERENCES project_categories(id),
+  created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+
+  UNIQUE(project_id, project_category_id)
+);
+
+CREATE INDEX idx_ppc_project_id  ON project_project_categories(project_id);
+CREATE INDEX idx_ppc_category_id ON project_project_categories(project_category_id);
 ```
 
 **Índices:**
-- `idx_projects_codigo`: búsqueda por código
-- `idx_projects_cliente_id`: listar proyectos de un cliente
+- `idx_projects_code`: búsqueda por código
+- `idx_projects_client_id`: listar proyectos de un cliente
 - `idx_projects_gestor_id`: listar proyectos de un gestor
 - `idx_projects_activo`: filtrar proyectos activos
-- `idx_projects_categoria_ingreso_id`: filtrar por categoría
+- `idx_projects_project_segmentation_id`: filtrar por segmentación
+- `idx_ppc_project_id`: categorías de un proyecto
+- `idx_ppc_category_id`: proyectos por categoría (reportes)
 
 ---
 
@@ -506,7 +669,7 @@ CREATE TABLE project_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   proyecto_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   usuario_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  rol_id UUID NOT NULL REFERENCES roles(id),
+  rol VARCHAR(50) NOT NULL,
   
   activo BOOLEAN NOT NULL DEFAULT true,
   
@@ -515,19 +678,17 @@ CREATE TABLE project_users (
   created_by UUID NOT NULL REFERENCES users(id),
   updated_by UUID NOT NULL REFERENCES users(id),
   
-  UNIQUE(proyecto_id, usuario_id, rol_id)
+  UNIQUE(proyecto_id, usuario_id, rol)
 );
 
 CREATE INDEX idx_project_users_proyecto_id ON project_users(proyecto_id);
 CREATE INDEX idx_project_users_usuario_id ON project_users(usuario_id);
-CREATE INDEX idx_project_users_rol_id ON project_users(rol_id);
 CREATE INDEX idx_project_users_activo ON project_users(activo);
 ```
 
 **Índices:**
 - `idx_project_users_proyecto_id`: listar usuarios de un proyecto
 - `idx_project_users_usuario_id`: listar proyectos de un usuario
-- `idx_project_users_rol_id`: listar asignaciones por rol
 - `idx_project_users_activo`: filtrar asignaciones activas
 
 ---
@@ -542,7 +703,7 @@ CREATE TABLE time_entries (
   usuario_id UUID NOT NULL REFERENCES users(id),
   semana VARCHAR(10) NOT NULL,  -- Ej: "S15/24"
   
-  estado_id UUID NOT NULL REFERENCES approval_statuses(id),
+  estado VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   
   fecha_carga TIMESTAMP NOT NULL DEFAULT NOW(),
   
@@ -558,14 +719,14 @@ CREATE TABLE time_entries (
 
 CREATE INDEX idx_time_entries_usuario_id ON time_entries(usuario_id);
 CREATE INDEX idx_time_entries_semana ON time_entries(semana);
-CREATE INDEX idx_time_entries_estado_id ON time_entries(estado_id);
+CREATE INDEX idx_time_entries_estado ON time_entries(estado);
 CREATE INDEX idx_time_entries_usuario_semana ON time_entries(usuario_id, semana);
 ```
 
 **Índices:**
 - `idx_time_entries_usuario_id`: listar cargas de un usuario
 - `idx_time_entries_semana`: buscar por semana
-- `idx_time_entries_estado_id`: filtrar por estado
+- `idx_time_entries_estado`: filtrar por estado
 - `idx_time_entries_usuario_semana`: combo para evitar duplicados (usuario + semana única implícitamente)
 
 ---
@@ -612,8 +773,6 @@ CREATE TABLE time_entry_approvals (
   time_entry_id UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
   
   tipo_accion VARCHAR(50) NOT NULL,  -- 'APROBACIÓN', 'OBSERVACIÓN', 'RECHAZO', 'AJUSTE'
-  estado_anterior_id UUID REFERENCES approval_statuses(id),
-  estado_nuevo_id UUID NOT NULL REFERENCES approval_statuses(id),
   
   comentario TEXT,
   sugerencia_horas INTEGER,
@@ -643,24 +802,28 @@ CREATE INDEX idx_time_entry_approvals_created_at ON time_entry_approvals(created
 
 | Tabla A | Relación | Tabla B | Implementación |
 |---------|----------|---------|---|
-| users | 1:N | time_entries | FK usuario_id |
-| users | 1:N | project_users | FK usuario_id |
-| users | 1:N | user_group_members | FK usuario_id |
+| users | N:1 | teams | FK team_id |
+| users | M:N | areas | via user_areas |
+| users | 1:N | user_group_members | FK user_id |
+| users | 1:N | project_users | FK user_id |
 | users | 1:N | projects | FK gestor_id |
+| users | 1:N | time_entries | FK user_id |
 | users | 1:N | time_entry_approvals | FK created_by |
-| users | N:1 | teams | FK equipo_id |
-| users | N:1 | areas | FK area_id |
-| clients | 1:N | projects | FK cliente_id |
-| projects | 1:N | time_entries | Indirecto (via project_users) |
-| projects | 1:N | project_users | FK proyecto_id |
-| projects | 1:N | time_entry_lines | FK proyecto_id |
-| projects | N:1 | income_categories | FK categoria_ingreso_id |
+| user_groups | 1:N | user_group_members | FK group_id |
+| clients | N:1 | client_categories | FK client_category_id |
+| clients | N:1 | client_segmentations | FK segmentation_id |
+| clients | N:0..1 | client_sectors | FK sector_id (nullable) |
+| clients | 1:N | projects | FK client_id |
+| projects | N:1 | project_segmentation | FK project_segmentation_id |
+| projects | N:0..1 | productivity_layers | FK productivity_layer_id (nullable) |
+| projects | N:0..1 | service_types | FK service_type_id (nullable) |
+| projects | M:N | project_categories | via project_project_categories |
+| projects | 1:N | project_users | FK project_id |
+| projects | 1:N | time_entry_lines | FK project_id |
 | time_entries | 1:N | time_entry_lines | FK time_entry_id |
 | time_entries | 1:N | time_entry_approvals | FK time_entry_id |
-| user_groups | 1:N | user_group_members | FK grupo_id |
-| roles | 1:N | project_users | FK rol_id |
-| approval_statuses | 1:N | time_entries | FK estado_id |
-| approval_statuses | 1:N | time_entry_approvals | FK estado_nuevo_id |
+| time_entry_lines | N:0..1 | income_categories | FK income_category_id (nullable, solo proyectos tipo Area) |
+
 
 ---
 
@@ -723,7 +886,7 @@ CREATE INDEX idx_time_entry_approvals_created_at ON time_entry_approvals(created
 - **Justificación:** Mejora performance de JOINs y filtros. Crítico para queries frecuentes (listar proyectos de usuario, etc.).
 
 ### **Índices en campos filtrados frecuentemente**
-- **Decisión:** Índices en `activo`, `estado_id`, `semana`, `rol_id`, etc.
+- **Decisión:** Índices en `activo`, `estado`, `semana`, etc.
 - **Justificación:** Speeding up WHERE clauses comunes (filtrar por activos, estado, período, rol).
 
 ---

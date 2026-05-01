@@ -20,9 +20,10 @@ export default function ProyectoEditar() {
   const { data: proyecto } = useQuery({ queryKey: ['proyecto', id], queryFn: () => projectApi.obtener(id).then((r) => r.data) });
   const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
   const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTORES', activo: true, limit: 100 }).then((r) => r.data.data) });
-  const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones'], queryFn: () => configApi.segmentaciones().then((r) => r.data) });
-  const { data: categorias } = useQuery({ queryKey: ['categorias-ingreso'], queryFn: () => configApi.categoriasIngreso().then((r) => r.data) });
+  const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
+  const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });
+  const { data: areas } = useQuery({ queryKey: ['areas'], queryFn: () => configApi.areas().then((r) => r.data) });
 
   useEffect(() => {
     if (proyecto) {
@@ -32,18 +33,23 @@ export default function ProyectoEditar() {
         cliente_id: proyecto.cliente?.id || '',
         descripcion: proyecto.descripcion || '',
         segmentacion_id: proyecto.segmentacion?.id || '',
-        categoria_ingreso_id: proyecto.categoria_ingreso?.id || '',
+        categoria_proyecto_id: proyecto.categoria_ingreso?.id || '',
         tipo_servicio_id: proyecto.tipo_servicio?.id || '',
         gestor_id: proyecto.gestor?.id || '',
         fecha_inicio: proyecto.fecha_inicio || '',
         fecha_fin: proyecto.fecha_fin || '',
         activo: proyecto.activo,
+        tiene_area: !!proyecto.area,
+        area_id: proyecto.area?.id || '',
       });
     }
   }, [proyecto]);
 
   const mutation = useMutation({
-    mutationFn: (datos) => projectApi.actualizar(id, datos),
+    mutationFn: (datos) => {
+      const { tiene_area, ...resto } = datos;
+      return projectApi.actualizar(id, { ...resto, area_id: tiene_area ? resto.area_id || null : null });
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['proyectos-admin'] }); navigate('/admin/proyectos'); },
     onError: (err) => setError(err.response?.data?.error || 'Error al actualizar'),
   });
@@ -92,8 +98,8 @@ export default function ProyectoEditar() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Categoría de ingreso *</Label>
-                <Select value={form.categoria_ingreso_id} onValueChange={set('categoria_ingreso_id')}>
+                <Label>Categoría</Label>
+                <Select value={form.categoria_proyecto_id} onValueChange={set('categoria_proyecto_id')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{(categorias || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
@@ -107,6 +113,31 @@ export default function ProyectoEditar() {
               </div>
               <div className="space-y-2"><Label>Fecha inicio</Label><Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} /></div>
               <div className="space-y-2"><Label>Fecha fin</Label><Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} /></div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Área aplicable</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.tiene_area}
+                  onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
+                  className="h-4 w-4 rounded border"
+                  style={{ accentColor: '#0f172a' }}
+                />
+                <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
+              </label>
+              {form.tiene_area && (
+                <div className="space-y-2">
+                  <Label>Área *</Label>
+                  <Select value={form.area_id} onValueChange={set('area_id')}>
+                    <SelectTrigger><SelectValue placeholder="Seleccioná el área" /></SelectTrigger>
+                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 

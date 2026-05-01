@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seekops — DER Base de Datos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background: #f8fafc; }
+
+    .header { background: #0f172a; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .logo-box { width: 2rem; height: 2rem; background: white; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0f172a; font-size: 1rem; }
+    .logo-text { color: white; font-weight: 700; font-size: 1.125rem; }
+    .logo-sub { color: #94a3b8; font-size: 0.75rem; margin-left: 0.25rem; }
+
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; }
+
+    .group-label {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600;
+    }
+    .group-config   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .group-core     { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .group-m2m      { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+    .group-trans    { background: #fdf2f8; color: #86198f; border: 1px solid #f0abfc; }
+    .group-auth     { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+
+    /* tabla DER */
+    .der-table { border-collapse: collapse; width: 100%; font-size: 0.78rem; }
+    .der-table th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    .der-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; vertical-align: top; }
+    .der-table tr:last-child td { border-bottom: none; }
+    .der-table tr:hover td { background: #f8fafc; }
+
+    .badge-pk  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
+    .badge-fk  { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
+    .badge-uk  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
+
+    .col-name  { font-weight: 600; color: #0f172a; font-family: 'Courier New', monospace; font-size: 0.78rem; }
+    .col-type  { color: #64748b; font-family: 'Courier New', monospace; font-size: 0.72rem; }
+
+    /* relaciones */
+    .rel-table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+    .rel-table th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    .rel-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+    .rel-table tr:last-child td { border-bottom: none; }
+    .rel-table tr:hover td { background: #f8fafc; }
+    .tname { font-family: 'Courier New', monospace; font-weight: 600; color: #0f172a; }
+    .trel  { color: #64748b; font-size: 0.75rem; }
+
+    .mermaid { text-align: center; }
+    .tab-btn { padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; border-bottom: 2px solid transparent; background: transparent; color: #64748b; }
+    .tab-btn.active { color: #0f172a; border-bottom-color: #0f172a; font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-box">S</div>
+    <div>
+      <span class="logo-text">Seekops</span>
+      <span class="logo-sub">· Database Entity-Relationship Diagram</span>
+    </div>
+    <div style="margin-left:auto; color:#94a3b8; font-size:0.75rem;">PostgreSQL · 24 tablas · April 2026</div>
+  </div>
+
+  <div style="max-width: 1400px; margin: 0 auto; padding: 1.5rem;">
+
+    <!-- Stats strip -->
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#0f172a;">24</div>
+        <div style="font-size:0.75rem; color:#64748b;">Tablas totales</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#1d4ed8;">11</div>
+        <div style="font-size:0.75rem; color:#64748b;">Configuración</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#166534;">4</div>
+        <div style="font-size:0.75rem; color:#64748b;">Core</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#86198f;">3</div>
+        <div style="font-size:0.75rem; color:#64748b;">Transaccional</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#9a3412;">2</div>
+        <div style="font-size:0.75rem; color:#64748b;">Auth tokens</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+      <button class="tab-btn active" onclick="switchTab('visual')">Diagrama Visual</button>
+      <button class="tab-btn" onclick="switchTab('tablas')">Detalle de Tablas</button>
+      <button class="tab-btn" onclick="switchTab('relaciones')">Relaciones</button>
+    </div>
+
+    <!-- TAB: Diagrama Visual (Mermaid) -->
+    <div id="tab-visual" class="tab-content active">
+      <div class="card" style="padding: 2rem; overflow-x: auto;">
+        <div class="mermaid">
+erDiagram
+    income_categories {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR name
+        BOOLEAN activo
+    }
+    client_categories {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR name
+        BOOLEAN activo
+    }
+    client_segmentations {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    client_sectors {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    project_segmentation {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    project_categories {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    productivity_layers {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    service_types {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    teams {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR name
+        BOOLEAN activo
+    }
+    areas {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR name
+        BOOLEAN activo
+    }
+    users {
+        UUID id PK
+        VARCHAR email UK
+        VARCHAR numero_documento UK
+        VARCHAR nombres
+        VARCHAR apellidos
+        UUID team_id FK
+        BOOLEAN activo
+        BOOLEAN staff
+        BOOLEAN super_usuario
+    }
+    user_groups {
+        UUID id PK
+        VARCHAR codigo UK
+        VARCHAR nombre
+        BOOLEAN activo
+    }
+    clients {
+        UUID id PK
+        VARCHAR ruc UK
+        VARCHAR nombre
+        UUID client_category_id FK
+        UUID segmentation_id FK
+        UUID sector_id FK
+        BOOLEAN activo
+    }
+    projects {
+        UUID id PK
+        VARCHAR code UK
+        VARCHAR nombre
+        UUID client_id FK
+        UUID project_segmentation_id FK
+        UUID productivity_layer_id FK
+        UUID service_type_id FK
+        UUID gestor_id FK
+        UUID area_id FK
+        BOOLEAN activo
+    }
+    user_group_members {
+        UUID id PK
+        UUID user_id FK
+        UUID group_id FK
+    }
+    user_areas {
+        UUID id PK
+        UUID user_id FK
+        UUID area_id FK
+    }
+    project_users {
+        UUID id PK
+        UUID project_id FK
+        UUID user_id FK
+        VARCHAR rol
+        BOOLEAN activo
+    }
+    project_project_categories {
+        UUID id PK
+        UUID project_id FK
+        UUID project_category_id FK
+    }
+    time_entries {
+        UUID id PK
+        UUID user_id FK
+        VARCHAR semana
+        VARCHAR estado
+    }
+    time_entry_lines {
+        UUID id PK
+        UUID time_entry_id FK
+        UUID project_id FK
+        UUID income_category_id FK
+        INTEGER hours
+        INTEGER extra_hours
+    }
+    time_entry_approvals {
+        UUID id PK
+        UUID time_entry_id FK
+        VARCHAR action
+        INTEGER suggested_hours
+        UUID created_by_user_id FK
+    }
+    refresh_tokens {
+        UUID id PK
+        UUID user_id FK "UNIQUE"
+        TEXT token
+        TIMESTAMP expires_at
+    }
+    password_reset_tokens {
+        UUID id PK
+        UUID user_id FK "UNIQUE"
+        TEXT token
+        TIMESTAMP expires_at
+    }
+
+    users }o--|| teams : "team_id"
+    users ||--o{ user_areas : "user_id"
+    user_areas }o--|| areas : "area_id"
+    users ||--o{ user_group_members : "user_id"
+    user_groups ||--o{ user_group_members : "group_id"
+    users ||--o{ project_users : "user_id"
+    projects ||--o{ project_users : "project_id"
+    users ||--o{ projects : "gestor_id"
+    clients ||--o{ projects : "client_id"
+    clients }o--|| client_categories : "client_category_id"
+    clients }o--|| client_segmentations : "segmentation_id"
+    clients }o--o| client_sectors : "sector_id"
+    projects }o--|| project_segmentation : "project_segmentation_id"
+    projects }o--o| productivity_layers : "productivity_layer_id"
+    projects }o--o| service_types : "service_type_id"
+    projects }o--o| areas : "area_id"
+    projects ||--o{ project_project_categories : "project_id"
+    project_project_categories }o--|| project_categories : "project_category_id"
+    users ||--o{ time_entries : "user_id"
+    time_entries ||--o{ time_entry_lines : "time_entry_id"
+    time_entries ||--o{ time_entry_approvals : "time_entry_id"
+    projects ||--o{ time_entry_lines : "project_id"
+    time_entry_lines }o--o| income_categories : "income_category_id"
+    users ||--o{ time_entry_approvals : "created_by_user_id"
+    users ||--o| refresh_tokens : "user_id"
+    users ||--o| password_reset_tokens : "user_id"
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Detalle de Tablas -->
+    <div id="tab-tablas" class="tab-content">
+
+      <!-- CONFIGURACIÓN -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
+          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Configuración</h2>
+          <span class="group-label group-config">lookup · seed data</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+
+          <!-- income_categories -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">income_categories</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">name</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: time_entry_lines.income_category_id
+            </div>
+          </div>
+
+          <!-- client_categories -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_categories</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">name</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: clients.client_category_id
+            </div>
+          </div>
+
+          <!-- client_segmentations -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_segmentations</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: clients.segmentation_id · Seeds: ENTERPRISE · MID_MARKET · SMB
+            </div>
+          </div>
+
+          <!-- client_sectors -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_sectors</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: clients.sector_id (nullable)
+            </div>
+          </div>
+
+          <!-- project_segmentation -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">project_segmentation</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: projects.project_segmentation_id · Seeds: ENTERPRISE · MID_MARKET · SMB
+            </div>
+          </div>
+
+          <!-- project_categories -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">project_categories</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Multi-select vía project_project_categories · Seeds: CONSULTORIA · DESARROLLO…
+            </div>
+          </div>
+
+          <!-- productivity_layers -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">productivity_layers</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: projects.productivity_layer_id (nullable)
+            </div>
+          </div>
+
+          <!-- service_types -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">service_types</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Usado en: projects.service_type_id
+            </div>
+          </div>
+
+          <!-- teams -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">teams</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">name</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Seeds: BACKEND · FRONTEND · QA · DEVOPS · FULLSTACK
+            </div>
+          </div>
+
+          <!-- areas -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">areas</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">name</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Seeds: DESARROLLO · OPERACIONES · RECURSOS · DELIVERY
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CORE -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
+          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas Core</h2>
+          <span class="group-label group-core">entidades principales</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+
+          <!-- users -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">users</span>
+              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría completa</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">email</td><td class="col-type">VARCHAR(255)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">password_hash</td><td class="col-type">VARCHAR(255)</td><td></td></tr>
+              <tr><td class="col-name">numero_documento</td><td class="col-type">VARCHAR(20)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombres</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">apellidos</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">puesto</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">celular</td><td class="col-type">VARCHAR(20)</td><td></td></tr>
+              <tr><td class="col-name">avatar_url</td><td class="col-type">VARCHAR(500)</td><td></td></tr>
+              <tr><td class="col-name">team_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → teams</span></td></tr>
+              <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas</span></td></tr>
+              <tr><td class="col-name">fecha_ingreso</td><td class="col-type">DATE</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">staff</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">super_usuario</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">deactivated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- user_groups -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">user_groups</span>
+              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">grupos de permisos</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">descripcion</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Seeds: ADMIN · SEEKER · GESTOR
+            </div>
+
+            <!-- clients -->
+            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0; border-top:1px solid #bbf7d0; margin-top:1rem;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">clients</span>
+              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría completa</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">razon_social / razon_comercial</td><td class="col-type">VARCHAR(150)</td><td></td></tr>
+              <tr><td class="col-name">ruc</td><td class="col-type">VARCHAR(14)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">nombre_contacto</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+              <tr><td class="col-name">email_contacto</td><td class="col-type">VARCHAR(255)</td><td></td></tr>
+              <tr><td class="col-name">telefono / direccion</td><td class="col-type">VARCHAR</td><td></td></tr>
+              <tr><td class="col-name">client_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_categories</span></td></tr>
+              <tr><td class="col-name">segmentation_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_segmentations</span></td></tr>
+              <tr><td class="col-name">sector_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_sectors (null)</span></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- projects -->
+          <div class="card" style="overflow:hidden; grid-column: span 2;">
+            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">projects</span>
+              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría · constraint fecha_fin >= fecha_inicio</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr;">
+              <table class="der-table">
+                <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+                <tr><td class="col-name">code</td><td class="col-type">VARCHAR(20)</td><td><span class="badge-uk">UK</span></td></tr>
+                <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+                <tr><td class="col-name">descripcion</td><td class="col-type">TEXT</td><td></td></tr>
+                <tr><td class="col-name">client_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → clients</span></td></tr>
+                <tr><td class="col-name">project_segmentation_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → project_segmentation</span></td></tr>
+                <tr><td class="col-name">productivity_layer_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → productivity_layers (null)</span></td></tr>
+              </table>
+              <table class="der-table">
+                <tr><td class="col-name">service_type_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → service_types (null)</span></td></tr>
+                <tr><td class="col-name">gestor_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+                <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas (null)</span></td></tr>
+                <tr><td class="col-name">fecha_inicio / fecha_fin</td><td class="col-type">DATE</td><td></td></tr>
+                <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+                <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+                <tr><td colspan="3" style="padding:0.35rem 0.75rem; font-size:0.7rem; color:#64748b; font-style:italic;">Categorías: M2M vía project_project_categories</td></tr>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- M2M + TRANSACCIONAL -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
+          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Relación (M2M)</h2>
+          <span class="group-label group-m2m">junction tables</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+
+          <!-- user_group_members -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">user_group_members</span>
+              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(user_id, group_id)</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">group_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → user_groups CASCADE</span></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <!-- project_users -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">project_users</span>
+              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(project_id, user_id, rol) · soft delete</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects CASCADE</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">rol</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem; color:#64748b;">texto libre</span></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <!-- project_project_categories -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">project_project_categories</span>
+              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(project_id, project_category_id)</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects CASCADE</span></td></tr>
+              <tr><td class="col-name">project_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → project_categories</span></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              Multi-select: un proyecto puede tener N categorías
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSACCIONAL -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
+          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas Transaccionales</h2>
+          <span class="group-label group-trans">registro de horas</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+
+          <!-- time_entries -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entries</span>
+              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">cabecera semanal</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">semana</td><td class="col-type">VARCHAR(10)</td><td><span style="font-size:0.65rem;color:#64748b;">ej: "2024-W15"</span></td></tr>
+              <tr><td class="col-name">estado</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem;color:#64748b;">texto directo</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+              <tr><td class="col-name">updated_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
+              idx: user_id · semana · estado · (user_id, semana)
+            </div>
+          </div>
+
+          <!-- time_entry_lines -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entry_lines</span>
+              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">línea por proyecto</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">time_entry_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → time_entries CASCADE</span></td></tr>
+              <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects</span></td></tr>
+              <tr><td class="col-name">income_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → income_categories (null)</span></td></tr>
+              <tr><td class="col-name">hours</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK 0–24</span></td></tr>
+              <tr><td class="col-name">extra_hours</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK 0–8</span></td></tr>
+              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <!-- time_entry_approvals -->
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entry_approvals</span>
+              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">historial de acciones</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">time_entry_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → time_entries CASCADE</span></td></tr>
+              <tr><td class="col-name">action</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem;color:#64748b;">APROBADO/OBSERVADO…</span></td></tr>
+              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">suggested_hours</td><td class="col-type">INTEGER</td><td></td></tr>
+              <tr><td class="col-name">suggested_extra_hours</td><td class="col-type">INTEGER</td><td></td></tr>
+              <tr><td class="col-name">rejection_reason</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">allow_resubmit</td><td class="col-type">BOOLEAN</td><td></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- AUTH -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
+          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Autenticación</h2>
+          <span class="group-label group-auth">tokens JWT · reset</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fff7ed; border-bottom:1px solid #fed7aa;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#9a3412;">refresh_tokens</span>
+              <span style="font-size:0.7rem; color:#9a3412; margin-left:0.5rem;">UNIQUE(user_id) — uno por usuario</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <div class="card" style="overflow:hidden;">
+            <div style="padding:0.75rem 1rem; background:#fff7ed; border-bottom:1px solid #fed7aa;">
+              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#9a3412;">password_reset_tokens</span>
+              <span style="font-size:0.7rem; color:#9a3412; margin-left:0.5rem;">UNIQUE(user_id) — uno por usuario</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-tablas -->
+
+    <!-- TAB: Relaciones -->
+    <div id="tab-relaciones" class="tab-content">
+      <div class="card" style="overflow:hidden;">
+        <table class="rel-table">
+          <thead>
+            <tr>
+              <th>Tabla A</th>
+              <th>Cardinalidad</th>
+              <th>Tabla B</th>
+              <th>Columna FK</th>
+              <th>On Delete</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="tname">users</td><td class="trel">N → 1</td><td class="tname">teams</td><td><code>team_id</code></td><td>RESTRICT</td><td>Usuario pertenece a un equipo</td></tr>
+            <tr style="background:#fef9c3;"><td class="tname">user_areas</td><td class="trel">M2M</td><td class="tname">users ↔ areas</td><td><code>user_id / area_id</code></td><td>CASCADE</td><td>Áreas del usuario (mínimo 1)</td></tr>
+            <tr style="background:#fef9c3;"><td class="tname">user_group_members</td><td class="trel">M2M</td><td class="tname">users ↔ user_groups</td><td><code>user_id / group_id</code></td><td>CASCADE</td><td>Rol del usuario en el sistema</td></tr>
+            <tr style="background:#fef9c3;"><td class="tname">project_users</td><td class="trel">M2M</td><td class="tname">projects ↔ users</td><td><code>project_id / user_id</code></td><td>CASCADE</td><td>Usuarios asignados a proyecto</td></tr>
+            <tr style="background:#fef9c3;"><td class="tname">project_project_categories</td><td class="trel">M2M</td><td class="tname">projects ↔ project_categories</td><td><code>project_id / project_category_id</code></td><td>CASCADE</td><td>Categorías del proyecto (multi-select)</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>gestor_id</code></td><td>RESTRICT</td><td>Gestor responsable del proyecto</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">clients</td><td><code>client_id</code></td><td>RESTRICT</td><td>Proyecto pertenece a un cliente</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">project_segmentation</td><td><code>project_segmentation_id</code></td><td>RESTRICT</td><td>Segmentación del proyecto</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">productivity_layers</td><td><code>productivity_layer_id</code></td><td>SET NULL</td><td>Capa de productividad (nullable)</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">service_types</td><td><code>service_type_id</code></td><td>SET NULL</td><td>Tipo de servicio (nullable)</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">areas</td><td><code>area_id</code></td><td>SET NULL</td><td>Área específica del proyecto (nullable)</td></tr>
+            <tr><td class="tname">clients</td><td class="trel">N → 1</td><td class="tname">client_categories</td><td><code>client_category_id</code></td><td>RESTRICT</td><td>Categoría del cliente</td></tr>
+            <tr><td class="tname">clients</td><td class="trel">N → 1</td><td class="tname">client_segmentations</td><td><code>segmentation_id</code></td><td>RESTRICT</td><td>Segmentación del cliente</td></tr>
+            <tr><td class="tname">clients</td><td class="trel">N → 0..1</td><td class="tname">client_sectors</td><td><code>sector_id</code></td><td>SET NULL</td><td>Sector económico del cliente (nullable)</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entries</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>user_id</code></td><td>CASCADE</td><td>Registro de horas del usuario</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 1</td><td class="tname">time_entries</td><td><code>time_entry_id</code></td><td>CASCADE</td><td>Línea pertenece a una entrada</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 1</td><td class="tname">projects</td><td><code>project_id</code></td><td>RESTRICT</td><td>Horas imputadas a proyecto</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 0..1</td><td class="tname">income_categories</td><td><code>income_category_id</code></td><td>SET NULL</td><td>Categoría de la línea (nullable, solo tipo Area)</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_approvals</td><td class="trel">N → 1</td><td class="tname">time_entries</td><td><code>time_entry_id</code></td><td>CASCADE</td><td>Historial de una entrada</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_approvals</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>created_by_user_id</code></td><td>SET NULL</td><td>Gestor que ejecutó la acción</td></tr>
+            <tr style="background:#fff7ed;"><td class="tname">refresh_tokens</td><td class="trel">1 → 1</td><td class="tname">users</td><td><code>user_id</code> UK</td><td>CASCADE</td><td>Un token activo por usuario</td></tr>
+            <tr style="background:#fff7ed;"><td class="tname">password_reset_tokens</td><td class="trel">1 → 1</td><td class="tname">users</td><td><code>user_id</code> UK</td><td>CASCADE</td><td>Un token reset por usuario</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /tab-relaciones -->
+
+  </div><!-- /main wrapper -->
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', er: { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, fontSize: 12 } });
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

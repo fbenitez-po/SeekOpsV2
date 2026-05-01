@@ -31,8 +31,8 @@ async function listarClientes(filtros) {
            (SELECT COUNT(*) FROM projects p WHERE p.client_id = c.id) as proyectos_count
     FROM clients c
     LEFT JOIN client_categories cu ON cu.id = c.client_category_id
-    LEFT JOIN segmentations s ON s.id = c.segmentation_id
-    LEFT JOIN sectors sec ON sec.id = c.sector_id
+    LEFT JOIN client_segmentations s ON s.id = c.segmentation_id
+    LEFT JOIN client_sectors sec ON sec.id = c.sector_id
     ${where}
     ORDER BY c.nombre
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
@@ -56,8 +56,8 @@ async function buscarClientePorId(id) {
             sec.id as sec_id, sec.nombre as sec_nombre
      FROM clients c
      LEFT JOIN client_categories cu ON cu.id = c.client_category_id
-     LEFT JOIN segmentations s ON s.id = c.segmentation_id
-     LEFT JOIN sectors sec ON sec.id = c.sector_id
+     LEFT JOIN client_segmentations s ON s.id = c.segmentation_id
+     LEFT JOIN client_sectors sec ON sec.id = c.sector_id
      WHERE c.id = $1`,
     [id]
   );

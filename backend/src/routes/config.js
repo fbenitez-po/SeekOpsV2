@@ -42,7 +42,7 @@ router.get('/categorias-ingreso', async (_req, res, next) => {
 
 router.get('/segmentaciones', async (_req, res, next) => {
   try {
-    const filas = await consultar(`SELECT id, nombre, activo FROM segmentations WHERE activo = true ORDER BY nombre`);
+    const filas = await consultar(`SELECT id, nombre, activo FROM client_segmentations WHERE activo = true ORDER BY nombre`);
     res.json(filas);
   } catch (err) {
     next(err);
@@ -51,7 +51,34 @@ router.get('/segmentaciones', async (_req, res, next) => {
 
 router.get('/sectores', async (_req, res, next) => {
   try {
-    const filas = await consultar(`SELECT id, nombre, activo FROM sectors WHERE activo = true ORDER BY nombre`);
+    const filas = await consultar(`SELECT id, nombre, activo FROM client_sectors WHERE activo = true ORDER BY nombre`);
+    res.json(filas);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/segmentaciones-proyecto', async (_req, res, next) => {
+  try {
+    const filas = await consultar(`SELECT id, nombre, activo FROM project_segmentation WHERE activo = true ORDER BY nombre`);
+    res.json(filas);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/categorias-proyecto', async (_req, res, next) => {
+  try {
+    const filas = await consultar(`SELECT id, nombre, activo FROM project_categories WHERE activo = true ORDER BY nombre`);
+    res.json(filas);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/capas-productividad', async (_req, res, next) => {
+  try {
+    const filas = await consultar(`SELECT id, nombre, activo FROM productivity_layers WHERE activo = true ORDER BY nombre`);
     res.json(filas);
   } catch (err) {
     next(err);
