@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building2, FolderOpen, Clock } from 'lucide-react';
+import { Users, Building2, FolderOpen, Clock, UserPlus, FolderPlus } from 'lucide-react';
 import { userApi, clientApi, projectApi, timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -48,9 +48,22 @@ export default function HomeAdmin() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Panel de Administración</h1>
-          <p className="text-muted-foreground">Vista general del sistema</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Panel de Administración</h1>
+            <p className="text-muted-foreground">Vista general del sistema</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/usuarios/crear')}>
+              <UserPlus className="h-4 w-4 mr-1.5" />Nuevo usuario
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/clientes/crear')}>
+              <Building2 className="h-4 w-4 mr-1.5" />Nuevo cliente
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/proyectos/crear')}>
+              <FolderPlus className="h-4 w-4 mr-1.5" />Nuevo proyecto
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -58,17 +71,6 @@ export default function HomeAdmin() {
           <TarjetaMetrica titulo="Clientes activos" valor={clientes} icono={Building2} color="bg-green-500" onClick={() => navigate('/admin/clientes')} />
           <TarjetaMetrica titulo="Proyectos activos" valor={proyectos} icono={FolderOpen} color="bg-purple-500" onClick={() => navigate('/admin/proyectos')} />
           <TarjetaMetrica titulo="Horas pendientes" valor={horasPendientes} icono={Clock} color="bg-orange-500" onClick={() => navigate('/admin/horas')} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Acciones rápidas</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/usuarios/crear')}>+ Nuevo usuario</Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/clientes/crear')}>+ Nuevo cliente</Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/admin/proyectos/crear')}>+ Nuevo proyecto</Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </Layout>
