@@ -10,7 +10,7 @@ function formatearProyecto(p) {
     cliente: p.cliente_id ? { id: p.cliente_id, nombre: p.cliente_nombre } : null,
     gestor: p.gestor_id ? { id: p.gestor_id, nombres: p.gestor_nombres, apellidos: p.gestor_apellidos } : null,
     segmentacion: p.seg_id ? { id: p.seg_id, nombre: p.seg_nombre } : null,
-    categoria_ingreso: p.cat_id ? { id: p.cat_id, nombre: p.cat_nombre } : null,
+    categorias_ingreso: Array.isArray(p.categorias) ? p.categorias : (p.categorias ? JSON.parse(p.categorias) : []),
     tipo_servicio: p.ts_id ? { id: p.ts_id, nombre: p.ts_nombre } : null,
     area: p.area_id ? { id: p.area_id, nombre: p.area_nombre } : null,
     fecha_inicio: p.fecha_inicio,

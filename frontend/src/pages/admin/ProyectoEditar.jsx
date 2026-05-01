@@ -10,6 +10,29 @@ import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
+function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
+  const toggle = (id) => {
+    const nuevos = seleccionados.includes(id) ? seleccionados.filter((x) => x !== id) : [...seleccionados, id];
+    onChange(nuevos);
+  };
+  return (
+    <div className="overflow-y-auto max-h-40 rounded-md border border-[#e2e8f0] p-2 space-y-1 bg-white">
+      {opciones.map((op) => (
+        <label key={op.id} className="flex items-center gap-2 cursor-pointer select-none px-1 py-0.5 rounded hover:bg-slate-50">
+          <input
+            type="checkbox"
+            checked={seleccionados.includes(op.id)}
+            onChange={() => toggle(op.id)}
+            className="h-4 w-4 rounded border"
+            style={{ accentColor: '#0f172a' }}
+          />
+          <span className="text-sm">{op.nombre}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 export default function ProyectoEditar() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -33,7 +56,7 @@ export default function ProyectoEditar() {
         cliente_id: proyecto.cliente?.id || '',
         descripcion: proyecto.descripcion || '',
         segmentacion_id: proyecto.segmentacion?.id || '',
-        categoria_proyecto_id: proyecto.categoria_ingreso?.id || '',
+        categorias_proyecto_ids: (proyecto.categorias_ingreso || []).map((c) => c.id),
         tipo_servicio_id: proyecto.tipo_servicio?.id || '',
         gestor_id: proyecto.gestor?.id || '',
         fecha_inicio: proyecto.fecha_inicio || '',
@@ -97,12 +120,16 @@ export default function ProyectoEditar() {
                   <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select value={form.categoria_proyecto_id} onValueChange={set('categoria_proyecto_id')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(categorias || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-                </Select>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Categoría de ingreso</Label>
+                <MultiCheckbox
+                  opciones={categorias || []}
+                  seleccionados={form.categorias_proyecto_ids}
+                  onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
+                />
+                {form.categorias_proyecto_ids.length > 0 && (
+                  <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Tipo de servicio</Label>

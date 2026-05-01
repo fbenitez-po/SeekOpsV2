@@ -74,9 +74,11 @@ Como Admin, quiero crear nuevos proyectos, para poder asignar empleados a trabaj
 
 ### Criterios de aceptación
 
-- **Given** estoy en el backoffice **When** hago clic en "Proyectos" → "Crear proyecto" **Then** se abre formulario con: nombre, cliente (dropdown), descripción, estado (Activo/Inactivo)
+- **Given** estoy en el backoffice **When** hago clic en "Proyectos" → "Crear proyecto" **Then** se abre formulario con: código, nombre, cliente (dropdown), gestor (dropdown), descripción, segmentación, **categoría de ingreso (multi-select: 1 o más)**, tipo de servicio, fechas, área aplicable
 
-- **Given** he completado el formulario **When** hago clic en "Crear" **Then** el proyecto se crea y aparece en listado
+- **Given** he completado el formulario **When** hago clic en "Crear" **Then** el proyecto se crea y aparece en listado con las categorías de ingreso seleccionadas guardadas
+
+- **Given** seleccioné múltiples categorías de ingreso **When** abro el proyecto para editar **Then** veo las mismas categorías ya marcadas en el multi-select
 
 - **Given** creé un proyecto **When** asigno usuarios **Then** puedo definir rol de cada usuario (Seeker o Gestor) en ese proyecto específico
 

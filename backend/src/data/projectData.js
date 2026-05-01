@@ -43,8 +43,9 @@ async function listarProyectos(filtros, usuarioId, roles) {
            c.id as cliente_id, c.nombre as cliente_nombre,
            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
            s.id as seg_id, s.nombre as seg_nombre,
-           (SELECT pc.id FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_id,
-           (SELECT pc.nombre FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_nombre,
+           (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)
+            FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
+            WHERE ppc.project_id = p.id) as categorias,
            ts.id as ts_id, ts.nombre as ts_nombre,
            a.id as area_id, a.name as area_nombre,
            (SELECT COUNT(*) FROM project_users pu WHERE pu.project_id = p.id) as usuarios_count
@@ -77,8 +78,9 @@ async function buscarProyectoPorId(id) {
             c.id as cliente_id, c.nombre as cliente_nombre, c.ruc,
             g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
             s.id as seg_id, s.nombre as seg_nombre,
-            (SELECT pc.id FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_id,
-            (SELECT pc.nombre FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id WHERE ppc.project_id = p.id LIMIT 1) as cat_nombre,
+            (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)
+             FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
+             WHERE ppc.project_id = p.id) as categorias,
             ts.id as ts_id, ts.nombre as ts_nombre,
             a.id as area_id, a.name as area_nombre
      FROM projects p
@@ -138,11 +140,13 @@ async function crearProyecto(datos) {
       ]
     );
 
-    if (datos.categoria_proyecto_id) {
-      await client.query(
-        `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-        [proyecto.id, datos.categoria_proyecto_id]
-      );
+    if (Array.isArray(datos.categorias_proyecto_ids) && datos.categorias_proyecto_ids.length) {
+      for (const catId of datos.categorias_proyecto_ids) {
+        await client.query(
+          `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [proyecto.id, catId]
+        );
+      }
     }
 
     await client.query('COMMIT');
@@ -195,13 +199,15 @@ async function actualizarProyecto(id, datos) {
       );
     }
 
-    if (datos.categoria_proyecto_id !== undefined) {
+    if (datos.categorias_proyecto_ids !== undefined) {
       await client.query(`DELETE FROM project_project_categories WHERE project_id = $1`, [id]);
-      if (datos.categoria_proyecto_id) {
-        await client.query(
-          `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-          [id, datos.categoria_proyecto_id]
-        );
+      if (Array.isArray(datos.categorias_proyecto_ids) && datos.categorias_proyecto_ids.length) {
+        for (const catId of datos.categorias_proyecto_ids) {
+          await client.query(
+            `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+            [id, catId]
+          );
+        }
       }
     }
 
