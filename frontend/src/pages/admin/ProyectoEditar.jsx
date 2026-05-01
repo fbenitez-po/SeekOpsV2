@@ -46,6 +46,7 @@ export default function ProyectoEditar() {
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
   const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });
+  const { data: capasProductividad } = useQuery({ queryKey: ['capas-productividad'], queryFn: () => configApi.capasProductividad().then((r) => r.data) });
   const { data: areas } = useQuery({ queryKey: ['areas'], queryFn: () => configApi.areas().then((r) => r.data) });
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function ProyectoEditar() {
         segmentacion_id: proyecto.segmentacion?.id || '',
         categorias_proyecto_ids: (proyecto.categorias_ingreso || []).map((c) => c.id),
         tipo_servicio_id: proyecto.tipo_servicio?.id || '',
+        capa_productividad_id: proyecto.capa_productividad?.id || '',
         gestor_id: proyecto.gestor?.id || '',
         fecha_inicio: proyecto.fecha_inicio || '',
         fecha_fin: proyecto.fecha_fin || '',
@@ -136,6 +138,13 @@ export default function ProyectoEditar() {
                 <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Capa de productividad</Label>
+                <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
+                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2"><Label>Fecha inicio</Label><Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} /></div>

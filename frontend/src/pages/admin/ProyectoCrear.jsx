@@ -37,7 +37,7 @@ export default function ProyectoCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     codigo: '', nombre: '', cliente_id: '', descripcion: '',
-    segmentacion_id: '', categorias_proyecto_ids: [], tipo_servicio_id: '',
+    segmentacion_id: '', categorias_proyecto_ids: [], tipo_servicio_id: '', capa_productividad_id: '',
     gestor_id: '', fecha_inicio: '', fecha_fin: '', activo: true,
     tiene_area: false, area_id: '',
   });
@@ -48,6 +48,7 @@ export default function ProyectoCrear() {
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
   const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });
+  const { data: capasProductividad } = useQuery({ queryKey: ['capas-productividad'], queryFn: () => configApi.capasProductividad().then((r) => r.data) });
   const { data: areas } = useQuery({ queryKey: ['areas'], queryFn: () => configApi.areas().then((r) => r.data) });
 
   const mutation = useMutation({
@@ -125,6 +126,13 @@ export default function ProyectoCrear() {
                 <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
                   <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Capa de productividad</Label>
+                <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
+                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
