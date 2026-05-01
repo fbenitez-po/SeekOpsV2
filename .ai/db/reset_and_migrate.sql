@@ -378,7 +378,7 @@ BEGIN
                      team_id, area_id, fecha_ingreso, activo, staff, super_usuario)
   VALUES (
     'admin@seekglobal.co',
-    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    '$2a$10$P9BpFTkN7XLpkRDZOr4lgeJAG8PjEozPULfHxa25TFNYSktH56zsO',
     'Admin', 'Seekops', '00000001', 'Administrador del Sistema',
     v_team_id, v_area_id, '2024-01-01', true, true, true
   )
