@@ -47,6 +47,37 @@ Como Seeker, quiero registrar mis horas trabajadas en un proyecto para una seman
 
 ---
 
+## US-004: Ver alerta de semanas sin carga al ingresar
+
+### Historia de usuario
+
+Como Seeker, quiero ver al ingresar al home cuáles semanas no he cargado desde mi fecha de ingreso a la compañía, para poder identificar rápidamente qué semanas me falta completar.
+
+### Criterios de aceptación
+
+**Visualización de la alerta:**
+- **Given** ingreso al home **When** tengo semanas sin ninguna carga registrada desde mi `fecha_ingreso` hasta hoy **Then** veo una alerta ámbar en la parte superior de la página, antes de cualquier otro contenido
+- **Given** veo la alerta **When** la reviso **Then** muestra el total de semanas faltantes y el listado de cada una con su rango de fechas legible (ej: "Lun 14 al Dom 20 abr 2026")
+- **Given** veo la alerta **When** hay muchas semanas **Then** el listado es scrolleable (máximo altura visible antes de scroll)
+- **Given** veo la alerta **When** hago clic en [Cargar horas] dentro de la alerta **Then** me redirige al formulario de carga
+
+**Condición de la alerta:**
+- **Given** una semana tiene al menos una carga registrada (en cualquier estado) **When** se evalúa **Then** esa semana NO aparece en la alerta
+- **Given** cargo horas de una semana que estaba en la alerta **When** vuelvo al home **Then** esa semana ya no aparece en el listado
+- **Given** todas mis semanas están cubiertas **When** ingreso al home **Then** la alerta NO se muestra
+
+### Supuestos y riesgos
+
+- La semana se considera "cubierta" con al menos una carga en cualquier estado (incluyendo RECHAZADO)
+- La semana actual (en curso) también se incluye en la evaluación
+- La lógica de codificación de semanas usa el mismo algoritmo que el formulario de carga para garantizar consistencia
+
+### Estado
+
+✅ Implementada
+
+---
+
 ## US-002: Visualizar historial de horas cargadas
 
 ### Historia de usuario

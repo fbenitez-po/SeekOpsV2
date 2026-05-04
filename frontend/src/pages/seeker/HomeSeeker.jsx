@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Plus } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Clock, Plus } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -48,6 +49,13 @@ function TarjetaEntrada({ entrada, onClick }) {
 export default function HomeSeeker() {
   const navigate = useNavigate();
 
+  const [semanasDesplegadas, setSemanasDesplegadas] = useState(false);
+
+  const { data: semanasSinCarga } = useQuery({
+    queryKey: ['time-entries', 'semanas-sin-carga'],
+    queryFn: () => timeEntryApi.semanasSinCarga().then((r) => r.data),
+  });
+
   const { data: pendientes, isLoading: cargandoPendientes } = useQuery({
     queryKey: ['time-entries', 'PENDIENTE'],
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE' }).then((r) => r.data),
@@ -72,6 +80,41 @@ export default function HomeSeeker() {
   return (
     <Layout>
       <div className="space-y-6">
+        {semanasSinCarga?.total > 0 && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+              <button
+                className="flex flex-1 items-center gap-2 text-left"
+                onClick={() => setSemanasDesplegadas((v) => !v)}
+              >
+                <span className="text-sm font-semibold text-amber-900">
+                  Tenés {semanasSinCarga.total} semana{semanasSinCarga.total > 1 ? 's' : ''} sin cargar
+                </span>
+                {semanasDesplegadas
+                  ? <ChevronUp className="h-3.5 w-3.5 text-amber-600" />
+                  : <ChevronDown className="h-3.5 w-3.5 text-amber-600" />}
+              </button>
+              <Button size="sm" onClick={() => navigate('/seeker/cargar')} className="shrink-0 h-7 text-xs px-3">
+                Cargar horas
+              </Button>
+            </div>
+            {semanasDesplegadas && (
+              <ul className="mt-2 ml-7 space-y-0.5">
+                {semanasSinCarga.semanas.map((semana) => {
+                  const domingo = semanaADomingo(semana);
+                  const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
+                  return (
+                    <li key={semana} className="text-xs text-amber-800">
+                      · {rango}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Mis horas</h1>

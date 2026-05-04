@@ -37,6 +37,16 @@ router.post(
   }
 );
 
+router.get('/semanas-sin-carga', async (req, res, next) => {
+  try {
+    const { usuario_id } = req.usuario;
+    const resultado = await service.obtenerSemanasSinCarga(usuario_id);
+    res.json(resultado);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const { usuario_id, roles } = req.usuario;

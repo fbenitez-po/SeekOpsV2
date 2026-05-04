@@ -241,6 +241,14 @@ async function registrarAprobacion({ entradaId, accion, usuarioId, datos = {} })
   }
 }
 
+async function obtenerFechaIngreso(usuarioId) {
+  return consultarUno('SELECT fecha_ingreso FROM users WHERE id = $1', [usuarioId]);
+}
+
+async function listarSemanasConCarga(usuarioId) {
+  return consultar('SELECT DISTINCT semana FROM time_entries WHERE user_id = $1', [usuarioId]);
+}
+
 module.exports = {
   listarEntradas,
   buscarEntradaPorId,
@@ -253,4 +261,6 @@ module.exports = {
   crearEntrada,
   actualizarLineasEntrada,
   registrarAprobacion,
+  obtenerFechaIngreso,
+  listarSemanasConCarga,
 };

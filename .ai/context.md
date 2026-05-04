@@ -78,6 +78,8 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   - PostgreSQL schema completado (8 config tables, 11 core + junction tables) ✅
   - Architectural consistency: Home → Funcionalidad pattern applied to all roles ✅
 - **Últimas actualizaciones (esta sesión):**
+  - ✅ US-004 (nueva): Alerta de semanas sin carga en Home Seeker — muestra al ingresar las semanas desde `fecha_ingreso` hasta hoy que no tienen ninguna carga registrada. Permanente hasta que se carguen. Lógica en JS en el servicio para garantizar consistencia con el formato de semanas del frontend (`S15/26`).
+  - ✅ Endpoint: `GET /time-entries/semanas-sin-carga` (solo requiere token, devuelve `{ semanas: [], total: N }`)
   - ✅ S-01-HOME-SEEKER: 4 secciones (pendientes, observadas, histórico) + button to S-01-CARGAR-HORAS
   - ✅ S-01-CARGAR-HORAS: Navegación semana, múltiples proyectos sin repetir, categoría condicional
   - ✅ S-02-HOME-GESTOR: Dashboard only (pendientes de equipo + mis pendientes) + button to S-02-CARGAR-HORAS-GESTOR
@@ -180,10 +182,10 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
 ## Historias de Usuario
 
-**Total:** 21 historias aprobadas ✅
+**Total:** 22 historias ✅
 
 - **Epic 00 — General (5):** Login, Reset password, Home Seeker, Home Gestor, Home Admin
-- **Epic 01 — Seeker (3):** Registrar horas, Ver historial, Ajustar observadas
+- **Epic 01 — Seeker (4):** Registrar horas, Ver historial, Ajustar observadas, **Alerta semanas sin carga (US-004)**
 - **Epic 02 — Gestor (5):** Ver pendientes, Aprobar, Observar, Rechazar, Propias horas
 - **Epic 03 — Admin (8):** Crear usuario, Crear cliente, Crear proyecto, Asignar usuarios, Editar usuario, Editar cliente, Editar proyecto, Administración de permisos/roles
 

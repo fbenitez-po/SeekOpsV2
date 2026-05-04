@@ -125,7 +125,7 @@ export function semanaADomingo(semana) {
   const nSemana = parseInt(match[1]);
   const anio = 2000 + parseInt(match[2]);
   const enero1 = new Date(anio, 0, 1);
-  const diasOffset = (nSemana - 1) * 7 - enero1.getDay() + 7;
+  const diasOffset = (nSemana - 1) * 7 - enero1.getDay();
   return new Date(anio, 0, 1 + diasOffset);
 }
 

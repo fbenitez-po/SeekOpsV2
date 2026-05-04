@@ -189,4 +189,45 @@ async function rechazar(id, usuarioId, roles, datos) {
   return { id, estado: 'RECHAZADO', rechazado_en: new Date().toISOString(), ...datos };
 }
 
-module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, observar, rechazar };
+function calcularCodigoSemana(fecha) {
+  const inicio = new Date(fecha.getFullYear(), 0, 1);
+  const dias = Math.floor((fecha - inicio) / 86400000);
+  const semana = Math.ceil((dias + inicio.getDay() + 1) / 7);
+  const anio = String(fecha.getFullYear()).slice(-2);
+  return `S${String(semana).padStart(2, '0')}/${anio}`;
+}
+
+function domingoDeSemanaDe(fecha) {
+  const d = new Date(fecha);
+  d.setHours(0, 0, 0, 0);
+  const dia = d.getDay();
+  if (dia !== 0) d.setDate(d.getDate() + (7 - dia));
+  return d;
+}
+
+async function obtenerSemanasSinCarga(usuarioId) {
+  const [usuarioRow, entradasRows] = await Promise.all([
+    data.obtenerFechaIngreso(usuarioId),
+    data.listarSemanasConCarga(usuarioId),
+  ]);
+
+  if (!usuarioRow?.fecha_ingreso) return { semanas: [], total: 0 };
+
+  const semanasConCarga = new Set(entradasRows.map((r) => r.semana));
+
+  const cursor = domingoDeSemanaDe(new Date(usuarioRow.fecha_ingreso));
+  // Solo semanas ya terminadas: retrocede una semana desde el domingo actual
+  const domingoUltimaSemanaCompleta = domingoDeSemanaDe(new Date());
+  domingoUltimaSemanaCompleta.setDate(domingoUltimaSemanaCompleta.getDate() - 7);
+  const semanasFaltantes = [];
+
+  while (cursor <= domingoUltimaSemanaCompleta) {
+    const codigo = calcularCodigoSemana(cursor);
+    if (!semanasConCarga.has(codigo)) semanasFaltantes.push(codigo);
+    cursor.setDate(cursor.getDate() + 7);
+  }
+
+  return { semanas: semanasFaltantes, total: semanasFaltantes.length };
+}
+
+module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, observar, rechazar, obtenerSemanasSinCarga };
