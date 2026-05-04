@@ -80,6 +80,15 @@ export const projectApi = {
   desasignarUsuario: (id, usuarioId) => api.delete(`/projects/${id}/usuarios/${usuarioId}`),
 };
 
+// Proyecciones de horas
+export const projectionApi = {
+  listar: (params) => api.get('/projections', { params }),
+  crear: (datos) => api.post('/projections', datos),
+  actualizar: (id, datos) => api.put(`/projections/${id}`, datos),
+  eliminar: (id) => api.delete(`/projections/${id}`),
+  alertas: () => api.get('/projections/alertas'),
+};
+
 // Config
 export const configApi = {
   equipos: () => api.get('/config/equipos'),

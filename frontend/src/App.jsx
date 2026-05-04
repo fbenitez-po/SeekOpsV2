@@ -13,6 +13,7 @@ import AjustarHorasPage from './pages/seeker/AjustarHoras';
 import HomeGestorPage from './pages/gestor/HomeGestor';
 import HorasEquipoPage from './pages/gestor/HorasEquipo';
 import CargarHorasGestorPage from './pages/gestor/CargarHorasGestor';
+import ProyeccionesHorasPage from './pages/gestor/ProyeccionesHoras';
 
 import HomeAdminPage from './pages/admin/HomeAdmin';
 import UsuariosListaPage from './pages/admin/UsuariosLista';
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="/gestor" element={<RutaProtegida roles={['GESTOR', 'ADMIN']}><HomeGestorPage /></RutaProtegida>} />
         <Route path="/gestor/equipo" element={<RutaProtegida roles={['GESTOR', 'ADMIN']}><HorasEquipoPage /></RutaProtegida>} />
         <Route path="/gestor/cargar" element={<RutaProtegida roles={['GESTOR', 'ADMIN']}><CargarHorasGestorPage /></RutaProtegida>} />
+        <Route path="/gestor/proyecciones" element={<RutaProtegida roles={['GESTOR', 'ADMIN']}><ProyeccionesHorasPage /></RutaProtegida>} />
 
         {/* Admin */}
         <Route path="/admin" element={<RutaProtegida roles={['ADMIN']}><HomeAdminPage /></RutaProtegida>} />

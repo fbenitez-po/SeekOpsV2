@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
@@ -11,6 +11,7 @@ const navSeeker = [
 const navGestor = [
   { label: 'Inicio', href: '/gestor', icon: LayoutDashboard },
   { label: 'Horas del equipo', href: '/gestor/equipo', icon: CheckSquare },
+  { label: 'Proyecciones', href: '/gestor/proyecciones', icon: CalendarRange },
   { label: 'Cargar mis horas', href: '/gestor/cargar', icon: Clock },
 ];
 

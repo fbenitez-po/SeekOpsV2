@@ -9,6 +9,7 @@ const userRoutes = require('./routes/users');
 const clientRoutes = require('./routes/clients');
 const projectRoutes = require('./routes/projects');
 const configRoutes = require('./routes/config');
+const projectionRoutes = require('./routes/projections');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/users', userRoutes);
 app.use('/clients', clientRoutes);
 app.use('/projects', projectRoutes);
 app.use('/config', configRoutes);
+app.use('/projections', projectionRoutes);
 
 app.get('/health', (_req, res) => res.json({ estado: 'ok' }));
 
