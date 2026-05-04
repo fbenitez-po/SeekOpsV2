@@ -3,10 +3,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
-COPY src/ ./src/
+COPY . .
 
-EXPOSE 3000
-
-CMD ["node", "src/index.js"]
+CMD ["sh", "-c", "node_modules/.bin/node-pg-migrate up && node src/index.js"]

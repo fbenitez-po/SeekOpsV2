@@ -1,38 +1,10 @@
 services:
 
-  backend:
-    build: ./backend
-    container_name: seekops-backend
-    ports:
-      - "3000:3000"
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: seekops
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      JWT_SECRET: ${JWT_SECRET:-cambiar_en_produccion}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar_refresh_en_produccion}
-      JWT_EXPIRES_IN: 1h
-      JWT_REFRESH_EXPIRES_IN: 7d
-      PORT: 3000
-      NODE_ENV: production
-      FRONTEND_URL: http://localhost
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  frontend:
-    build: ./frontend
-    container_name: seekops-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
   postgres:
     image: postgres:16-alpine
     container_name: seekops-db
+    mem_limit: 512m
+    mem_reservation: 128m
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -46,6 +18,42 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  backend:
+    build: ./backend
+    container_name: seekops-backend
+    mem_limit: 512m
+    mem_reservation: 256m
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: seekops
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/seekops
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_changeme}
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_jwt_refresh_secret_changeme}
+      JWT_REFRESH_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: seekops-frontend
+    mem_limit: 512m
+    mem_reservation: 256m
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

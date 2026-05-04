@@ -7,7 +7,11 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "test": "jest --runInBand",
-    "test:coverage": "jest --runInBand --coverage"
+    "test:coverage": "jest --runInBand --coverage",
+    "migrate": "node-pg-migrate --envPath .env up",
+    "migrate:down": "node-pg-migrate --envPath .env down",
+    "migrate:status": "node-pg-migrate --envPath .env status",
+    "migrate:create": "node-pg-migrate --envPath .env create"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,6 +20,7 @@
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
+    "node-pg-migrate": "^8.0.4",
     "nodemailer": "^8.0.6",
     "pg": "^8.12.0",
     "uuid": "^10.0.0"
