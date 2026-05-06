@@ -79,7 +79,7 @@ export default function Layout({ children }) {
                 {usuario?.nombres} {usuario?.apellidos}
               </p>
               <p className="truncate text-xs text-white/50">
-                {usuario?.roles?.[0]}
+                {usuario?.roles?.join(' · ')}
               </p>
             </div>
           </div>
