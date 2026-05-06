@@ -35,9 +35,10 @@ const lineaVacia = () => ({
 
 export default function CargarHoras() {
   const navigate = useNavigate();
-  const [offsetSemana, setOffsetSemana] = useState(0);
+  const [offsetSemana, setOffsetSemana] = useState(-1);
   const [lineas, setLineas] = useState([lineaVacia()]);
   const [error, setError] = useState('');
+  const [mostrarAlertaSemana, setMostrarAlertaSemana] = useState(false);
 
   const domingo = obtenerDomingo(offsetSemana);
   const semana = formatearSemana(domingo);
@@ -72,6 +73,14 @@ export default function CargarHoras() {
 
   function eliminarLinea(id) {
     setLineas((prev) => prev.filter((l) => l.id !== id));
+  }
+
+  function avanzarSemana() {
+    if (offsetSemana >= -1) {
+      setMostrarAlertaSemana(true);
+    } else {
+      setOffsetSemana((o) => o + 1);
+    }
   }
 
   function manejarSubmit(e) {
@@ -114,8 +123,7 @@ export default function CargarHoras() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setOffsetSemana((o) => o + 1)}
-                disabled={offsetSemana >= 0}
+                onClick={avanzarSemana}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -254,6 +262,20 @@ export default function CargarHoras() {
           </div>
         </form>
       </div>
+
+      {mostrarAlertaSemana && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl border border-slate-200">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Semana no disponible</h3>
+            <p className="text-sm text-slate-600 mb-5">
+              Solo podés cargar horas de semanas ya cerradas. La semana en curso y las futuras no están disponibles para carga.
+            </p>
+            <Button className="w-full" onClick={() => setMostrarAlertaSemana(false)}>
+              Entendido
+            </Button>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
