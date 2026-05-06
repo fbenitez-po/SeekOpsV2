@@ -19,9 +19,9 @@ api.interceptors.response.use(
       original._reintento = true;
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`, { refresh_token: refreshToken });
-        localStorage.setItem('access_token', data.access_token);
-        original.headers.Authorization = `Bearer ${data.access_token}`;
+        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || '/api'}/auth/refresh-token`, { refreshToken });
+        localStorage.setItem('access_token', data.accessToken);
+        original.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(original);
       } catch {
         localStorage.clear();
@@ -35,7 +35,7 @@ api.interceptors.response.use(
 // Auth
 export const authApi = {
   login: (datos) => api.post('/auth/login', datos),
-  logout: (refreshToken) => api.post('/auth/logout', { refresh_token: refreshToken }),
+  logout: (refreshToken) => api.post('/auth/logout', { refreshToken }),
   solicitarReset: (email) => api.post('/auth/solicitar-reset', { email }),
   confirmarReset: (datos) => api.post('/auth/confirmar-reset', datos),
 };
@@ -46,10 +46,10 @@ export const timeEntryApi = {
   obtener: (id) => api.get(`/time-entries/${id}`),
   crear: (datos) => api.post('/time-entries', datos),
   ajustar: (id, datos) => api.put(`/time-entries/${id}`, datos),
-  aprobar: (id) => api.post(`/time-entries/${id}/aprobar`),
-  observar: (id, datos) => api.post(`/time-entries/${id}/observar`, datos),
-  rechazar: (id, datos) => api.post(`/time-entries/${id}/rechazar`, datos),
-  semanasSinCarga: () => api.get('/time-entries/semanas-sin-carga'),
+  aprobar: (id) => api.post(`/time-entries/${id}/approve`),
+  observar: (id, datos) => api.post(`/time-entries/${id}/observe`, datos),
+  rechazar: (id, datos) => api.post(`/time-entries/${id}/reject`, datos),
+  semanasSinCarga: () => api.get('/time-entries/missing-weeks'),
 };
 
 // Usuarios
@@ -77,8 +77,8 @@ export const projectApi = {
   crear: (datos) => api.post('/projects', datos),
   actualizar: (id, datos) => api.put(`/projects/${id}`, datos),
   toggleActivo: (id) => api.patch(`/projects/${id}/toggle-activo`),
-  asignarUsuarios: (id, usuarios) => api.post(`/projects/${id}/usuarios`, { usuarios }),
-  desasignarUsuario: (id, usuarioId) => api.delete(`/projects/${id}/usuarios/${usuarioId}`),
+  asignarUsuarios: (id, members) => api.post(`/projects/${id}/members`, { members }),
+  desasignarUsuario: (id, userId) => api.delete(`/projects/${id}/members/${userId}`),
 };
 
 // Proyecciones de horas
@@ -87,22 +87,22 @@ export const projectionApi = {
   crear: (datos) => api.post('/projections', datos),
   actualizar: (id, datos) => api.put(`/projections/${id}`, datos),
   eliminar: (id) => api.delete(`/projections/${id}`),
-  alertas: () => api.get('/projections/alertas'),
+  alertas: () => api.get('/projections/alerts'),
 };
 
 // Config
 export const configApi = {
-  equipos: () => api.get('/config/equipos'),
+  equipos: () => api.get('/config/teams'),
   areas: () => api.get('/config/areas'),
-  grupos: () => api.get('/config/grupos'),
-  categoriasIngreso: () => api.get('/config/categorias-ingreso'),
-  segmentaciones: () => api.get('/config/segmentaciones'),
-  sectores: () => api.get('/config/sectores'),
-  tiposServicio: () => api.get('/config/tipos-servicio'),
-  categoriasUsuario: () => api.get('/config/categorias-usuario'),
-  segmentacionesProyecto: () => api.get('/config/segmentaciones-proyecto'),
-  categoriasProyecto: () => api.get('/config/categorias-proyecto'),
-  capasProductividad: () => api.get('/config/capas-productividad'),
+  grupos: () => api.get('/config/groups'),
+  categoriasIngreso: () => api.get('/config/income-categories'),
+  segmentaciones: () => api.get('/config/client-segmentations'),
+  sectores: () => api.get('/config/client-sectors'),
+  tiposServicio: () => api.get('/config/service-types'),
+  categoriasUsuario: () => api.get('/config/client-categories'),
+  segmentacionesProyecto: () => api.get('/config/project-segmentations'),
+  categoriasProyecto: () => api.get('/config/project-categories'),
+  capasProductividad: () => api.get('/config/productivity-layers'),
 };
 
 export default api;

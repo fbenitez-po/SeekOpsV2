@@ -1,14 +1,14 @@
 // Reutiliza lógica de ClienteCrear pero carga datos existentes
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clientApi, configApi } from '../../services/api';
+import {useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {clientApi, configApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
 
 export default function ClienteEditar() {
   const { id } = useParams();
@@ -25,18 +25,18 @@ export default function ClienteEditar() {
   useEffect(() => {
     if (cliente) {
       setForm({
-        nombre: cliente.nombre || '',
-        razon_social: cliente.razon_social || '',
-        razon_comercial: cliente.razon_comercial || '',
-        ruc: cliente.ruc || '',
-        nombre_contacto: cliente.nombre_contacto || '',
-        email_contacto: cliente.email_contacto || '',
-        telefono: cliente.telefono || '',
-        direccion: cliente.direccion || '',
-        categoria_usuario_id: cliente.categoria_usuario?.id || '',
-        segmentacion_id: cliente.segmentacion?.id || '',
-        sector_id: cliente.sector?.id || '',
-        activo: cliente.activo,
+        name: cliente.name || '',
+        legalName: cliente.legalName || '',
+        commercialName: cliente.commercialName || '',
+        taxId: cliente.taxId || '',
+        contactName: cliente.contactName || '',
+        contactEmail: cliente.contactEmail || '',
+        phone: cliente.phone || '',
+        address: cliente.address || '',
+        categoryId: cliente.category?.id || '',
+        segmentationId: cliente.segmentation?.id || '',
+        sectorId: cliente.sector?.id || '',
+        isActive: cliente.isActive,
       });
     }
   }, [cliente]);
@@ -63,29 +63,29 @@ export default function ClienteEditar() {
           <Card>
             <CardHeader><CardTitle className="text-base">Información comercial</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2"><Label>Nombre *</Label><Input value={form.nombre} onChange={set('nombre')} required /></div>
-              <div className="space-y-2"><Label>RUC *</Label><Input value={form.ruc} onChange={set('ruc')} required /></div>
-              <div className="space-y-2"><Label>Razón social</Label><Input value={form.razon_social} onChange={set('razon_social')} /></div>
-              <div className="space-y-2"><Label>Razón comercial</Label><Input value={form.razon_comercial} onChange={set('razon_comercial')} /></div>
+              <div className="space-y-2"><Label>Nombre *</Label><Input value={form.name} onChange={set('name')} required /></div>
+              <div className="space-y-2"><Label>RUC *</Label><Input value={form.taxId} onChange={set('taxId')} required /></div>
+              <div className="space-y-2"><Label>Razón social</Label><Input value={form.legalName} onChange={set('legalName')} /></div>
+              <div className="space-y-2"><Label>Razón comercial</Label><Input value={form.commercialName} onChange={set('commercialName')} /></div>
               <div className="space-y-2">
                 <Label>Categoría *</Label>
-                <Select value={form.categoria_usuario_id} onValueChange={set('categoria_usuario_id')}>
+                <Select value={form.categoryId} onValueChange={set('categoryId')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
-                <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
+                <Select value={form.segmentationId} onValueChange={set('segmentationId')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Sector</Label>
-                <Select value={form.sector_id} onValueChange={set('sector_id')}>
+                <Select value={form.sectorId} onValueChange={set('sectorId')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(sectores || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(sectores || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </CardContent>
@@ -94,10 +94,10 @@ export default function ClienteEditar() {
           <Card>
             <CardHeader><CardTitle className="text-base">Contacto</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2"><Label>Nombre de contacto</Label><Input value={form.nombre_contacto} onChange={set('nombre_contacto')} /></div>
-              <div className="space-y-2"><Label>Email de contacto</Label><Input type="email" value={form.email_contacto} onChange={set('email_contacto')} /></div>
-              <div className="space-y-2"><Label>Teléfono</Label><Input value={form.telefono} onChange={set('telefono')} /></div>
-              <div className="space-y-2"><Label>Dirección</Label><Input value={form.direccion} onChange={set('direccion')} /></div>
+              <div className="space-y-2"><Label>Nombre de contacto</Label><Input value={form.contactName} onChange={set('contactName')} /></div>
+              <div className="space-y-2"><Label>Email de contacto</Label><Input type="email" value={form.contactEmail} onChange={set('contactEmail')} /></div>
+              <div className="space-y-2"><Label>Teléfono</Label><Input value={form.phone} onChange={set('phone')} /></div>
+              <div className="space-y-2"><Label>Dirección</Label><Input value={form.address} onChange={set('address')} /></div>
             </CardContent>
           </Card>
 

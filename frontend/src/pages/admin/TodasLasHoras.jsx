@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Eye, X } from 'lucide-react';
-import { timeEntryApi } from '../../services/api';
+import {useState} from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {Check, Eye, X} from 'lucide-react';
+import {timeEntryApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Textarea } from '../../components/ui/textarea';
-import { Label } from '../../components/ui/label';
-import { ESTADO_LABELS, formatearFecha } from '../../lib/utils';
+import {Button} from '../../components/ui/button';
+import {Card, CardContent} from '../../components/ui/card';
+import {Badge} from '../../components/ui/badge';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
+import {Textarea} from '../../components/ui/textarea';
+import {Label} from '../../components/ui/label';
+import {ESTADO_LABELS, formatearFecha} from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
-  PENDIENTE: 'warning',
-  APROBADO: 'success',
-  OBSERVADO: 'info',
-  RECHAZADO: 'destructive',
+  PENDING: 'warning',
+  APPROVED: 'success',
+  OBSERVED: 'info',
+  REJECTED: 'destructive',
 };
 
 function ModalAccion({ tipo, entrada, onCerrar, onConfirmar }) {
@@ -25,7 +25,7 @@ function ModalAccion({ tipo, entrada, onCerrar, onConfirmar }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">{tipo === 'observar' ? 'Observar' : 'Rechazar'} horas</h2>
-        <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
+        <p className="text-sm text-muted-foreground">{entrada.user.firstName} {entrada.user.lastName} — {entrada.week}</p>
         <div className="space-y-2">
           <Label>{tipo === 'observar' ? 'Comentario de observación *' : 'Razón del rechazo *'}</Label>
           <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} />
@@ -48,7 +48,7 @@ export default function TodasLasHoras() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['todas-horas', estado],
-    queryFn: () => timeEntryApi.listar({ ...(estado !== 'TODOS' ? { estado } : {}), limit: 50 }).then((r) => r.data),
+    queryFn: () => timeEntryApi.listar({ ...(estado !== 'TODOS' ? { status: estado } : {}), limit: 50 }).then((r) => r.data),
   });
 
   const mutAprobar = useMutation({
@@ -57,12 +57,12 @@ export default function TodasLasHoras() {
   });
 
   const mutObservar = useMutation({
-    mutationFn: ({ id, comentario }) => timeEntryApi.observar(id, { comentario_observacion: comentario }),
+    mutationFn: ({ id, comentario }) => timeEntryApi.observar(id, { comment: comentario }),
     onSuccess: () => { setModal(null); queryClient.invalidateQueries({ queryKey: ['todas-horas'] }); },
   });
 
   const mutRechazar = useMutation({
-    mutationFn: ({ id, comentario }) => timeEntryApi.rechazar(id, { razon_rechazo: comentario }),
+    mutationFn: ({ id, comentario }) => timeEntryApi.rechazar(id, { rejectionReason: comentario }),
     onSuccess: () => { setModal(null); queryClient.invalidateQueries({ queryKey: ['todas-horas'] }); },
   });
 
@@ -77,10 +77,10 @@ export default function TodasLasHoras() {
             <SelectTrigger className="w-48"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="TODOS">Todos los estados</SelectItem>
-              <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-              <SelectItem value="APROBADO">Aprobado</SelectItem>
-              <SelectItem value="OBSERVADO">Observado</SelectItem>
-              <SelectItem value="RECHAZADO">Rechazado</SelectItem>
+              <SelectItem value="PENDING">Pendiente</SelectItem>
+              <SelectItem value="APPROVED">Aprobado</SelectItem>
+              <SelectItem value="OBSERVED">Observado</SelectItem>
+              <SelectItem value="REJECTED">Rechazado</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -106,15 +106,15 @@ export default function TodasLasHoras() {
                 <tbody>
                   {entradas.map((e) => (
                     <tr key={e.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium">{e.usuario.nombres} {e.usuario.apellidos}</td>
-                      <td className="px-4 py-3">{e.semana}</td>
-                      <td className="px-4 py-3">{e.total_horas}h + {e.total_extras}h ext.</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatearFecha(e.fecha_carga)}</td>
+                      <td className="px-4 py-3 font-medium">{e.user.firstName} {e.user.lastName}</td>
+                      <td className="px-4 py-3">{e.week}</td>
+                      <td className="px-4 py-3">{e.totalHours}h + {e.totalExtraHours}h ext.</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatearFecha(e.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={VARIANTE_ESTADO[e.estado]}>{ESTADO_LABELS[e.estado]}</Badge>
+                        <Badge variant={VARIANTE_ESTADO[e.status]}>{ESTADO_LABELS[e.status]}</Badge>
                       </td>
                       <td className="px-4 py-3">
-                        {e.estado === 'PENDIENTE' && (
+                        {e.status === 'PENDING' && (
                           <div className="flex justify-end gap-1">
                             <Button size="sm" variant="ghost" className="text-green-700" onClick={() => mutAprobar.mutate(e.id)}>
                               <Check className="h-4 w-4" />

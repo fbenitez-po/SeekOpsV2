@@ -1,0 +1,479 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum TimeEntryStatus {
+  PENDING
+  APPROVED
+  OBSERVED
+  REJECTED
+}
+
+enum ProjectRole {
+  SEEKER
+  MANAGER
+  ADMIN
+}
+
+// ─────────────────────────────────────────────
+// CATALOG TABLES
+// ─────────────────────────────────────────────
+
+model IncomeCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  timeEntryLines TimeEntryLine[]
+
+  @@map("income_categories")
+}
+
+model ClientCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  clients Client[]
+
+  @@map("client_categories")
+}
+
+model ServiceType {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@map("service_types")
+}
+
+model ClientSegmentation {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  clients Client[]
+
+  @@map("client_segmentations")
+}
+
+model ClientSector {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  clients Client[]
+
+  @@map("client_sectors")
+}
+
+model Team {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("teams")
+}
+
+model Area {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  userAreas   UserArea[]
+  projects    Project[]
+
+  @@map("areas")
+}
+
+model UserGroup {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members UserGroupMember[]
+
+  @@map("user_groups")
+}
+
+model ProjectSegmentation {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@map("project_segmentation")
+}
+
+model ProjectCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projectLinks ProjectProjectCategory[]
+
+  @@map("project_categories")
+}
+
+model ProductivityLayer {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@map("productivity_layers")
+}
+
+// ─────────────────────────────────────────────
+// CORE TABLES
+// ─────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique @db.VarChar(255)
+  passwordHash   String    @default("$placeholder$") @map("password_hash") @db.VarChar(255)
+  documentNumber String    @unique @map("document_number") @db.VarChar(20)
+  firstName      String    @map("first_name") @db.VarChar(100)
+  lastName       String    @map("last_name") @db.VarChar(100)
+  jobTitle       String    @map("job_title") @db.VarChar(100)
+  phone          String?   @db.VarChar(20)
+  avatarUrl      String?   @map("avatar_url") @db.VarChar(500)
+  teamId         String    @map("team_id") @db.Uuid
+  hireDate       DateTime  @map("hire_date") @db.Date
+  isActive       Boolean   @default(true) @map("is_active")
+  isStaff        Boolean   @default(false) @map("is_staff")
+  isSuperUser    Boolean   @default(false) @map("is_super_user")
+  deactivatedAt  DateTime? @map("deactivated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  createdById    String?   @map("created_by") @db.Uuid
+  updatedById    String?   @map("updated_by") @db.Uuid
+
+  team              Team              @relation(fields: [teamId], references: [id])
+  areas             UserArea[]
+  groups            UserGroupMember[]
+  managedProjects   Project[]         @relation("ProjectManager")
+  projectMemberships ProjectUser[]
+  timeEntries       TimeEntry[]
+  timeEntryApprovals TimeEntryApproval[]
+  refreshToken      RefreshToken?
+  passwordResetToken PasswordResetToken?
+  hourProjections   HourProjection[]
+  createdByUser     User?             @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers      User[]            @relation("UserCreatedBy")
+  updatedByUser     User?             @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  updatedUsers      User[]            @relation("UserUpdatedBy")
+
+  @@index([email])
+  @@index([documentNumber])
+  @@index([isActive])
+  @@index([teamId])
+  @@map("users")
+}
+
+model UserArea {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  areaId    String   @map("area_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area Area @relation(fields: [areaId], references: [id])
+
+  @@unique([userId, areaId])
+  @@index([userId])
+  @@index([areaId])
+  @@map("user_areas")
+}
+
+model UserGroupMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  groupId   String   @map("group_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group UserGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+  @@map("user_group_members")
+}
+
+model Client {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String   @db.VarChar(100)
+  legalName       String?  @map("legal_name") @db.VarChar(150)
+  tradeName       String?  @map("trade_name") @db.VarChar(150)
+  taxId           String   @unique @map("tax_id") @db.VarChar(14)
+  contactName     String?  @map("contact_name") @db.VarChar(100)
+  contactEmail    String?  @map("contact_email") @db.VarChar(255)
+  phone           String?  @db.VarChar(20)
+  address         String?  @db.VarChar(200)
+  categoryId      String   @map("client_category_id") @db.Uuid
+  segmentationId  String   @map("segmentation_id") @db.Uuid
+  sectorId        String?  @map("sector_id") @db.Uuid
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdById     String?  @map("created_by") @db.Uuid
+  updatedById     String?  @map("updated_by") @db.Uuid
+
+  category     ClientCategory     @relation(fields: [categoryId], references: [id])
+  segmentation ClientSegmentation @relation(fields: [segmentationId], references: [id])
+  sector       ClientSector?      @relation(fields: [sectorId], references: [id])
+  projects     Project[]
+
+  @@index([taxId])
+  @@index([isActive])
+  @@index([segmentationId])
+  @@index([sectorId])
+  @@map("clients")
+}
+
+model Project {
+  id                  String    @id @default(uuid()) @db.Uuid
+  code                String    @unique @db.VarChar(20)
+  name                String    @db.VarChar(100)
+  description         String?   @db.Text
+  clientId            String    @map("client_id") @db.Uuid
+  segmentationId      String?   @map("project_segmentation_id") @db.Uuid
+  productivityLayerId String?   @map("productivity_layer_id") @db.Uuid
+  serviceTypeId       String?   @map("service_type_id") @db.Uuid
+  managerId           String    @map("gestor_id") @db.Uuid
+  areaId              String?   @map("area_id") @db.Uuid
+  startDate           DateTime? @map("fecha_inicio") @db.Date
+  endDate             DateTime? @map("fecha_fin") @db.Date
+  isActive            Boolean   @default(true) @map("is_active")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  createdById         String?   @map("created_by") @db.Uuid
+  updatedById         String?   @map("updated_by") @db.Uuid
+
+  client            Client                   @relation(fields: [clientId], references: [id])
+  segmentation      ProjectSegmentation?     @relation(fields: [segmentationId], references: [id])
+  productivityLayer ProductivityLayer?       @relation(fields: [productivityLayerId], references: [id])
+  serviceType       ServiceType?             @relation(fields: [serviceTypeId], references: [id])
+  manager           User                     @relation("ProjectManager", fields: [managerId], references: [id])
+  area              Area?                    @relation(fields: [areaId], references: [id])
+  categories        ProjectProjectCategory[]
+  members           ProjectUser[]
+  timeEntryLines    TimeEntryLine[]
+  hourProjections   HourProjection[]
+
+  @@index([code])
+  @@index([clientId])
+  @@index([managerId])
+  @@index([isActive])
+  @@map("projects")
+}
+
+model ProjectProjectCategory {
+  id         String   @id @default(uuid()) @db.Uuid
+  projectId  String   @map("project_id") @db.Uuid
+  categoryId String   @map("project_category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category ProjectCategory @relation(fields: [categoryId], references: [id])
+
+  @@unique([projectId, categoryId])
+  @@index([projectId])
+  @@index([categoryId])
+  @@map("project_project_categories")
+}
+
+model ProjectUser {
+  id        String      @id @default(uuid()) @db.Uuid
+  projectId String      @map("project_id") @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  role      ProjectRole @map("rol")
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId, role])
+  @@index([projectId])
+  @@index([userId])
+  @@index([isActive])
+  @@map("project_users")
+}
+
+// ─────────────────────────────────────────────
+// TRANSACTIONAL TABLES
+// ─────────────────────────────────────────────
+
+model TimeEntry {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  week            String          @map("semana") @db.VarChar(10)
+  status          TimeEntryStatus @default(PENDING) @map("estado")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  createdByUserId String?         @map("created_by_user_id") @db.Uuid
+  updatedByUserId String?         @map("updated_by_user_id") @db.Uuid
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lines     TimeEntryLine[]
+  approvals TimeEntryApproval[]
+
+  @@index([userId])
+  @@index([week])
+  @@index([status])
+  @@index([userId, week])
+  @@map("time_entries")
+}
+
+model TimeEntryLine {
+  id               String   @id @default(uuid()) @db.Uuid
+  timeEntryId      String   @map("time_entry_id") @db.Uuid
+  projectId        String   @map("project_id") @db.Uuid
+  incomeCategoryId String?  @map("income_category_id") @db.Uuid
+  hours            Int
+  extraHours       Int      @default(0) @map("extra_hours")
+  comment          String?  @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  timeEntry      TimeEntry       @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  project        Project         @relation(fields: [projectId], references: [id])
+  incomeCategory IncomeCategory? @relation(fields: [incomeCategoryId], references: [id])
+
+  @@index([timeEntryId])
+  @@index([projectId])
+  @@map("time_entry_lines")
+}
+
+model TimeEntryApproval {
+  id                String          @id @default(uuid()) @db.Uuid
+  timeEntryId       String          @map("time_entry_id") @db.Uuid
+  action            TimeEntryStatus
+  comment           String?         @db.Text
+  suggestedHours    Int?            @map("suggested_hours")
+  suggestedExtraHours Int?          @map("suggested_extra_hours")
+  rejectionReason   String?         @map("rejection_reason") @db.Text
+  allowResubmit     Boolean         @default(true) @map("allow_resubmit")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  createdByUserId   String?         @map("created_by_user_id") @db.Uuid
+
+  timeEntry     TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
+  createdByUser User?     @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([timeEntryId])
+  @@index([createdByUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("time_entry_approvals")
+}
+
+model HourProjection {
+  id               String   @id @default(uuid()) @db.Uuid
+  projectId        String   @map("project_id") @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  startDate        DateTime @map("fecha_inicio") @db.Date
+  endDate          DateTime @map("fecha_fin") @db.Date
+  projectedHours   Int      @map("horas_proyectadas")
+  notes            String?  @map("notas") @db.Text
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdByUserId  String?  @map("created_by_user_id") @db.Uuid
+  updatedByUserId  String?  @map("updated_by_user_id") @db.Uuid
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([projectId, userId])
+  @@index([startDate, endDate])
+  @@map("hour_projections")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  token     String   @db.Text
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  token     String   @db.Text
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("password_reset_tokens")
+}

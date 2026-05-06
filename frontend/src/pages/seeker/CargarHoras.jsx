@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { timeEntryApi, projectApi, configApi } from '../../services/api';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import {ChevronLeft, ChevronRight, Plus, Trash2} from 'lucide-react';
+import {configApi, projectApi, timeEntryApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Textarea} from '../../components/ui/textarea';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
 import {
-  formatearSemana,
-  formatearRangoDeSemana,
-  formatearDiaMes,
-  obtenerDomingoBase,
-  obtenerFeriadosSemana,
+    formatearDiaMes,
+    formatearRangoDeSemana,
+    formatearSemana,
+    obtenerDomingoBase,
+    obtenerFeriadosSemana,
 } from '../../lib/utils';
 
 function obtenerDomingo(offset = 0) {
@@ -26,8 +26,8 @@ function obtenerDomingo(offset = 0) {
 
 const lineaVacia = () => ({
   id: crypto.randomUUID(),
-  proyecto_id: '',
-  categoria_ingreso_id: null,
+  projectId: '',
+  incomeCategoryId: null,
   horas: '',
   horas_extra: '',
   comentario: '',
@@ -46,7 +46,7 @@ export default function CargarHoras() {
 
   const { data: proyectos } = useQuery({
     queryKey: ['proyectos-asignados'],
-    queryFn: () => projectApi.listar({ activo: true }).then((r) => r.data.data),
+    queryFn: () => projectApi.listar({ isActive: true }).then((r) => r.data.data),
   });
 
   const { data: categorias } = useQuery({
@@ -60,7 +60,7 @@ export default function CargarHoras() {
     onError: (err) => setError(err.response?.data?.error || 'Error al guardar'),
   });
 
-  const proyectosUsados = lineas.map((l) => l.proyecto_id).filter(Boolean);
+  const proyectosUsados = lineas.map((l) => l.projectId).filter(Boolean);
 
   function actualizarLinea(id, campo, valor) {
     setLineas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
@@ -78,13 +78,13 @@ export default function CargarHoras() {
     e.preventDefault();
     setError('');
     mutation.mutate({
-      semana,
-      lineas: lineas.map((l) => ({
-        proyecto_id: l.proyecto_id,
-        categoria_ingreso_id: l.categoria_ingreso_id || null,
-        horas: parseInt(l.horas) || 0,
-        horas_extra: parseInt(l.horas_extra) || 0,
-        comentario: l.comentario,
+      week: semana,
+      lines: lineas.map((l) => ({
+        projectId: l.projectId,
+        incomeCategoryId: l.incomeCategoryId || null,
+        hours: parseInt(l.horas) || 0,
+        extraHours: parseInt(l.horas_extra) || 0,
+        comment: l.comentario,
       })),
     });
   }
@@ -138,10 +138,10 @@ export default function CargarHoras() {
         <form onSubmit={manejarSubmit} className="space-y-4">
           {lineas.map((linea, idx) => {
             const proyectosDisponibles = (proyectos || []).filter(
-              (p) => p.id === linea.proyecto_id || !proyectosUsados.includes(p.id)
+              (p) => p.id === linea.projectId || !proyectosUsados.includes(p.id)
             );
-            const proyectoSeleccionado = (proyectos || []).find((p) => p.id === linea.proyecto_id);
-            const esAreaProject = proyectoSeleccionado?.categoria_ingreso?.nombre === 'Area';
+            const proyectoSeleccionado = (proyectos || []).find((p) => p.id === linea.projectId);
+            const esAreaProject = proyectoSeleccionado?.serviceType?.name === 'Area';
 
             return (
               <Card key={linea.id}>
@@ -159,8 +159,8 @@ export default function CargarHoras() {
                   <div className="space-y-2">
                     <Label>Proyecto</Label>
                     <Select
-                      value={linea.proyecto_id}
-                      onValueChange={(v) => actualizarLinea(linea.id, 'proyecto_id', v)}
+                      value={linea.projectId}
+                      onValueChange={(v) => actualizarLinea(linea.id, 'projectId', v)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccioná un proyecto" />
@@ -168,7 +168,7 @@ export default function CargarHoras() {
                       <SelectContent>
                         {proyectosDisponibles.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
-                            {p.nombre} ({p.codigo})
+                            {p.name} ({p.code})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -179,15 +179,15 @@ export default function CargarHoras() {
                     <div className="space-y-2">
                       <Label>Categoría de ingreso</Label>
                       <Select
-                        value={linea.categoria_ingreso_id || ''}
-                        onValueChange={(v) => actualizarLinea(linea.id, 'categoria_ingreso_id', v)}
+                        value={linea.incomeCategoryId || ''}
+                        onValueChange={(v) => actualizarLinea(linea.id, 'incomeCategoryId', v)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccioná categoría" />
                         </SelectTrigger>
                         <SelectContent>
                           {(categorias || []).map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

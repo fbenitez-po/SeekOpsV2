@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { projectApi, clientApi, userApi, configApi } from '../../services/api';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import {clientApi, configApi, projectApi, userApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Textarea} from '../../components/ui/textarea';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
 
 function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
   const toggle = (id) => {
@@ -26,7 +26,7 @@ function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
             className="h-4 w-4 rounded border"
             style={{ accentColor: '#0f172a' }}
           />
-          <span className="text-sm">{op.nombre}</span>
+          <span className="text-sm">{op.name}</span>
         </label>
       ))}
     </div>
@@ -36,15 +36,15 @@ function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
 export default function ProyectoCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    codigo: '', nombre: '', cliente_id: '', descripcion: '',
-    segmentacion_id: '', categorias_proyecto_ids: [], tipo_servicio_id: '', capa_productividad_id: '',
-    gestor_id: '', fecha_inicio: '', fecha_fin: '', activo: true,
-    tiene_area: false, area_id: '',
+    code: '', name: '', clientId: '', description: '',
+    segmentationId: '', projectCategoryIds: [], serviceTypeId: '', productivityLayerId: '',
+    managerId: '', startDate: '', endDate: '', isActive: true,
+    hasArea: false, areaId: '',
   });
   const [error, setError] = useState('');
 
-  const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
-  const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTORES', activo: true, limit: 100 }).then((r) => r.data.data) });
+  const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ isActive: true, limit: 100 }).then((r) => r.data.data) });
+  const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ group: 'MANAGERS', isActive: true, limit: 100 }).then((r) => r.data.data) });
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
   const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });
@@ -53,8 +53,8 @@ export default function ProyectoCrear() {
 
   const mutation = useMutation({
     mutationFn: (datos) => {
-      const { tiene_area, ...resto } = datos;
-      return projectApi.crear({ ...resto, area_id: tiene_area ? resto.area_id || null : null });
+      const { hasArea, ...resto } = datos;
+      return projectApi.crear({ ...resto, areaId: hasArea ? resto.areaId || null : null });
     },
     onSuccess: () => navigate('/admin/proyectos'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear proyecto'),
@@ -73,28 +73,28 @@ export default function ProyectoCrear() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Código *</Label>
-                <Input value={form.codigo} onChange={set('codigo')} required maxLength={20} placeholder="PRJ-001" />
+                <Input value={form.code} onChange={set('code')} required maxLength={20} placeholder="PRJ-001" />
               </div>
               <div className="space-y-2">
                 <Label>Nombre *</Label>
-                <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} />
+                <Input value={form.name} onChange={set('name')} required maxLength={100} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Descripción</Label>
-                <Textarea value={form.descripcion} onChange={set('descripcion')} maxLength={500} rows={2} />
+                <Textarea value={form.description} onChange={set('description')} maxLength={500} rows={2} />
               </div>
               <div className="space-y-2">
                 <Label>Cliente *</Label>
-                <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
+                <Select value={form.clientId} onValueChange={set('clientId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná cliente" /></SelectTrigger>
-                  <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Gestor *</Label>
-                <Select value={form.gestor_id} onValueChange={set('gestor_id')}>
+                <Select value={form.managerId} onValueChange={set('managerId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná gestor" /></SelectTrigger>
-                  <SelectContent>{(gestores || []).map((g) => <SelectItem key={g.id} value={g.id}>{g.nombres} {g.apellidos}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(gestores || []).map((g) => <SelectItem key={g.id} value={g.id}>{g.firstName} {g.lastName}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </CardContent>
@@ -105,43 +105,43 @@ export default function ProyectoCrear() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
-                <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
+                <Select value={form.segmentationId} onValueChange={set('segmentationId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Categoría de ingreso</Label>
                 <MultiCheckbox
                   opciones={categorias || []}
-                  seleccionados={form.categorias_proyecto_ids}
-                  onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
+                  seleccionados={form.projectCategoryIds}
+                  onChange={(ids) => setForm((f) => ({ ...f, projectCategoryIds: ids }))}
                 />
-                {form.categorias_proyecto_ids.length > 0 && (
-                  <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
+                {form.projectCategoryIds.length > 0 && (
+                  <p className="text-xs text-[#64748b]">{form.projectCategoryIds.length} seleccionada{form.projectCategoryIds.length > 1 ? 's' : ''}</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>Tipo de servicio</Label>
-                <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
+                <Select value={form.serviceTypeId} onValueChange={set('serviceTypeId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                  <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Capa de productividad</Label>
-                <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
+                <Select value={form.productivityLayerId} onValueChange={set('productivityLayerId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Fecha inicio</Label>
-                <Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} />
+                <Input type="date" value={form.startDate} onChange={set('startDate')} />
               </div>
               <div className="space-y-2">
                 <Label>Fecha fin</Label>
-                <Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} />
+                <Input type="date" value={form.endDate} onChange={set('endDate')} />
               </div>
             </CardContent>
           </Card>
@@ -152,19 +152,19 @@ export default function ProyectoCrear() {
               <label className="flex items-center gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  checked={form.tiene_area}
-                  onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
+                  checked={form.hasArea}
+                  onChange={(e) => setForm((f) => ({ ...f, hasArea: e.target.checked, areaId: '' }))}
                   className="h-4 w-4 rounded border"
                   style={{ accentColor: '#0f172a' }}
                 />
                 <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
               </label>
-              {form.tiene_area && (
+              {form.hasArea && (
                 <div className="space-y-2">
                   <Label>Área *</Label>
-                  <Select value={form.area_id} onValueChange={set('area_id')}>
+                  <Select value={form.areaId} onValueChange={set('areaId')}>
                     <SelectTrigger><SelectValue placeholder="Seleccioná el área" /></SelectTrigger>
-                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
+                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               )}

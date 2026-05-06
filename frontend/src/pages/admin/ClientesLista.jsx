@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
-import { clientApi } from '../../services/api';
+import {useState} from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useNavigate} from 'react-router-dom';
+import {Pencil, Plus, ToggleLeft, ToggleRight} from 'lucide-react';
+import {clientApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import { Card, CardContent } from '../../components/ui/card';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Badge} from '../../components/ui/badge';
+import {Card, CardContent} from '../../components/ui/card';
 
 export default function ClientesLista() {
   const navigate = useNavigate();
@@ -57,12 +57,12 @@ export default function ClientesLista() {
                 <tbody>
                   {clientes.map((c) => (
                     <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium">{c.nombre}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{c.ruc}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{c.segmentacion?.nombre || '—'}</td>
-                      <td className="px-4 py-3">{c.proyectos_count}</td>
+                      <td className="px-4 py-3 font-medium">{c.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{c.taxId}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{c.segmentation?.name || '—'}</td>
+                      <td className="px-4 py-3">—</td>
                       <td className="px-4 py-3">
-                        <Badge variant={c.activo ? 'success' : 'secondary'}>{c.activo ? 'Activo' : 'Inactivo'}</Badge>
+                        <Badge variant={c.isActive ? 'success' : 'secondary'}>{c.isActive ? 'Activo' : 'Inactivo'}</Badge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
@@ -70,7 +70,7 @@ export default function ClientesLista() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => mutToggle.mutate(c.id)}>
-                            {c.activo ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
+                            {c.isActive ? <ToggleRight className="h-4 w-4 text-green-600" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
                           </Button>
                         </div>
                       </td>

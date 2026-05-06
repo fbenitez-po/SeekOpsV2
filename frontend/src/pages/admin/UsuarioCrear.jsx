@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { userApi, configApi } from '../../services/api';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import {configApi, userApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
 
 function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
   function toggle(id) {
@@ -35,7 +35,7 @@ function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
               borderColor: activo ? '#0f172a' : '#e2e8f0',
             }}
           >
-            {o.nombre}
+            {o.name}
           </button>
         );
       })}
@@ -44,24 +44,24 @@ function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
 }
 
 function SelectorGrupos({ grupos, seleccionados, onChange }) {
-  function toggle(codigo) {
-    if (seleccionados.includes(codigo)) {
+  function toggle(code) {
+    if (seleccionados.includes(code)) {
       if (seleccionados.length === 1) return;
-      onChange(seleccionados.filter((c) => c !== codigo));
+      onChange(seleccionados.filter((c) => c !== code));
     } else {
-      onChange([...seleccionados, codigo]);
+      onChange([...seleccionados, code]);
     }
   }
 
   return (
     <div className="flex flex-wrap gap-2">
       {(grupos || []).map((g) => {
-        const activo = seleccionados.includes(g.codigo);
+        const activo = seleccionados.includes(g.code);
         return (
           <button
             key={g.id}
             type="button"
-            onClick={() => toggle(g.codigo)}
+            onClick={() => toggle(g.code)}
             className="rounded-md px-3 py-1.5 text-sm font-medium border transition-colors"
             style={{
               backgroundColor: activo ? '#0f172a' : '#ffffff',
@@ -69,7 +69,7 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
               borderColor: activo ? '#0f172a' : '#e2e8f0',
             }}
           >
-            {g.nombre}
+            {g.name}
           </button>
         );
       })}
@@ -80,10 +80,10 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
 export default function UsuarioCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    email: '', nombres: '', apellidos: '', numero_documento: '',
-    puesto: '', celular: '', equipo_id: '', areas: [],
-    fecha_ingreso: '', activo: true, staff: false, super_usuario: false,
-    grupos: ['SEEKER'],
+    email: '', firstName: '', lastName: '', documentNumber: '',
+    jobTitle: '', phone: '', teamId: '', areas: [],
+    hireDate: '', isActive: true, isStaff: false, isSuperUser: false,
+    groups: ['SEEKER'],
   });
   const [error, setError] = useState('');
 
@@ -92,7 +92,7 @@ export default function UsuarioCrear() {
   const { data: grupos } = useQuery({ queryKey: ['grupos'], queryFn: () => configApi.grupos().then((r) => r.data) });
 
   const mutation = useMutation({
-    mutationFn: (datos) => userApi.crear({ ...datos, celular: datos.celular || null }),
+    mutationFn: (datos) => userApi.crear({ ...datos, phone: datos.phone || null }),
     onSuccess: () => navigate('/admin/usuarios'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear usuario'),
   });
@@ -124,23 +124,23 @@ export default function UsuarioCrear() {
               </div>
               <div className="space-y-2">
                 <Label>Documento *</Label>
-                <Input value={form.numero_documento} onChange={set('numero_documento')} required pattern="\d{6,20}" />
+                <Input value={form.documentNumber} onChange={set('documentNumber')} required pattern="\d{6,20}" />
               </div>
               <div className="space-y-2">
                 <Label>Nombres *</Label>
-                <Input value={form.nombres} onChange={set('nombres')} required maxLength={100} />
+                <Input value={form.firstName} onChange={set('firstName')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Apellidos *</Label>
-                <Input value={form.apellidos} onChange={set('apellidos')} required maxLength={100} />
+                <Input value={form.lastName} onChange={set('lastName')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Puesto *</Label>
-                <Input value={form.puesto} onChange={set('puesto')} required maxLength={100} />
+                <Input value={form.jobTitle} onChange={set('jobTitle')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Celular</Label>
-                <Input value={form.celular} onChange={set('celular')} placeholder="+51..." />
+                <Input value={form.phone} onChange={set('phone')} placeholder="+51..." />
               </div>
             </CardContent>
           </Card>
@@ -150,14 +150,14 @@ export default function UsuarioCrear() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Equipo *</Label>
-                <Select value={form.equipo_id} onValueChange={set('equipo_id')}>
+                <Select value={form.teamId} onValueChange={set('teamId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná equipo" /></SelectTrigger>
-                  <SelectContent>{(equipos || []).map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(equipos || []).map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Fecha de ingreso *</Label>
-                <Input type="date" value={form.fecha_ingreso} onChange={set('fecha_ingreso')} required max={new Date().toISOString().split('T')[0]} />
+                <Input type="date" value={form.hireDate} onChange={set('hireDate')} required max={new Date().toISOString().split('T')[0]} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, podés seleccionar varias)</span></Label>
@@ -175,8 +175,8 @@ export default function UsuarioCrear() {
                 <Label>Grupos / Roles *</Label>
                 <SelectorGrupos
                   grupos={grupos}
-                  seleccionados={form.grupos}
-                  onChange={(v) => setForm((f) => ({ ...f, grupos: v }))}
+                  seleccionados={form.groups}
+                  onChange={(v) => setForm((f) => ({ ...f, groups: v }))}
                 />
                 <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
               </div>

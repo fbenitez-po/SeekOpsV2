@@ -1,14 +1,14 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { timeEntryApi } from '../../services/api';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useEffect, useState} from 'react';
+import {timeEntryApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { formatearFechaHora } from '../../lib/utils';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Textarea} from '../../components/ui/textarea';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {formatearFechaHora} from '../../lib/utils';
 
 export default function AjustarHoras() {
   const { id } = useParams();
@@ -24,12 +24,12 @@ export default function AjustarHoras() {
 
   useEffect(() => {
     if (entrada) {
-      setLineas(entrada.lineas.map((l) => ({
+      setLineas(entrada.lines.map((l) => ({
         id: l.id,
-        proyecto_nombre: l.proyecto.nombre,
-        horas: l.horas,
-        horas_extra: l.horas_extra,
-        comentario: l.comentario,
+        proyecto_nombre: l.project.name,
+        horas: l.hours,
+        horas_extra: l.extraHours,
+        comentario: l.comment,
       })));
     }
   }, [entrada]);
@@ -50,25 +50,25 @@ export default function AjustarHoras() {
   function manejarSubmit(e) {
     e.preventDefault();
     mutation.mutate({
-      lineas: lineas.map((l) => ({
+      lines: lineas.map((l) => ({
         id: l.id,
-        horas: parseInt(l.horas) || 0,
-        horas_extra: parseInt(l.horas_extra) || 0,
-        comentario: l.comentario,
+        hours: parseInt(l.horas) || 0,
+        extraHours: parseInt(l.horas_extra) || 0,
+        comment: l.comentario,
       })),
     });
   }
 
   if (isLoading) return <Layout><p className="text-muted-foreground">Cargando...</p></Layout>;
 
-  const ultimaObservacion = entrada?.aprobaciones?.slice().reverse().find((a) => a.accion === 'OBSERVADO');
+  const ultimaObservacion = entrada?.approvals?.slice().reverse().find((a) => a.action === 'OBSERVED');
 
   return (
     <Layout>
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Ajustar horas</h1>
-          <p className="text-muted-foreground">Semana: {entrada?.semana}</p>
+          <p className="text-muted-foreground">Semana: {entrada?.week}</p>
         </div>
 
         {ultimaObservacion && (
@@ -77,15 +77,15 @@ export default function AjustarHoras() {
               <CardTitle className="text-sm text-blue-800">Observación del gestor</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-blue-900">{ultimaObservacion.comentario}</p>
-              {ultimaObservacion.sugerencia_horas !== null && (
+              <p className="text-sm text-blue-900">{ultimaObservacion.comment}</p>
+              {ultimaObservacion.suggestedHours !== null && (
                 <p className="text-sm text-blue-700">
-                  Sugerencia: {ultimaObservacion.sugerencia_horas}h normales
-                  {ultimaObservacion.sugerencia_extras !== null && ` · ${ultimaObservacion.sugerencia_extras}h extras`}
+                  Sugerencia: {ultimaObservacion.suggestedHours}h normales
+                  {ultimaObservacion.suggestedExtraHours !== null && ` · ${ultimaObservacion.suggestedExtraHours}h extras`}
                 </p>
               )}
               <p className="text-xs text-blue-600">
-                {ultimaObservacion.realizado_por.nombres} {ultimaObservacion.realizado_por.apellidos} · {formatearFechaHora(ultimaObservacion.fecha)}
+                {ultimaObservacion.createdBy.firstName} {ultimaObservacion.createdBy.lastName} · {formatearFechaHora(ultimaObservacion.createdAt)}
               </p>
             </CardContent>
           </Card>

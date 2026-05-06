@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Eye, X } from 'lucide-react';
-import { timeEntryApi } from '../../services/api';
+import {useState} from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {Check, Eye, X} from 'lucide-react';
+import {timeEntryApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Textarea } from '../../components/ui/textarea';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { formatearFecha, ESTADO_LABELS } from '../../lib/utils';
+import {Button} from '../../components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Badge} from '../../components/ui/badge';
+import {Textarea} from '../../components/ui/textarea';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {ESTADO_LABELS, formatearFecha} from '../../lib/utils';
 
 function ModalObservar({ entrada, onCerrar, onConfirmar }) {
   const [comentario, setComentario] = useState('');
@@ -19,7 +19,7 @@ function ModalObservar({ entrada, onCerrar, onConfirmar }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">Observar horas</h2>
-        <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
+        <p className="text-sm text-muted-foreground">{entrada.user.firstName} {entrada.user.lastName} — {entrada.week}</p>
 
         <div className="space-y-2">
           <Label>Comentario de observación *</Label>
@@ -32,7 +32,7 @@ function ModalObservar({ entrada, onCerrar, onConfirmar }) {
 
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onCerrar}>Cancelar</Button>
-          <Button className="flex-1" disabled={!comentario} onClick={() => onConfirmar({ comentario_observacion: comentario, sugerencia_horas: sugerenciaHoras ? parseInt(sugerenciaHoras) : null })}>
+          <Button className="flex-1" disabled={!comentario} onClick={() => onConfirmar({ comment: comentario, suggestedHours: sugerenciaHoras ? parseInt(sugerenciaHoras) : null })}>
             Observar
           </Button>
         </div>
@@ -48,7 +48,7 @@ function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">Rechazar horas</h2>
-        <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
+        <p className="text-sm text-muted-foreground">{entrada.user.firstName} {entrada.user.lastName} — {entrada.week}</p>
 
         <div className="space-y-2">
           <Label>Razón del rechazo *</Label>
@@ -57,7 +57,7 @@ function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
 
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onCerrar}>Cancelar</Button>
-          <Button variant="destructive" className="flex-1" disabled={!razon} onClick={() => onConfirmar({ razon_rechazo: razon, permitir_reenvio: false })}>
+          <Button variant="destructive" className="flex-1" disabled={!razon} onClick={() => onConfirmar({ rejectionReason: razon, allowResubmit: false })}>
             Rechazar
           </Button>
         </div>
@@ -72,8 +72,8 @@ export default function HorasEquipo() {
   const [modalRechazar, setModalRechazar] = useState(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['horas-equipo', 'PENDIENTE'],
-    queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
+    queryKey: ['horas-equipo', 'PENDING'],
+    queryFn: () => timeEntryApi.listar({ status: 'PENDING', limit: 50 }).then((r) => r.data),
   });
 
   const entradas = data?.data || [];
@@ -124,21 +124,21 @@ export default function HorasEquipo() {
                   <div key={entrada.id} className="rounded-md border p-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <p className="font-medium">{entrada.usuario.nombres} {entrada.usuario.apellidos}</p>
+                        <p className="font-medium">{entrada.user.firstName} {entrada.user.lastName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {entrada.semana} · {entrada.total_horas}h normales · {entrada.total_extras}h extras
+                          {entrada.week} · {entrada.totalHours}h normales · {entrada.totalExtraHours}h extras
                         </p>
-                        <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
+                        <p className="text-xs text-muted-foreground">{formatearFecha(entrada.createdAt)}</p>
                         <div className="mt-2 space-y-1">
-                          {entrada.lineas.map((l) => (
+                          {entrada.lines.map((l) => (
                             <p key={l.id} className="text-xs text-muted-foreground">
-                              {l.proyecto.nombre}: {l.horas}h{l.horas_extra > 0 ? ` + ${l.horas_extra}h extras` : ''}
-                              {l.comentario ? ` — ${l.comentario}` : ''}
+                              {l.project.name}: {l.hours}h{l.extraHours > 0 ? ` + ${l.extraHours}h extras` : ''}
+                              {l.comment ? ` — ${l.comment}` : ''}
                             </p>
                           ))}
                         </div>
                       </div>
-                      <Badge variant="warning">{ESTADO_LABELS[entrada.estado]}</Badge>
+                      <Badge variant="warning">{ESTADO_LABELS[entrada.status]}</Badge>
                     </div>
 
                     <div className="mt-3 flex gap-2">

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { authApi } from '../services/api';
+import {create} from 'zustand';
+import {authApi} from '../services/api';
 
 const useAuthStore = create((set, get) => ({
   usuario: JSON.parse(localStorage.getItem('usuario') || 'null'),
@@ -10,11 +10,11 @@ const useAuthStore = create((set, get) => ({
     set({ cargando: true, error: null });
     try {
       const { data } = await authApi.login({ email, password });
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('usuario', JSON.stringify(data.usuario));
-      set({ usuario: data.usuario, cargando: false });
-      return data.usuario;
+      localStorage.setItem('access_token', data.accessToken);
+      localStorage.setItem('refresh_token', data.refreshToken);
+      localStorage.setItem('usuario', JSON.stringify(data.user));
+      set({ usuario: data.user, cargando: false });
+      return data.user;
     } catch (err) {
       const mensaje = err.response?.data?.error || 'Error al iniciar sesión';
       set({ error: mensaje, cargando: false });
@@ -38,7 +38,7 @@ const useAuthStore = create((set, get) => ({
   },
 
   esAdmin: () => get().tieneRol('ADMIN'),
-  esGestor: () => get().tieneRol('GESTOR'),
+  esGestor: () => get().tieneRol('MANAGER'),
   esSeeker: () => get().tieneRol('SEEKER'),
 }));
 

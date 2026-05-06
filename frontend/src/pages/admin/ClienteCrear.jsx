@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { clientApi, configApi } from '../../services/api';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import {clientApi, configApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
 
 export default function ClienteCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    nombre: '', razon_social: '', razon_comercial: '', ruc: '',
-    nombre_contacto: '', email_contacto: '', telefono: '', direccion: '',
-    categoria_usuario_id: '', segmentacion_id: '', sector_id: '', activo: true,
+    name: '', legalName: '', commercialName: '', taxId: '',
+    contactName: '', contactEmail: '', phone: '', address: '',
+    categoryId: '', segmentationId: '', sectorId: '', isActive: true,
   });
   const [error, setError] = useState('');
 
@@ -41,39 +41,39 @@ export default function ClienteCrear() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nombre *</Label>
-                <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} />
+                <Input value={form.name} onChange={set('name')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>RUC *</Label>
-                <Input value={form.ruc} onChange={set('ruc')} required pattern="\d{11,14}" placeholder="20123456789" />
+                <Input value={form.taxId} onChange={set('taxId')} required pattern="\d{11,14}" placeholder="20123456789" />
               </div>
               <div className="space-y-2">
                 <Label>Razón social</Label>
-                <Input value={form.razon_social} onChange={set('razon_social')} maxLength={150} />
+                <Input value={form.legalName} onChange={set('legalName')} maxLength={150} />
               </div>
               <div className="space-y-2">
                 <Label>Razón comercial</Label>
-                <Input value={form.razon_comercial} onChange={set('razon_comercial')} maxLength={150} />
+                <Input value={form.commercialName} onChange={set('commercialName')} maxLength={150} />
               </div>
               <div className="space-y-2">
                 <Label>Categoría *</Label>
-                <Select value={form.categoria_usuario_id} onValueChange={set('categoria_usuario_id')}>
+                <Select value={form.categoryId} onValueChange={set('categoryId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná categoría" /></SelectTrigger>
-                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
-                <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
+                <Select value={form.segmentationId} onValueChange={set('segmentationId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná segmentación" /></SelectTrigger>
-                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Sector</Label>
-                <Select value={form.sector_id} onValueChange={set('sector_id')}>
+                <Select value={form.sectorId} onValueChange={set('sectorId')}>
                   <SelectTrigger><SelectValue placeholder="Seleccioná sector" /></SelectTrigger>
-                  <SelectContent>{(sectores || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(sectores || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </CardContent>
@@ -84,19 +84,19 @@ export default function ClienteCrear() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nombre de contacto</Label>
-                <Input value={form.nombre_contacto} onChange={set('nombre_contacto')} maxLength={100} />
+                <Input value={form.contactName} onChange={set('contactName')} maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Email de contacto</Label>
-                <Input type="email" value={form.email_contacto} onChange={set('email_contacto')} />
+                <Input type="email" value={form.contactEmail} onChange={set('contactEmail')} />
               </div>
               <div className="space-y-2">
                 <Label>Teléfono</Label>
-                <Input value={form.telefono} onChange={set('telefono')} placeholder="+51..." />
+                <Input value={form.phone} onChange={set('phone')} placeholder="+51..." />
               </div>
               <div className="space-y-2">
                 <Label>Dirección</Label>
-                <Input value={form.direccion} onChange={set('direccion')} maxLength={200} />
+                <Input value={form.address} onChange={set('address')} maxLength={200} />
               </div>
             </CardContent>
           </Card>

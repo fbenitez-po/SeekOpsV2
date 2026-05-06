@@ -1,7 +1,7 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange } from 'lucide-react';
+import {Link, useLocation, useNavigate} from 'react-router-dom';
+import {Building2, CalendarRange, CheckSquare, Clock, FolderOpen, LayoutDashboard, LogOut, Users} from 'lucide-react';
 import useAuthStore from '../../store/authStore';
-import { cn } from '../../lib/utils';
+import {cn} from '../../lib/utils';
 
 const navSeeker = [
   { label: 'Inicio', href: '/seeker', icon: LayoutDashboard },
@@ -72,11 +72,11 @@ export default function Layout({ children }) {
         <div className="border-t border-white/10 p-4">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
-              {usuario?.nombres?.[0]}{usuario?.apellidos?.[0]}
+              {usuario?.firstName?.[0]}{usuario?.lastName?.[0]}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-white">
-                {usuario?.nombres} {usuario?.apellidos}
+                {usuario?.firstName} {usuario?.lastName}
               </p>
               <p className="truncate text-xs text-white/50">
                 {usuario?.roles?.[0]}

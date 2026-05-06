@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ChevronDown, ChevronUp, Clock, Plus } from 'lucide-react';
-import { timeEntryApi } from '../../services/api';
+import {useState} from 'react';
+import {useQuery} from '@tanstack/react-query';
+import {useNavigate} from 'react-router-dom';
+import {AlertTriangle, ChevronDown, ChevronUp, Clock, Plus} from 'lucide-react';
+import {timeEntryApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
+import {Button} from '../../components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Badge} from '../../components/ui/badge';
+import {ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo} from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
-  PENDIENTE: 'warning',
-  APROBADO: 'success',
-  OBSERVADO: 'info',
-  RECHAZADO: 'destructive',
+  PENDING: 'warning',
+  APPROVED: 'success',
+  OBSERVED: 'info',
+  REJECTED: 'destructive',
 };
 
 function TarjetaEntrada({ entrada, onClick }) {
-  const lineas = entrada.lineas || [];
-  const proyectosUnicos = [...new Set(lineas.map((l) => l.proyecto?.nombre).filter(Boolean))];
+  const lineas = entrada.lines || [];
+  const proyectosUnicos = [...new Set(lineas.map((l) => l.project?.name).filter(Boolean))];
 
   return (
     <div
@@ -28,18 +28,18 @@ function TarjetaEntrada({ entrada, onClick }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-0.5">
           <p className="font-medium leading-snug">
-            {formatearRangoDeSemana(semanaADomingo(entrada.semana)) || entrada.semana}
+            {formatearRangoDeSemana(semanaADomingo(entrada.week)) || entrada.week}
           </p>
           {proyectosUnicos.length > 0 && (
             <p className="text-sm text-muted-foreground">{proyectosUnicos.join(' · ')}</p>
           )}
           <p className="text-sm text-muted-foreground">
-            {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
+            {entrada.totalHours}h{entrada.totalExtraHours > 0 ? ` + ${entrada.totalExtraHours}h extra` : ''}
           </p>
-          <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
+          <p className="text-xs text-muted-foreground">{formatearFecha(entrada.createdAt)}</p>
         </div>
-        <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 mt-0.5">
-          {ESTADO_LABELS[entrada.estado]}
+        <Badge variant={VARIANTE_ESTADO[entrada.status]} className="shrink-0 mt-0.5">
+          {ESTADO_LABELS[entrada.status]}
         </Badge>
       </div>
     </div>
@@ -57,13 +57,13 @@ export default function HomeSeeker() {
   });
 
   const { data: pendientes, isLoading: cargandoPendientes } = useQuery({
-    queryKey: ['time-entries', 'PENDIENTE'],
-    queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE' }).then((r) => r.data),
+    queryKey: ['time-entries', 'PENDING'],
+    queryFn: () => timeEntryApi.listar({ status: 'PENDING' }).then((r) => r.data),
   });
 
   const { data: observadas } = useQuery({
-    queryKey: ['time-entries', 'OBSERVADO'],
-    queryFn: () => timeEntryApi.listar({ estado: 'OBSERVADO' }).then((r) => r.data),
+    queryKey: ['time-entries', 'OBSERVED'],
+    queryFn: () => timeEntryApi.listar({ status: 'OBSERVED' }).then((r) => r.data),
   });
 
   const { data: historico } = useQuery({
@@ -72,7 +72,7 @@ export default function HomeSeeker() {
   });
 
   function manejarClickEntrada(entrada) {
-    if (entrada.estado === 'OBSERVADO') navigate(`/seeker/ajustar/${entrada.id}`);
+    if (entrada.status === 'OBSERVED') navigate(`/seeker/ajustar/${entrada.id}`);
   }
 
   const cantidadObservadas = observadas?.data?.length ?? 0;
@@ -101,7 +101,7 @@ export default function HomeSeeker() {
             </div>
             {semanasDesplegadas && (
               <ul className="mt-2 ml-7 space-y-0.5">
-                {semanasSinCarga.semanas.map((semana) => {
+                {semanasSinCarga.weeks.map((semana) => {
                   const domingo = semanaADomingo(semana);
                   const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
                   return (

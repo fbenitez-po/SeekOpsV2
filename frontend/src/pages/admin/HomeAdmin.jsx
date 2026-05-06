@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Users, Building2, FolderOpen, Clock, UserPlus, FolderPlus } from 'lucide-react';
-import { userApi, clientApi, projectApi, timeEntryApi } from '../../services/api';
+import {useQuery} from '@tanstack/react-query';
+import {useNavigate} from 'react-router-dom';
+import {Building2, Clock, FolderOpen, FolderPlus, UserPlus, Users} from 'lucide-react';
+import {clientApi, projectApi, timeEntryApi, userApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Button} from '../../components/ui/button';
 
 function TarjetaMetrica({ titulo, valor, icono: Icon, color, onClick }) {
   return (
@@ -27,22 +27,22 @@ export default function HomeAdmin() {
 
   const { data: usuarios } = useQuery({
     queryKey: ['usuarios-count'],
-    queryFn: () => userApi.listar({ activo: true, limit: 1 }).then((r) => r.data.pagination.total),
+    queryFn: () => userApi.listar({ isActive: true, limit: 1 }).then((r) => r.data.pagination.total),
   });
 
   const { data: clientes } = useQuery({
     queryKey: ['clientes-count'],
-    queryFn: () => clientApi.listar({ activo: true, limit: 1 }).then((r) => r.data.pagination.total),
+    queryFn: () => clientApi.listar({ isActive: true, limit: 1 }).then((r) => r.data.pagination.total),
   });
 
   const { data: proyectos } = useQuery({
     queryKey: ['proyectos-count'],
-    queryFn: () => projectApi.listar({ activo: true, limit: 1 }).then((r) => r.data.pagination.total),
+    queryFn: () => projectApi.listar({ isActive: true, limit: 1 }).then((r) => r.data.pagination.total),
   });
 
   const { data: horasPendientes } = useQuery({
     queryKey: ['horas-pendientes-count'],
-    queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 1 }).then((r) => r.data.pagination.total),
+    queryFn: () => timeEntryApi.listar({ status: 'PENDING', limit: 1 }).then((r) => r.data.pagination.total),
   });
 
   return (

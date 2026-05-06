@@ -2,33 +2,41 @@
   "name": "seekops-backend",
   "version": "1.0.0",
   "description": "Seekops — API REST para registro de horas",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
     "test": "jest --runInBand",
-    "test:coverage": "jest --runInBand --coverage",
-    "migrate": "node-pg-migrate --envPath .env up",
-    "migrate:down": "node-pg-migrate --envPath .env down",
-    "migrate:status": "node-pg-migrate --envPath .env status",
-    "migrate:create": "node-pg-migrate --envPath .env create"
+    "test:coverage": "jest --runInBand --coverage"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
-    "node-pg-migrate": "^8.0.4",
     "nodemailer": "^8.0.6",
-    "pg": "^8.12.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
+    "@types/uuid": "^10.0.0",
     "jest": "^29.7.0",
-    "nodemon": "^3.1.4",
-    "supertest": "^7.0.0"
+    "prisma": "^6.19.3",
+    "supertest": "^7.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "jest": {
     "testEnvironment": "node",

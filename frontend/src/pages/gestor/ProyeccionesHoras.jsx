@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, X, CalendarRange } from 'lucide-react';
-import { projectionApi, projectApi, userApi } from '../../services/api';
+import {useState} from 'react';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {CalendarRange, Pencil, Plus, Trash2, X} from 'lucide-react';
+import {projectApi, projectionApi, userApi} from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
+import {Button} from '../../components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
 
 function formatFecha(fecha) {
   if (!fecha) return '—';
@@ -14,12 +13,12 @@ function formatFecha(fecha) {
 }
 
 const FORM_VACIO = {
-  project_id: '',
-  user_id: '',
-  fecha_inicio: '',
-  fecha_fin: '',
-  horas_proyectadas: '',
-  notas: '',
+  projectId: '',
+  userId: '',
+  startDate: '',
+  endDate: '',
+  projectedHours: '',
+  notes: '',
 };
 
 export default function ProyeccionesHoras() {
@@ -27,7 +26,7 @@ export default function ProyeccionesHoras() {
   const qc = useQueryClient();
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [editando, setEditando] = useState(null); // proyección completa si se edita
+  const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(FORM_VACIO);
   const [error, setError] = useState('');
   const [confirmarEliminar, setConfirmarEliminar] = useState(null);
@@ -39,18 +38,14 @@ export default function ProyeccionesHoras() {
 
   const { data: dataProyectos } = useQuery({
     queryKey: ['projects-gestor'],
-    queryFn: () => projectApi.listar({ activo: 'true', limit: 100 }).then((r) => r.data.data),
+    queryFn: () => projectApi.listar({ isActive: 'true', limit: 100 }).then((r) => r.data.data),
   });
 
   const { data: dataUsuarios } = useQuery({
     queryKey: ['users-todos'],
-    queryFn: () => userApi.listar({ activo: 'true', limit: 200 }).then((r) => r.data.data),
-    enabled: !!form.project_id,
+    queryFn: () => userApi.listar({ isActive: 'true', limit: 200 }).then((r) => r.data.data),
+    enabled: !!form.projectId,
   });
-
-  // Filtrar usuarios asignados al proyecto seleccionado
-  const proyectoSeleccionado = (dataProyectos || []).find((p) => p.id === form.project_id);
-  const usuariosDelProyecto = proyectoSeleccionado?.usuarios || (dataUsuarios || []);
 
   const mutCrear = useMutation({
     mutationFn: (datos) => projectionApi.crear(datos),
@@ -91,12 +86,12 @@ export default function ProyeccionesHoras() {
   function abrirEditar(proy) {
     setEditando(proy);
     setForm({
-      project_id: proy.project_id,
-      user_id: proy.user_id,
-      fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '',
-      fecha_fin: proy.fecha_fin?.slice(0, 10) || '',
-      horas_proyectadas: String(proy.horas_proyectadas),
-      notas: proy.notas || '',
+      projectId: proy.projectId,
+      userId: proy.userId,
+      startDate: proy.startDate?.slice(0, 10) || '',
+      endDate: proy.endDate?.slice(0, 10) || '',
+      projectedHours: String(proy.projectedHours),
+      notes: proy.notes || '',
     });
     setError('');
     setMostrarFormulario(true);
@@ -118,12 +113,12 @@ export default function ProyeccionesHoras() {
     setError('');
 
     const datos = {
-      project_id: form.project_id,
-      user_id: form.user_id,
-      fecha_inicio: form.fecha_inicio,
-      fecha_fin: form.fecha_fin,
-      horas_proyectadas: parseInt(form.horas_proyectadas),
-      notas: form.notas || null,
+      projectId: form.projectId,
+      userId: form.userId,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      projectedHours: parseInt(form.projectedHours),
+      notes: form.notes || null,
     };
 
     if (editando) {
@@ -139,7 +134,6 @@ export default function ProyeccionesHoras() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Proyecciones de horas</h1>
@@ -153,7 +147,6 @@ export default function ProyeccionesHoras() {
           </Button>
         </div>
 
-        {/* Formulario inline */}
         {mostrarFormulario && (
           <Card className="border-2" style={{ borderColor: '#0f172a' }}>
             <CardHeader className="pb-4">
@@ -175,72 +168,67 @@ export default function ProyeccionesHoras() {
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Proyecto */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Proyecto *</label>
                     <select
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.project_id}
-                      onChange={(e) => cambiarCampo('project_id', e.target.value)}
+                      value={form.projectId}
+                      onChange={(e) => cambiarCampo('projectId', e.target.value)}
                       required
                       disabled={!!editando}
                     >
                       <option value="">Seleccioná un proyecto</option>
                       {(dataProyectos || []).map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.codigo} — {p.nombre}
+                          {p.code} — {p.name}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Usuario */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Seeker *</label>
                     <select
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.user_id}
-                      onChange={(e) => cambiarCampo('user_id', e.target.value)}
+                      value={form.userId}
+                      onChange={(e) => cambiarCampo('userId', e.target.value)}
                       required
-                      disabled={!!editando || !form.project_id}
+                      disabled={!!editando || !form.projectId}
                     >
                       <option value="">
-                        {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
+                        {form.projectId ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
                       </option>
                       {(dataUsuarios || []).map((u) => (
                         <option key={u.id} value={u.id}>
-                          {u.nombres} {u.apellidos}
+                          {u.firstName} {u.lastName}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Fecha inicio */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Fecha inicio *</label>
                     <input
                       type="date"
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.fecha_inicio}
-                      onChange={(e) => cambiarCampo('fecha_inicio', e.target.value)}
+                      value={form.startDate}
+                      onChange={(e) => cambiarCampo('startDate', e.target.value)}
                       required
                     />
                   </div>
 
-                  {/* Fecha fin */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Fecha fin *</label>
                     <input
                       type="date"
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.fecha_fin}
-                      onChange={(e) => cambiarCampo('fecha_fin', e.target.value)}
-                      min={form.fecha_inicio || undefined}
+                      value={form.endDate}
+                      onChange={(e) => cambiarCampo('endDate', e.target.value)}
+                      min={form.startDate || undefined}
                       required
                     />
                   </div>
 
-                  {/* Horas proyectadas */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Horas proyectadas *</label>
                     <input
@@ -249,13 +237,12 @@ export default function ProyeccionesHoras() {
                       max="9999"
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                       placeholder="Ej: 160"
-                      value={form.horas_proyectadas}
-                      onChange={(e) => cambiarCampo('horas_proyectadas', e.target.value)}
+                      value={form.projectedHours}
+                      onChange={(e) => cambiarCampo('projectedHours', e.target.value)}
                       required
                     />
                   </div>
 
-                  {/* Notas */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Notas</label>
                     <input
@@ -263,8 +250,8 @@ export default function ProyeccionesHoras() {
                       maxLength={500}
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                       placeholder="Opcional"
-                      value={form.notas}
-                      onChange={(e) => cambiarCampo('notas', e.target.value)}
+                      value={form.notes}
+                      onChange={(e) => cambiarCampo('notes', e.target.value)}
                     />
                   </div>
                 </div>
@@ -282,7 +269,6 @@ export default function ProyeccionesHoras() {
           </Card>
         )}
 
-        {/* Tabla de proyecciones */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -314,18 +300,18 @@ export default function ProyeccionesHoras() {
                     {proyecciones.map((p) => (
                       <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20">
                         <td className="px-4 py-3">
-                          <p className="font-medium">{p.proyecto_nombre}</p>
-                          <p className="text-xs text-muted-foreground">{p.proyecto_codigo}</p>
+                          <p className="font-medium">{p.projectName}</p>
+                          <p className="text-xs text-muted-foreground">{p.projectCode}</p>
                         </td>
                         <td className="px-4 py-3">
-                          {p.usuario_nombres} {p.usuario_apellidos}
+                          {p.firstName} {p.lastName}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          {formatFecha(p.fecha_inicio)} → {formatFecha(p.fecha_fin)}
+                          {formatFecha(p.startDate)} → {formatFecha(p.endDate)}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">{p.horas_proyectadas}h</td>
+                        <td className="px-4 py-3 text-right font-semibold">{p.projectedHours}h</td>
                         <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">
-                          {p.notas || '—'}
+                          {p.notes || '—'}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
@@ -354,7 +340,6 @@ export default function ProyeccionesHoras() {
           </CardContent>
         </Card>
 
-        {/* Modal confirmación eliminar */}
         {confirmarEliminar && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
@@ -362,9 +347,9 @@ export default function ProyeccionesHoras() {
               <p className="mb-4 text-sm text-muted-foreground">
                 Se eliminará la proyección de{' '}
                 <span className="font-medium">
-                  {confirmarEliminar.usuario_nombres} {confirmarEliminar.usuario_apellidos}
+                  {confirmarEliminar.firstName} {confirmarEliminar.lastName}
                 </span>{' '}
-                en <span className="font-medium">{confirmarEliminar.proyecto_nombre}</span>. Esta
+                en <span className="font-medium">{confirmarEliminar.projectName}</span>. Esta
                 acción no se puede deshacer.
               </p>
               <div className="flex justify-end gap-2">

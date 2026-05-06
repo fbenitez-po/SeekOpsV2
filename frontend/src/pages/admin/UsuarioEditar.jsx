@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userApi, configApi } from '../../services/api';
+import {useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {configApi, userApi} from '../../services/api';
 import Layout from '../../components/layout/Layout';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Badge } from '../../components/ui/badge';
-import { formatearFechaHora } from '../../lib/utils';
+import {Button} from '../../components/ui/button';
+import {Input} from '../../components/ui/input';
+import {Label} from '../../components/ui/label';
+import {Card, CardContent, CardHeader, CardTitle} from '../../components/ui/card';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '../../components/ui/select';
+import {Badge} from '../../components/ui/badge';
+import {formatearFechaHora} from '../../lib/utils';
 
 function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
   function toggle(id) {
@@ -37,7 +37,7 @@ function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
               borderColor: activo ? '#0f172a' : '#e2e8f0',
             }}
           >
-            {o.nombre}
+            {o.name}
           </button>
         );
       })}
@@ -46,24 +46,24 @@ function SelectorMultiple({ opciones, seleccionados, onChange, minimo = 1 }) {
 }
 
 function SelectorGrupos({ grupos, seleccionados, onChange }) {
-  function toggle(codigo) {
-    if (seleccionados.includes(codigo)) {
+  function toggle(code) {
+    if (seleccionados.includes(code)) {
       if (seleccionados.length === 1) return;
-      onChange(seleccionados.filter((c) => c !== codigo));
+      onChange(seleccionados.filter((c) => c !== code));
     } else {
-      onChange([...seleccionados, codigo]);
+      onChange([...seleccionados, code]);
     }
   }
 
   return (
     <div className="flex flex-wrap gap-2">
       {(grupos || []).map((g) => {
-        const activo = seleccionados.includes(g.codigo);
+        const activo = seleccionados.includes(g.code);
         return (
           <button
             key={g.id}
             type="button"
-            onClick={() => toggle(g.codigo)}
+            onClick={() => toggle(g.code)}
             className="rounded-md px-3 py-1.5 text-sm font-medium border transition-colors"
             style={{
               backgroundColor: activo ? '#0f172a' : '#ffffff',
@@ -71,7 +71,7 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
               borderColor: activo ? '#0f172a' : '#e2e8f0',
             }}
           >
-            {g.nombre}
+            {g.name}
           </button>
         );
       })}
@@ -94,22 +94,22 @@ export default function UsuarioEditar() {
   useEffect(() => {
     if (usuario) {
       setForm({
-        nombres: usuario.nombres,
-        apellidos: usuario.apellidos,
-        numero_documento: usuario.numero_documento,
-        puesto: usuario.puesto,
-        celular: usuario.celular || '',
-        equipo_id: usuario.equipo?.id || '',
+        firstName: usuario.firstName,
+        lastName: usuario.lastName,
+        documentNumber: usuario.documentNumber,
+        jobTitle: usuario.jobTitle,
+        phone: usuario.phone || '',
+        teamId: usuario.team?.id || '',
         areas: (usuario.areas || []).map((a) => a.id),
-        fecha_ingreso: usuario.fecha_ingreso ? usuario.fecha_ingreso.split('T')[0] : '',
-        activo: usuario.activo,
-        grupos: usuario.grupos,
+        hireDate: usuario.hireDate ? usuario.hireDate.split('T')[0] : '',
+        isActive: usuario.isActive,
+        groups: usuario.groups,
       });
     }
   }, [usuario]);
 
   const mutation = useMutation({
-    mutationFn: (datos) => userApi.actualizar(id, { ...datos, celular: datos.celular || null }),
+    mutationFn: (datos) => userApi.actualizar(id, { ...datos, phone: datos.phone || null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       navigate('/admin/usuarios');
@@ -140,11 +140,11 @@ export default function UsuarioEditar() {
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Cuenta</CardTitle></CardHeader>
           <CardContent className="space-y-1">
             <p className="text-sm font-medium">{usuario?.email}</p>
-            <p className="text-xs text-muted-foreground">Registrado: {formatearFechaHora(usuario?.creado_en)}</p>
-            <p className="text-xs text-muted-foreground">Actualizado: {formatearFechaHora(usuario?.actualizado_en)}</p>
-            {usuario?.desactivado_en && <p className="text-xs text-muted-foreground">Desactivado: {formatearFechaHora(usuario.desactivado_en)}</p>}
+            <p className="text-xs text-muted-foreground">Registrado: {formatearFechaHora(usuario?.createdAt)}</p>
+            <p className="text-xs text-muted-foreground">Actualizado: {formatearFechaHora(usuario?.updatedAt)}</p>
+            {usuario?.deactivatedAt && <p className="text-xs text-muted-foreground">Desactivado: {formatearFechaHora(usuario.deactivatedAt)}</p>}
             <div className="mt-2">
-              <Badge variant={usuario?.activo ? 'success' : 'secondary'}>{usuario?.activo ? 'Activo' : 'Inactivo'}</Badge>
+              <Badge variant={usuario?.isActive ? 'success' : 'secondary'}>{usuario?.isActive ? 'Activo' : 'Inactivo'}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -155,23 +155,23 @@ export default function UsuarioEditar() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nombres *</Label>
-                <Input value={form.nombres} onChange={set('nombres')} required maxLength={100} />
+                <Input value={form.firstName} onChange={set('firstName')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Apellidos *</Label>
-                <Input value={form.apellidos} onChange={set('apellidos')} required maxLength={100} />
+                <Input value={form.lastName} onChange={set('lastName')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Documento *</Label>
-                <Input value={form.numero_documento} onChange={set('numero_documento')} required />
+                <Input value={form.documentNumber} onChange={set('documentNumber')} required />
               </div>
               <div className="space-y-2">
                 <Label>Puesto *</Label>
-                <Input value={form.puesto} onChange={set('puesto')} required maxLength={100} />
+                <Input value={form.jobTitle} onChange={set('jobTitle')} required maxLength={100} />
               </div>
               <div className="space-y-2">
                 <Label>Celular</Label>
-                <Input value={form.celular} onChange={set('celular')} />
+                <Input value={form.phone} onChange={set('phone')} />
               </div>
             </CardContent>
           </Card>
@@ -181,14 +181,14 @@ export default function UsuarioEditar() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Equipo *</Label>
-                <Select value={form.equipo_id} onValueChange={set('equipo_id')}>
+                <Select value={form.teamId} onValueChange={set('teamId')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(equipos || []).map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(equipos || []).map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Fecha de ingreso *</Label>
-                <Input type="date" value={form.fecha_ingreso} onChange={set('fecha_ingreso')} required max={new Date().toISOString().split('T')[0]} />
+                <Input type="date" value={form.hireDate} onChange={set('hireDate')} required max={new Date().toISOString().split('T')[0]} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, podés seleccionar varias)</span></Label>
@@ -206,8 +206,8 @@ export default function UsuarioEditar() {
                 <Label>Grupos / Roles *</Label>
                 <SelectorGrupos
                   grupos={grupos}
-                  seleccionados={form.grupos}
-                  onChange={(v) => setForm((f) => ({ ...f, grupos: v }))}
+                  seleccionados={form.groups}
+                  onChange={(v) => setForm((f) => ({ ...f, groups: v }))}
                 />
                 <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
               </div>
@@ -222,15 +222,15 @@ export default function UsuarioEditar() {
           </div>
         </form>
 
-        {usuario?.proyectos?.length > 0 && (
+        {usuario?.projects?.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-base">Proyectos asignados</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {usuario.proyectos.map((p) => (
+                {usuario.projects.map((p) => (
                   <div key={p.id} className="flex items-center justify-between text-sm">
-                    <span>{p.nombre} <span className="text-muted-foreground">({p.cliente})</span></span>
-                    <Badge variant="secondary">{p.rol}</Badge>
+                    <span>{p.name} <span className="text-muted-foreground">({p.clientName})</span></span>
+                    <Badge variant="secondary">{p.role}</Badge>
                   </div>
                 ))}
               </div>
