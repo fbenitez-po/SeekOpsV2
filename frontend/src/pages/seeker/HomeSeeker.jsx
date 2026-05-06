@@ -11,6 +11,7 @@ import { ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo }
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
   APROBADO: 'success',
+  APROBADO_CON_OBSERVACION: 'success',
   OBSERVADO: 'info',
   RECHAZADO: 'destructive',
 };
@@ -58,9 +59,9 @@ export default function HomeSeeker() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE' }).then((r) => r.data),
   });
 
-  const { data: observadas } = useQuery({
-    queryKey: ['time-entries', 'OBSERVADO'],
-    queryFn: () => timeEntryApi.listar({ estado: 'OBSERVADO' }).then((r) => r.data),
+  const { data: aprobadas } = useQuery({
+    queryKey: ['time-entries', 'APROBADO_CON_OBSERVACION'],
+    queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION' }).then((r) => r.data),
   });
 
   const { data: historico } = useQuery({
@@ -68,8 +69,8 @@ export default function HomeSeeker() {
     queryFn: () => timeEntryApi.listar({ limit: 10 }).then((r) => r.data),
   });
 
-  function manejarClickEntrada(entrada) {
-    if (entrada.estado === 'OBSERVADO') navigate(`/seeker/ajustar/${entrada.id}`);
+  function manejarClickEntrada(_entrada) {
+    // Las entradas aprobadas con observación son de solo lectura — sin acción al hacer clic
   }
 
   return (
@@ -144,15 +145,15 @@ export default function HomeSeeker() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                Observadas — requieren ajuste
+                Aprobadas con observación
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {observadas?.data?.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tenés horas observadas</p>
+              {!aprobadas || aprobadas?.data?.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tenés horas aprobadas con observación</p>
               ) : (
                 <div className="space-y-2">
-                  {observadas?.data?.map((e) => (
+                  {aprobadas?.data?.map((e) => (
                     <TarjetaEntrada key={e.id} entrada={e} onClick={manejarClickEntrada} />
                   ))}
                 </div>

@@ -12,6 +12,7 @@ import { ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo }
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
   APROBADO: 'success',
+  APROBADO_CON_OBSERVACION: 'success',
   OBSERVADO: 'info',
   RECHAZADO: 'destructive',
 };
@@ -60,9 +61,9 @@ export default function HomeGestor() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
   });
 
-  const { data: dataObservadas } = useQuery({
-    queryKey: ['time-entries-gestor', 'OBSERVADO'],
-    queryFn: () => timeEntryApi.listar({ estado: 'OBSERVADO', limit: 50 }).then((r) => r.data),
+  const { data: dataAprobadas } = useQuery({
+    queryKey: ['time-entries-gestor', 'APROBADO_CON_OBSERVACION'],
+    queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION', limit: 50 }).then((r) => r.data),
     enabled: esSeeker(),
   });
 
@@ -72,17 +73,21 @@ export default function HomeGestor() {
     enabled: esSeeker(),
   });
 
+  const { data: semanasSinCarga } = useQuery({
+    queryKey: ['time-entries-gestor', 'semanas-sin-carga'],
+    queryFn: () => timeEntryApi.semanasSinCarga().then((r) => r.data),
+    enabled: esSeeker(),
+  });
+
   const alertasSinProyeccion = dataAlertas || [];
   const todasPendientes = dataPendientes?.data || [];
   const pendientesEquipo = todasPendientes;
   const misPendientes = todasPendientes.filter((e) => e.usuario.id === usuario?.id);
-  const misObservadas = (dataObservadas?.data || []).filter((e) => e.usuario.id === usuario?.id);
+  const misAprobadas = (dataAprobadas?.data || []).filter((e) => e.usuario.id === usuario?.id);
   const miHistorial = (dataHistorial?.data || []).filter((e) => e.usuario.id === usuario?.id);
 
-  const cantidadObservadas = misObservadas.length;
-
-  function manejarClickEntradaPropia(entrada) {
-    if (entrada.estado === 'OBSERVADO') navigate(`/seeker/ajustar/${entrada.id}`);
+  function manejarClickEntradaPropia(_entrada) {
+    // Sin acción — aprobadas con observación son de solo lectura
   }
 
   return (
@@ -168,15 +173,39 @@ export default function HomeGestor() {
           <div className="space-y-6 border-t pt-6">
             <h2 className="text-lg font-semibold">Mis horas</h2>
 
-            {cantidadObservadas > 0 && (
-              <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-800">
-                  Tenés {cantidadObservadas} entrada{cantidadObservadas > 1 ? 's' : ''} observada{cantidadObservadas > 1 ? 's' : ''} para ajustar
-                </p>
-              </div>
-            )}
+              <div className="grid gap-6 md:grid-cols-3 items-start">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    Semanas sin cargar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!semanasSinCarga || semanasSinCarga.total === 0 ? (
+                    <p className="text-sm text-muted-foreground">Estás al día</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-amber-700">
+                        {semanasSinCarga.total} semana{semanasSinCarga.total > 1 ? 's' : ''} pendiente{semanasSinCarga.total > 1 ? 's' : ''}
+                      </p>
+                      <ul className="space-y-1">
+                        {semanasSinCarga.semanas.map((semana) => {
+                          const domingo = semanaADomingo(semana);
+                          const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
+                          return (
+                            <li key={semana} className="text-xs text-muted-foreground">· {rango}</li>
+                          );
+                        })}
+                      </ul>
+                      <Button size="sm" onClick={() => navigate('/gestor/cargar')} className="w-full">
+                        Cargar horas
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-            <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -199,14 +228,14 @@ export default function HomeGestor() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Observadas — requieren ajuste</CardTitle>
+                  <CardTitle className="text-base">Aprobadas con observación</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {misObservadas.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No tenés horas observadas</p>
+                  {misAprobadas.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No tenés horas aprobadas con observación</p>
                   ) : (
                     <div className="space-y-2">
-                      {misObservadas.map((e) => (
+                      {misAprobadas.map((e) => (
                         <TarjetaEntradaPropia key={e.id} entrada={e} onClick={manejarClickEntradaPropia} />
                       ))}
                     </div>
