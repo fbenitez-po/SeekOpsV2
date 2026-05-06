@@ -132,6 +132,7 @@ export function semanaADomingo(semana) {
 export const ESTADO_LABELS = {
   PENDIENTE: 'Pendiente',
   APROBADO: 'Aprobado',
+  APROBADO_CON_OBSERVACION: 'Aprobado con observación',
   OBSERVADO: 'Observado',
   RECHAZADO: 'Rechazado',
 };
@@ -139,6 +140,7 @@ export const ESTADO_LABELS = {
 export const ESTADO_COLORS = {
   PENDIENTE: 'bg-yellow-100 text-yellow-800',
   APROBADO: 'bg-green-100 text-green-800',
+  APROBADO_CON_OBSERVACION: 'bg-teal-100 text-teal-800',
   OBSERVADO: 'bg-blue-100 text-blue-800',
   RECHAZADO: 'bg-red-100 text-red-800',
 };

@@ -172,6 +172,15 @@ async function crearEntrada({ usuarioId, semana, estado, lineas }) {
   }
 }
 
+async function actualizarSoloHorasLineas(client, entradaId, lineas) {
+  for (const linea of lineas) {
+    await client.query(
+      `UPDATE time_entry_lines SET hours = $1, extra_hours = $2 WHERE id = $3 AND time_entry_id = $4`,
+      [linea.horas, linea.horas_extra ?? 0, linea.id, entradaId]
+    );
+  }
+}
+
 async function actualizarLineasEntrada(entradaId, lineas, usuarioId) {
   const client = await pool.connect();
   try {
@@ -203,12 +212,16 @@ async function actualizarLineasEntrada(entradaId, lineas, usuarioId) {
 }
 
 async function registrarAprobacion({ entradaId, accion, usuarioId, datos = {} }) {
-  const estadoMap = { APROBAR: 'APROBADO', OBSERVAR: 'OBSERVADO', RECHAZAR: 'RECHAZADO' };
+  const estadoMap = { APROBAR: 'APROBADO', APROBAR_CON_OBSERVACION: 'APROBADO_CON_OBSERVACION', OBSERVAR: 'OBSERVADO', RECHAZAR: 'RECHAZADO' };
   const nuevoEstado = estadoMap[accion];
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    if (accion === 'APROBAR_CON_OBSERVACION' && datos.lineas?.length) {
+      await actualizarSoloHorasLineas(client, entradaId, datos.lineas);
+    }
 
     await client.query(
       `UPDATE time_entries SET estado = $1, updated_at = NOW(), updated_by_user_id = $2 WHERE id = $3`,

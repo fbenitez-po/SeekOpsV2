@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Eye, X } from 'lucide-react';
+import { Check, CheckCheck, X } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -11,29 +11,67 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { formatearFecha, ESTADO_LABELS } from '../../lib/utils';
 
-function ModalObservar({ entrada, onCerrar, onConfirmar }) {
+function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
   const [comentario, setComentario] = useState('');
-  const [sugerenciaHoras, setSugerenciaHoras] = useState('');
+  const [lineas, setLineas] = useState(
+    entrada.lineas.map((l) => ({ id: l.id, horas: l.horas, horas_extra: l.horas_extra }))
+  );
+
+  function actualizarLinea(idx, campo, valor) {
+    setLineas((prev) => prev.map((l, i) => i === idx ? { ...l, [campo]: valor === '' ? '' : Number(valor) } : l));
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
-        <h2 className="text-lg font-semibold">Observar horas</h2>
+      <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-lg space-y-4 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg font-semibold">Aprobar con observación</h2>
         <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
+        <p className="text-sm text-muted-foreground">Las horas quedarán aprobadas con el comentario registrado.</p>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Horas por proyecto</Label>
+          <div className="rounded-md border divide-y">
+            {entrada.lineas.map((linea, idx) => (
+              <div key={linea.id} className="flex items-center gap-3 p-3">
+                <p className="flex-1 text-sm font-medium truncate">{linea.proyecto.nombre}</p>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground text-center">Horas</p>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="24"
+                      className="w-16 h-8 text-center text-sm"
+                      value={lineas[idx].horas}
+                      onChange={(e) => actualizarLinea(idx, 'horas', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground text-center">Extra</p>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="8"
+                      className="w-16 h-8 text-center text-sm"
+                      value={lineas[idx].horas_extra}
+                      onChange={(e) => actualizarLinea(idx, 'horas_extra', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="space-y-2">
           <Label>Comentario de observación *</Label>
-          <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Explicá qué debe corregir..." />
-        </div>
-        <div className="space-y-2">
-          <Label>Sugerencia de horas (opcional)</Label>
-          <Input type="number" min="0" max="24" value={sugerenciaHoras} onChange={(e) => setSugerenciaHoras(e.target.value)} placeholder="ej: 6" />
+          <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Indicá qué observás sobre estas horas..." />
         </div>
 
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onCerrar}>Cancelar</Button>
-          <Button className="flex-1" disabled={!comentario} onClick={() => onConfirmar({ comentario_observacion: comentario, sugerencia_horas: sugerenciaHoras ? parseInt(sugerenciaHoras) : null })}>
-            Observar
+          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" disabled={!comentario} onClick={() => onConfirmar({ comentario_observacion: comentario, lineas })}>
+            Aprobar con observación
           </Button>
         </div>
       </div>
@@ -68,7 +106,7 @@ function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
 
 export default function HorasEquipo() {
   const queryClient = useQueryClient();
-  const [modalObservar, setModalObservar] = useState(null);
+  const [modalAprobarConObs, setModalAprobarConObs] = useState(null);
   const [modalRechazar, setModalRechazar] = useState(null);
 
   const { data, isLoading } = useQuery({
@@ -76,17 +114,23 @@ export default function HorasEquipo() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
   });
 
+  const { data: dataAprobadas } = useQuery({
+    queryKey: ['horas-equipo', 'APROBADO_CON_OBSERVACION'],
+    queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION', limit: 50 }).then((r) => r.data),
+  });
+
   const entradas = data?.data || [];
+  const entradasAprobadas = dataAprobadas?.data || [];
 
   const mutAprobar = useMutation({
     mutationFn: (id) => timeEntryApi.aprobar(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['horas-equipo'] }),
   });
 
-  const mutObservar = useMutation({
-    mutationFn: ({ id, datos }) => timeEntryApi.observar(id, datos),
+  const mutAprobarConObs = useMutation({
+    mutationFn: ({ id, datos }) => timeEntryApi.aprobarConObservacion(id, datos),
     onSuccess: () => {
-      setModalObservar(null);
+      setModalAprobarConObs(null);
       queryClient.invalidateQueries({ queryKey: ['horas-equipo'] });
     },
   });
@@ -104,7 +148,7 @@ export default function HorasEquipo() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Horas del equipo</h1>
-          <p className="text-muted-foreground">Aprobá, observá o rechazá las horas de tu equipo</p>
+          <p className="text-muted-foreground">Aprobá o rechazá las horas de tu equipo</p>
         </div>
 
         <Card>
@@ -153,10 +197,10 @@ export default function HorasEquipo() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1 border-blue-300 text-blue-700 hover:bg-blue-50"
-                        onClick={() => setModalObservar(entrada)}
+                        className="gap-1 border-teal-300 text-teal-700 hover:bg-teal-50"
+                        onClick={() => setModalAprobarConObs(entrada)}
                       >
-                        <Eye className="h-3 w-3" /> Observar
+                        <CheckCheck className="h-3 w-3" /> Aprobar con obs.
                       </Button>
                       <Button
                         size="sm"
@@ -173,13 +217,49 @@ export default function HorasEquipo() {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Aprobadas con observación ({entradasAprobadas.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {entradasAprobadas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No hay entradas aprobadas con observación</p>
+            ) : (
+              <div className="space-y-3">
+                {entradasAprobadas.map((entrada) => {
+                  const obs = entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION');
+                  return (
+                    <div key={entrada.id} className="rounded-md border border-teal-200 bg-teal-50 p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="font-medium">{entrada.usuario.nombres} {entrada.usuario.apellidos}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {entrada.semana} · {entrada.total_horas}h normales · {entrada.total_extras}h extras
+                          </p>
+                          <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
+                          {obs?.comentario && (
+                            <p className="text-xs text-teal-700 mt-1">Obs: {obs.comentario}</p>
+                          )}
+                        </div>
+                        <Badge className="bg-teal-100 text-teal-800 shrink-0">Aprobado con obs.</Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {modalObservar && (
-        <ModalObservar
-          entrada={modalObservar}
-          onCerrar={() => setModalObservar(null)}
-          onConfirmar={(datos) => mutObservar.mutate({ id: modalObservar.id, datos })}
+      {modalAprobarConObs && (
+        <ModalAprobarConObservacion
+          entrada={modalAprobarConObs}
+          onCerrar={() => setModalAprobarConObs(null)}
+          onConfirmar={(datos) => mutAprobarConObs.mutate({ id: modalAprobarConObs.id, datos })}
         />
       )}
 

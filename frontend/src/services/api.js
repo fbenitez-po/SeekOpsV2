@@ -47,6 +47,7 @@ export const timeEntryApi = {
   crear: (datos) => api.post('/time-entries', datos),
   ajustar: (id, datos) => api.put(`/time-entries/${id}`, datos),
   aprobar: (id) => api.post(`/time-entries/${id}/aprobar`),
+  aprobarConObservacion: (id, datos) => api.post(`/time-entries/${id}/aprobar-con-observacion`, datos),
   observar: (id, datos) => api.post(`/time-entries/${id}/observar`, datos),
   rechazar: (id, datos) => api.post(`/time-entries/${id}/rechazar`, datos),
   semanasSinCarga: () => api.get('/time-entries/semanas-sin-carga'),

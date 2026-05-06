@@ -172,6 +172,32 @@ async function observar(id, usuarioId, roles, datos) {
   return { id, estado: 'OBSERVADO', observado_en: new Date().toISOString(), ...datos };
 }
 
+async function aprobarConObservacion(id, usuarioId, roles, datos) {
+  const entrada = await data.buscarEntradaPorId(id);
+  if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
+  if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden aprobar registros en estado PENDIENTE', 403);
+
+  if (!datos.comentario_observacion) throw new ErrorApp('comentario_observacion es requerido', 400);
+
+  if (datos.lineas) {
+    for (const linea of datos.lineas) {
+      if (linea.horas < 0) throw new ErrorApp('horas debe ser mayor o igual a 0', 400);
+      if (linea.horas_extra !== undefined && (linea.horas_extra < 0 || linea.horas_extra > 8)) {
+        throw new ErrorApp('horas_extra debe ser entre 0 y 8', 400);
+      }
+    }
+  }
+
+  if (!roles.includes('ADMIN')) {
+    const lineaPrincipal = await data.obtenerProyectoDeEntrada(id);
+    const esGestor = lineaPrincipal && await data.esGestorDelProyecto(usuarioId, lineaPrincipal.project_id);
+    if (!esGestor) throw new ErrorApp('Solo el gestor del proyecto o un administrador puede aprobar', 403);
+  }
+
+  await data.registrarAprobacion({ entradaId: id, accion: 'APROBAR_CON_OBSERVACION', usuarioId, datos });
+  return { id, estado: 'APROBADO_CON_OBSERVACION', aprobado_en: new Date().toISOString(), comentario_observacion: datos.comentario_observacion };
+}
+
 async function rechazar(id, usuarioId, roles, datos) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
@@ -230,4 +256,4 @@ async function obtenerSemanasSinCarga(usuarioId) {
   return { semanas: semanasFaltantes, total: semanasFaltantes.length };
 }
 
-module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, observar, rechazar, obtenerSemanasSinCarga };
+module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, aprobarConObservacion, observar, rechazar, obtenerSemanasSinCarga };

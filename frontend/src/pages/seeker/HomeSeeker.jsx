@@ -19,6 +19,9 @@ const VARIANTE_ESTADO = {
 function TarjetaEntrada({ entrada, onClick }) {
   const lineas = entrada.lineas || [];
   const proyectosUnicos = [...new Set(lineas.map((l) => l.proyecto?.nombre).filter(Boolean))];
+  const obs = entrada.estado === 'APROBADO_CON_OBSERVACION'
+    ? entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION')
+    : null;
 
   return (
     <div
@@ -37,6 +40,9 @@ function TarjetaEntrada({ entrada, onClick }) {
             {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
           </p>
           <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
+          {obs?.comentario && (
+            <p className="text-xs text-teal-700 mt-1 border-l-2 border-teal-300 pl-2">{obs.comentario}</p>
+          )}
         </div>
         <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 mt-0.5">
           {ESTADO_LABELS[entrada.estado]}
