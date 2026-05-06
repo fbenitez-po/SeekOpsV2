@@ -14,14 +14,12 @@ export default function ClienteCrear() {
   const [form, setForm] = useState({
     nombre: '', razon_social: '', razon_comercial: '', ruc: '',
     nombre_contacto: '', email_contacto: '', telefono: '', direccion: '',
-    categoria_usuario_id: '', segmentacion_id: '', sector_id: '', activo: true,
+    segmentacion_id: '', sector_id: '', activo: true,
   });
   const [error, setError] = useState('');
 
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones'], queryFn: () => configApi.segmentaciones().then((r) => r.data) });
   const { data: sectores } = useQuery({ queryKey: ['sectores'], queryFn: () => configApi.sectores().then((r) => r.data) });
-  const { data: categoriasCliente } = useQuery({ queryKey: ['categorias-cliente'], queryFn: () => configApi.categoriasUsuario().then((r) => r.data) });
-
   const mutation = useMutation({
     mutationFn: (datos) => clientApi.crear(datos),
     onSuccess: () => navigate('/admin/clientes'),
@@ -54,13 +52,6 @@ export default function ClienteCrear() {
               <div className="space-y-2">
                 <Label>Razón comercial</Label>
                 <Input value={form.razon_comercial} onChange={set('razon_comercial')} maxLength={150} />
-              </div>
-              <div className="space-y-2">
-                <Label>Categoría *</Label>
-                <Select value={form.categoria_usuario_id} onValueChange={set('categoria_usuario_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná categoría" /></SelectTrigger>
-                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
