@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, CheckCheck, X, Bell, CircleCheck } from 'lucide-react';
+import { Check, CheckCheck, X, Bell, CircleCheck, TriangleAlert } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -199,19 +199,27 @@ export default function HorasEquipo() {
                           : 'border-yellow-200 bg-yellow-50'
                       }`}
                     >
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         <p className={`font-medium text-sm ${esCritico ? 'text-red-900' : 'text-yellow-900'}`}>
                           {item.usuario.nombres} {item.usuario.apellidos}
                         </p>
-                        <p className={`text-xs ${esCritico ? 'text-red-700' : 'text-yellow-700'}`}>
+                        <p className={`text-xs flex items-center gap-1 ${esCritico ? 'text-red-700' : 'text-yellow-700'}`}>
+                          <TriangleAlert className="h-3 w-3 shrink-0" />
                           {item.semanas_sin_carga} semana{item.semanas_sin_carga !== 1 ? 's' : ''} sin carga
                           {item.proyectos_pendientes?.length > 0 && (
                             <> · Pendiente en: <span className="font-medium">{item.proyectos_pendientes.map((p) => p.nombre).join(', ')}</span></>
                           )}
-                          {!esCritico && item.proyectos_otros?.length > 0 && (
-                            <> · Cargó en: <span className="font-medium">{item.proyectos_otros.join(', ')}</span></>
-                          )}
                         </p>
+                        {!esCritico && item.proyectos_otros?.length > 0 && (
+                          <p className="text-xs text-yellow-700">
+                            {item.proyectos_otros.map((p, i) => (
+                              <span key={p.nombre}>
+                                {i > 0 && ' · '}
+                                Cargó {p.semanas} semana{p.semanas !== 1 ? 's' : ''} en: <span className="font-medium">{p.nombre}</span>
+                              </span>
+                            ))}
+                          </p>
+                        )}
                       </div>
                       <Button
                         size="sm"

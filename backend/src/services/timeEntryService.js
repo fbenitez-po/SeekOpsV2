@@ -276,7 +276,16 @@ async function obtenerSeekersSinCarga(usuarioId, roles) {
 
     const entradaUltimaSemana = entradas.find((e) => e.semana === ultimaSemana);
     const severidad = entradaUltimaSemana ? 'ADVERTENCIA' : 'CRITICO';
-    const proyectosOtros = entradaUltimaSemana?.proyectos_otros || [];
+
+    const conteoOtros = {};
+    for (const entrada of entradas) {
+      if (Array.isArray(entrada.proyectos_otros)) {
+        for (const nombre of entrada.proyectos_otros) {
+          conteoOtros[nombre] = (conteoOtros[nombre] || 0) + 1;
+        }
+      }
+    }
+    const proyectosOtros = Object.entries(conteoOtros).map(([nombre, semanas]) => ({ nombre, semanas }));
 
     resultado.push({
       usuario: { id: seeker.user_id, nombres: seeker.nombres, apellidos: seeker.apellidos },
