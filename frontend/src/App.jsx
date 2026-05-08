@@ -9,6 +9,7 @@ import ActivarCuenta from './pages/auth/ActivarCuenta';
 import HomeSeekerPage from './pages/seeker/HomeSeeker';
 import CargarHorasPage from './pages/seeker/CargarHoras';
 import AjustarHorasPage from './pages/seeker/AjustarHoras';
+import MisHorasPage from './pages/seeker/MisHoras';
 
 import HomeGestorPage from './pages/gestor/HomeGestor';
 import HorasEquipoPage from './pages/gestor/HorasEquipo';
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="/seeker" element={<RutaProtegida roles={['SEEKER', 'GESTOR', 'ADMIN']}><HomeSeekerPage /></RutaProtegida>} />
         <Route path="/seeker/cargar" element={<RutaProtegida roles={['SEEKER', 'GESTOR', 'ADMIN']}><CargarHorasPage /></RutaProtegida>} />
         <Route path="/seeker/ajustar/:id" element={<RutaProtegida roles={['SEEKER', 'GESTOR', 'ADMIN']}><AjustarHorasPage /></RutaProtegida>} />
+        <Route path="/seeker/mis-horas" element={<RutaProtegida roles={['SEEKER', 'GESTOR', 'ADMIN']}><MisHorasPage /></RutaProtegida>} />
 
         {/* Gestor */}
         <Route path="/gestor" element={<RutaProtegida roles={['GESTOR', 'ADMIN']}><HomeGestorPage /></RutaProtegida>} />

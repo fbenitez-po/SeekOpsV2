@@ -1,11 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
 const navSeeker = [
   { label: 'Inicio', href: '/seeker', icon: LayoutDashboard },
   { label: 'Cargar horas', href: '/seeker/cargar', icon: Clock },
+  { label: 'Mis horas', href: '/seeker/mis-horas', icon: History },
 ];
 
 const navGestor = [

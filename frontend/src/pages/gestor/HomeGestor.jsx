@@ -26,26 +26,23 @@ function TarjetaEntradaPropia({ entrada, onClick }) {
 
   return (
     <div
-      className="cursor-pointer rounded-md border p-4 hover:bg-muted/50 transition-colors"
+      className="cursor-pointer rounded-md border px-3 py-2 hover:bg-muted/50 transition-colors"
       onClick={() => onClick(entrada)}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 space-y-0.5">
-          <p className="font-medium leading-snug">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-snug truncate">
             {formatearRangoDeSemana(semanaADomingo(entrada.semana)) || entrada.semana}
           </p>
-          {proyectosUnicos.length > 0 && (
-            <p className="text-sm text-muted-foreground">{proyectosUnicos.join(' · ')}</p>
-          )}
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">
+            {proyectosUnicos.length > 0 ? proyectosUnicos.join(' · ') + ' · ' : ''}
             {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
           </p>
-          <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
           {obs?.comentario && (
-            <p className="text-xs text-teal-700 mt-1 border-l-2 border-teal-300 pl-2">{obs.comentario}</p>
+            <p className="text-xs text-teal-700 mt-0.5 border-l-2 border-teal-300 pl-2 truncate">{obs.comentario}</p>
           )}
         </div>
-        <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 mt-0.5">
+        <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 text-xs">
           {ESTADO_LABELS[entrada.estado]}
         </Badge>
       </div>
@@ -187,7 +184,7 @@ export default function HomeGestor() {
           <div className="space-y-6 border-t pt-6">
             <h2 className="text-lg font-semibold">Mis horas</h2>
 
-              <div className="grid gap-6 md:grid-cols-3 items-start">
+              <div className="grid gap-6 md:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -204,13 +201,18 @@ export default function HomeGestor() {
                         {semanasSinCarga.total} semana{semanasSinCarga.total > 1 ? 's' : ''} pendiente{semanasSinCarga.total > 1 ? 's' : ''}
                       </p>
                       <ul className="space-y-1">
-                        {semanasSinCarga.semanas.map((semana) => {
+                        {semanasSinCarga.semanas.slice(0, 2).map((semana) => {
                           const domingo = semanaADomingo(semana);
                           const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
                           return (
                             <li key={semana} className="text-xs text-muted-foreground">· {rango}</li>
                           );
                         })}
+                        {semanasSinCarga.total > 2 && (
+                          <li className="text-xs text-muted-foreground">
+                            · y {semanasSinCarga.total - 2} semana{semanasSinCarga.total - 2 > 1 ? 's' : ''} más
+                          </li>
+                        )}
                       </ul>
                       <Button size="sm" onClick={() => navigate('/gestor/cargar')} className="w-full">
                         Cargar horas
@@ -232,9 +234,17 @@ export default function HomeGestor() {
                     <p className="text-sm text-muted-foreground">No tenés horas pendientes</p>
                   ) : (
                     <div className="space-y-2">
-                      {misPendientes.map((e) => (
+                      {misPendientes.slice(0, 2).map((e) => (
                         <TarjetaEntradaPropia key={e.id} entrada={e} onClick={manejarClickEntradaPropia} />
                       ))}
+                      {misPendientes.length > 2 && (
+                        <button
+                          onClick={() => navigate('/seeker/mis-horas')}
+                          className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
+                        >
+                          Ver {misPendientes.length - 2} más →
+                        </button>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -249,9 +259,17 @@ export default function HomeGestor() {
                     <p className="text-sm text-muted-foreground">No tenés horas aprobadas con observación</p>
                   ) : (
                     <div className="space-y-2">
-                      {misAprobadas.map((e) => (
+                      {misAprobadas.slice(0, 2).map((e) => (
                         <TarjetaEntradaPropia key={e.id} entrada={e} onClick={manejarClickEntradaPropia} />
                       ))}
+                      {misAprobadas.length > 2 && (
+                        <button
+                          onClick={() => navigate('/seeker/mis-horas')}
+                          className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
+                        >
+                          Ver {misAprobadas.length - 2} más →
+                        </button>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -267,9 +285,15 @@ export default function HomeGestor() {
                   <p className="text-sm text-muted-foreground">No hay registros anteriores</p>
                 ) : (
                   <div className="space-y-2">
-                    {miHistorial.map((e) => (
+                    {miHistorial.slice(0, 3).map((e) => (
                       <TarjetaEntradaPropia key={e.id} entrada={e} onClick={manejarClickEntradaPropia} />
                     ))}
+                    <button
+                      onClick={() => navigate('/seeker/mis-horas')}
+                      className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
+                    >
+                      Ver historial completo →
+                    </button>
                   </div>
                 )}
               </CardContent>
