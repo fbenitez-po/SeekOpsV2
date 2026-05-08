@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, CheckCheck, X } from 'lucide-react';
+import { Check, CheckCheck, X, Bell } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -110,10 +110,16 @@ export default function HorasEquipo() {
   const queryClient = useQueryClient();
   const [modalAprobarConObs, setModalAprobarConObs] = useState(null);
   const [modalRechazar, setModalRechazar] = useState(null);
+  const [recordatoriosEnviados, setRecordatoriosEnviados] = useState({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['horas-equipo', 'PENDIENTE'],
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
+  });
+
+  const { data: dataSeekers } = useQuery({
+    queryKey: ['seekers-sin-carga'],
+    queryFn: () => timeEntryApi.seekersSinCarga().then((r) => r.data),
   });
 
   const { data: dataAprobadas } = useQuery({
@@ -123,6 +129,20 @@ export default function HorasEquipo() {
 
   const entradas = data?.data || [];
   const entradasAprobadas = dataAprobadas?.data || [];
+  const seekersSinCarga = dataSeekers?.data || [];
+
+  const mutRecordatorio = useMutation({
+    mutationFn: (userId) => timeEntryApi.enviarRecordatorio(userId),
+    onSuccess: (_, userId) => {
+      setRecordatoriosEnviados((prev) => ({ ...prev, [userId]: Date.now() }));
+    },
+  });
+
+  function recordatorioReciente(userId) {
+    const enviado = recordatoriosEnviados[userId];
+    if (!enviado) return false;
+    return Date.now() - enviado < 24 * 60 * 60 * 1000;
+  }
 
   const mutAprobar = useMutation({
     mutationFn: (id) => timeEntryApi.aprobar(id),
@@ -152,6 +172,58 @@ export default function HorasEquipo() {
           <h1 className="text-2xl font-bold">Horas del equipo</h1>
           <p className="text-muted-foreground">Aprobá o rechazá las horas de tu equipo</p>
         </div>
+
+        {seekersSinCarga.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Seekers con carga pendiente ({seekersSinCarga.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {seekersSinCarga.map((item) => {
+                  const esCritico = item.severidad === 'CRITICO';
+                  const yaEnviado = recordatorioReciente(item.usuario.id);
+                  return (
+                    <div
+                      key={item.usuario.id}
+                      className={`rounded-md border p-4 flex items-center justify-between gap-4 ${
+                        esCritico
+                          ? 'border-red-200 bg-red-50'
+                          : 'border-yellow-200 bg-yellow-50'
+                      }`}
+                    >
+                      <div className="space-y-0.5">
+                        <p className={`font-medium text-sm ${esCritico ? 'text-red-900' : 'text-yellow-900'}`}>
+                          {item.usuario.nombres} {item.usuario.apellidos}
+                        </p>
+                        <p className={`text-xs ${esCritico ? 'text-red-700' : 'text-yellow-700'}`}>
+                          {item.semanas_sin_carga} semana{item.semanas_sin_carga !== 1 ? 's' : ''} sin carga ·{' '}
+                          {esCritico ? 'Sin registros en ningún proyecto' : 'Tiene horas en otros proyectos'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`shrink-0 gap-1.5 ${
+                          esCritico
+                            ? 'border-red-300 text-red-700 hover:bg-red-100'
+                            : 'border-yellow-300 text-yellow-800 hover:bg-yellow-100'
+                        }`}
+                        disabled={yaEnviado || mutRecordatorio.isPending}
+                        onClick={() => mutRecordatorio.mutate(item.usuario.id)}
+                      >
+                        <Bell className="h-3 w-3" />
+                        {yaEnviado ? 'Recordatorio enviado' : 'Enviar recordatorio'}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

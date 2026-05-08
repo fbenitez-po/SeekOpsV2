@@ -262,6 +262,54 @@ async function listarSemanasConCarga(usuarioId) {
   return consultar('SELECT DISTINCT semana FROM time_entries WHERE user_id = $1', [usuarioId]);
 }
 
+async function obtenerDatosSeekersSinCarga(gestorId) {
+  return consultar(
+    `SELECT
+       u.id as user_id,
+       u.nombres,
+       u.apellidos,
+       u.email,
+       u.fecha_ingreso,
+       COALESCE(
+         json_agg(
+           json_build_object(
+             'semana', te.semana,
+             'en_mis_proyectos', EXISTS(
+               SELECT 1 FROM time_entry_lines tel
+               JOIN projects p2 ON p2.id = tel.project_id
+               WHERE tel.time_entry_id = te.id AND p2.gestor_id = $1
+             )
+           )
+         ) FILTER (WHERE te.id IS NOT NULL),
+         '[]'::json
+       ) as entradas
+     FROM (
+       SELECT DISTINCT pu.user_id
+       FROM projects p
+       JOIN project_users pu ON pu.project_id = p.id
+       WHERE p.gestor_id = $1 AND pu.activo = true AND pu.rol = 'SEEKER'
+     ) seekers
+     JOIN users u ON u.id = seekers.user_id AND u.id != $1
+     LEFT JOIN time_entries te ON te.user_id = u.id AND te.estado != 'RECHAZADO'
+     GROUP BY u.id, u.nombres, u.apellidos, u.email, u.fecha_ingreso`,
+    [gestorId]
+  );
+}
+
+async function verificarSeekerDeGestor(gestorId, seekerId) {
+  return consultarUno(
+    `SELECT u.nombres, u.apellidos, u.email,
+            g.nombres as gestor_nombres, g.apellidos as gestor_apellidos
+     FROM projects p
+     JOIN project_users pu ON pu.project_id = p.id
+     JOIN users u ON u.id = pu.user_id
+     JOIN users g ON g.id = $1
+     WHERE p.gestor_id = $1 AND pu.user_id = $2 AND pu.activo = true AND pu.rol = 'SEEKER'
+     LIMIT 1`,
+    [gestorId, seekerId]
+  );
+}
+
 module.exports = {
   listarEntradas,
   buscarEntradaPorId,
@@ -276,4 +324,6 @@ module.exports = {
   registrarAprobacion,
   obtenerFechaIngreso,
   listarSemanasConCarga,
+  obtenerDatosSeekersSinCarga,
+  verificarSeekerDeGestor,
 };

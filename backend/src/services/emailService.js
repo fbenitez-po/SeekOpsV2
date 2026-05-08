@@ -128,4 +128,34 @@ async function enviarResetPassword(email, nombres, token) {
   });
 }
 
-module.exports = { enviarBienvenida, enviarResetPassword };
+async function enviarRecordatorioCarga(email, nombresSeeker, nombreGestor) {
+  const link = process.env.FRONTEND_URL || '#';
+
+  const cuerpo = `
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;">Recordatorio de carga de horas</h2>
+    <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+      Hola ${nombresSeeker}, te escribimos porque tenés semanas pendientes de carga de horas en Seekops.
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">
+      <strong>${nombreGestor}</strong> te solicita que ingreses a la plataforma y registres tus horas a la brevedad.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="background:#0f172a;border-radius:8px;padding:12px 28px;">
+          <a href="${link}" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">Cargar mis horas</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;font-size:13px;color:#94a3b8;">
+      Si ya cargaste tus horas recientemente, podés ignorar este mensaje.
+    </p>`;
+
+  await enviar({
+    to: email,
+    subject: 'Recordatorio: tenés horas pendientes de carga — Seekops',
+    html: templateBase('Recordatorio de carga de horas', cuerpo),
+    link,
+  });
+}
+
+module.exports = { enviarBienvenida, enviarResetPassword, enviarRecordatorioCarga };

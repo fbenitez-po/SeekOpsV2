@@ -47,6 +47,26 @@ router.get('/semanas-sin-carga', async (req, res, next) => {
   }
 });
 
+router.get('/seekers-sin-carga', async (req, res, next) => {
+  try {
+    const { usuario_id, roles } = req.usuario;
+    const resultado = await service.obtenerSeekersSinCarga(usuario_id, roles);
+    res.json(resultado);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/seekers-sin-carga/:userId/recordatorio', async (req, res, next) => {
+  try {
+    const { usuario_id, roles } = req.usuario;
+    const resultado = await service.enviarRecordatorio(usuario_id, req.params.userId, roles);
+    res.json(resultado);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const { usuario_id, roles } = req.usuario;

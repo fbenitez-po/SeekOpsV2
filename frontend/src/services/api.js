@@ -51,6 +51,8 @@ export const timeEntryApi = {
   observar: (id, datos) => api.post(`/time-entries/${id}/observar`, datos),
   rechazar: (id, datos) => api.post(`/time-entries/${id}/rechazar`, datos),
   semanasSinCarga: () => api.get('/time-entries/semanas-sin-carga'),
+  seekersSinCarga: () => api.get('/time-entries/seekers-sin-carga'),
+  enviarRecordatorio: (userId) => api.post(`/time-entries/seekers-sin-carga/${userId}/recordatorio`),
 };
 
 // Usuarios

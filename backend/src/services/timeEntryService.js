@@ -1,5 +1,6 @@
 const { ErrorApp } = require('../middlewares/errorHandler');
 const data = require('../data/timeEntryData');
+const emailService = require('./emailService');
 
 function construirEntrada(entrada, lineas, aprobaciones) {
   const totalHoras = lineas.reduce((s, l) => s + parseFloat(l.horas || 0), 0);
@@ -256,4 +257,69 @@ async function obtenerSemanasSinCarga(usuarioId) {
   return { semanas: semanasFaltantes, total: semanasFaltantes.length };
 }
 
-module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, aprobarConObservacion, observar, rechazar, obtenerSemanasSinCarga };
+async function obtenerSeekersSinCarga(usuarioId, roles) {
+  if (!roles.includes('GESTOR') && !roles.includes('ADMIN')) {
+    throw new ErrorApp('Solo el gestor puede ver esta información', 403);
+  }
+
+  const seekers = await data.obtenerDatosSeekersSinCarga(usuarioId);
+
+  const hoy = new Date();
+  const domingoUltimaSemanaCompleta = domingoDeSemanaDe(hoy);
+  domingoUltimaSemanaCompleta.setDate(domingoUltimaSemanaCompleta.getDate() - 7);
+  const ultimaSemana = calcularCodigoSemana(domingoUltimaSemanaCompleta);
+
+  const resultado = [];
+
+  for (const seeker of seekers) {
+    if (!seeker.fecha_ingreso) continue;
+
+    const entradas = Array.isArray(seeker.entradas) ? seeker.entradas : [];
+    const semanasConCargaGeneral = new Set(entradas.map((e) => e.semana));
+    const semanasConCargaMisProyectos = new Set(
+      entradas.filter((e) => e.en_mis_proyectos).map((e) => e.semana)
+    );
+
+    const cursor = domingoDeSemanaDe(new Date(seeker.fecha_ingreso));
+    let cantSemanasSinCarga = 0;
+    while (cursor <= domingoUltimaSemanaCompleta) {
+      const codigo = calcularCodigoSemana(cursor);
+      if (!semanasConCargaMisProyectos.has(codigo)) cantSemanasSinCarga++;
+      cursor.setDate(cursor.getDate() + 7);
+    }
+
+    if (cantSemanasSinCarga === 0) continue;
+
+    const tieneEntradaUltimaSemana = semanasConCargaGeneral.has(ultimaSemana);
+    const severidad = tieneEntradaUltimaSemana ? 'ADVERTENCIA' : 'CRITICO';
+
+    resultado.push({
+      usuario: { id: seeker.user_id, nombres: seeker.nombres, apellidos: seeker.apellidos },
+      semanas_sin_carga: cantSemanasSinCarga,
+      ultima_semana: ultimaSemana,
+      severidad,
+    });
+  }
+
+  resultado.sort((a, b) => (a.severidad === b.severidad ? 0 : a.severidad === 'CRITICO' ? -1 : 1));
+  return { data: resultado, total: resultado.length };
+}
+
+async function enviarRecordatorio(gestorId, seekerId, roles) {
+  if (!roles.includes('GESTOR') && !roles.includes('ADMIN')) {
+    throw new ErrorApp('Solo el gestor puede enviar recordatorios', 403);
+  }
+
+  const seeker = await data.verificarSeekerDeGestor(gestorId, seekerId);
+  if (!seeker) throw new ErrorApp('El usuario no pertenece a tu equipo', 403);
+
+  await emailService.enviarRecordatorioCarga(
+    seeker.email,
+    seeker.nombres,
+    `${seeker.gestor_nombres} ${seeker.gestor_apellidos}`
+  );
+
+  return { ok: true };
+}
+
+module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, aprobarConObservacion, observar, rechazar, obtenerSemanasSinCarga, obtenerSeekersSinCarga, enviarRecordatorio };
