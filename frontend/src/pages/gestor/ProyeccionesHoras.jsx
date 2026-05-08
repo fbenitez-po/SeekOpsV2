@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, X, CalendarRange } from 'lucide-react';
-import { projectionApi, projectApi } from '../../services/api';
+import { projectionApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 
 function seekerVacio() {
-  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '' };
+  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', categoria_id: '' };
 }
 
 function formatFecha(fecha) {
@@ -39,6 +39,11 @@ export default function ProyeccionesHoras() {
   const { data: dataProyectos } = useQuery({
     queryKey: ['projects-gestor'],
     queryFn: () => projectApi.listar({ activo: 'true', limit: 100 }).then((r) => r.data.data),
+  });
+
+  const { data: dataCategorias } = useQuery({
+    queryKey: ['categorias-cliente'],
+    queryFn: () => configApi.categoriasUsuario().then((r) => r.data),
   });
 
   const { data: dataProyectoDetalle } = useQuery({
@@ -82,7 +87,7 @@ export default function ProyeccionesHoras() {
       fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '',
       fecha_fin: proy.fecha_fin?.slice(0, 10) || '',
       notas: proy.notas || '',
-      seekers: [{ id: crypto.randomUUID(), user_id: proy.user_id, fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '', fecha_fin: proy.fecha_fin?.slice(0, 10) || '', horas_proyectadas: String(proy.horas_proyectadas) }],
+      seekers: [{ id: crypto.randomUUID(), user_id: proy.user_id, fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '', fecha_fin: proy.fecha_fin?.slice(0, 10) || '', horas_proyectadas: String(proy.horas_proyectadas), categoria_id: proy.categoria_id || '' }],
     });
     setError('');
     setMostrarFormulario(true);
@@ -126,6 +131,7 @@ export default function ProyeccionesHoras() {
         fecha_inicio: s.fecha_inicio,
         fecha_fin: s.fecha_fin,
         horas_proyectadas: parseFloat(s.horas_proyectadas),
+        categoria_id: s.categoria_id || null,
         notas: form.notas || null,
       };
       mutActualizar.mutate({ id: editando.id, datos });
@@ -142,6 +148,7 @@ export default function ProyeccionesHoras() {
             fecha_inicio: s.fecha_inicio,
             fecha_fin: s.fecha_fin,
             horas_proyectadas: parseFloat(s.horas_proyectadas),
+            categoria_id: s.categoria_id || null,
             notas: form.notas || null,
           })
         )
@@ -254,6 +261,19 @@ export default function ProyeccionesHoras() {
                               </button>
                             )}
                           </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">Categoría</label>
+                            <select
+                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                              value={seeker.categoria_id}
+                              onChange={(e) => actualizarSeeker(seeker.id, 'categoria_id', e.target.value)}
+                            >
+                              <option value="">Sin categoría</option>
+                              {(dataCategorias || []).map((c) => (
+                                <option key={c.id} value={c.id}>{c.nombre}</option>
+                              ))}
+                            </select>
+                          </div>
                           <div className="grid gap-3 sm:grid-cols-3">
                             <div className="space-y-1.5">
                               <label className="text-xs font-medium text-muted-foreground">Fecha inicio *</label>
@@ -359,6 +379,7 @@ export default function ProyeccionesHoras() {
                     <tr className="border-b bg-muted/30">
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Proyecto</th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Seeker</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Categoría</th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Período</th>
                       <th className="px-4 py-3 text-right font-medium text-muted-foreground">Horas</th>
                       <th className="px-4 py-3 text-left font-medium text-muted-foreground">Notas</th>
@@ -374,6 +395,9 @@ export default function ProyeccionesHoras() {
                         </td>
                         <td className="px-4 py-3">
                           {p.usuario_nombres} {p.usuario_apellidos}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {p.categoria_nombre || '—'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {formatFecha(p.fecha_inicio)} → {formatFecha(p.fecha_fin)}

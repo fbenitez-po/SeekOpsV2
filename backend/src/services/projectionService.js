@@ -12,7 +12,7 @@ async function listar(filtros, gestorId, roles) {
 }
 
 async function crear(body, gestorId, roles) {
-  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas } = body;
+  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, categoria_id } = body;
 
   if (!project_id || !user_id || !fecha_inicio || !fecha_fin || !horas_proyectadas) {
     throw crearError('project_id, user_id, fecha_inicio, fecha_fin y horas_proyectadas son requeridos');
@@ -28,7 +28,7 @@ async function crear(body, gestorId, roles) {
 
   // Verificar que el gestor tenga acceso al proyecto
   if (!roles.includes('ADMIN')) {
-    const proyecto = await projectData.obtenerPorId(project_id, gestorId, roles);
+    const proyecto = await projectData.buscarProyectoPorId(project_id);
     if (!proyecto || proyecto.gestor_id !== gestorId) {
       throw crearError('No tenés permisos para proyectar horas en este proyecto', 403);
     }
@@ -61,6 +61,7 @@ async function actualizar(id, body, gestorId, roles) {
     fecha_fin: fecha_fin || existente.fecha_fin,
     horas_proyectadas: horas_proyectadas || existente.horas_proyectadas,
     notas: body.notas !== undefined ? body.notas : existente.notas,
+    categoria_id: body.categoria_id !== undefined ? body.categoria_id : existente.categoria_id,
   }, gestorId);
 
   return data.obtenerPorId(id);
