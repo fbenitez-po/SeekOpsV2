@@ -274,14 +274,17 @@ async function obtenerSeekersSinCarga(usuarioId, roles) {
 
     if (cantSemanasSinCarga === 0) continue;
 
-    const tieneEntradaUltimaSemana = semanasConCargaGeneral.has(ultimaSemana);
-    const severidad = tieneEntradaUltimaSemana ? 'ADVERTENCIA' : 'CRITICO';
+    const entradaUltimaSemana = entradas.find((e) => e.semana === ultimaSemana);
+    const severidad = entradaUltimaSemana ? 'ADVERTENCIA' : 'CRITICO';
+    const proyectosOtros = entradaUltimaSemana?.proyectos_otros || [];
 
     resultado.push({
       usuario: { id: seeker.user_id, nombres: seeker.nombres, apellidos: seeker.apellidos },
       semanas_sin_carga: cantSemanasSinCarga,
       ultima_semana: ultimaSemana,
       severidad,
+      proyectos_pendientes: Array.isArray(seeker.mis_proyectos) ? seeker.mis_proyectos : [],
+      proyectos_otros: proyectosOtros,
     });
   }
 

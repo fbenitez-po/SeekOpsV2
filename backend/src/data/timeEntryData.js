@@ -271,6 +271,13 @@ async function obtenerDatosSeekersSinCarga(gestorId) {
        u.email,
        u.fecha_ingreso,
        COALESCE(
+         (SELECT json_agg(json_build_object('id', p3.id, 'nombre', p3.nombre))
+          FROM projects p3
+          JOIN project_users pu3 ON pu3.project_id = p3.id
+          WHERE p3.gestor_id = $1 AND pu3.user_id = u.id AND pu3.activo = true AND pu3.rol = 'SEEKER'),
+         '[]'::json
+       ) as mis_proyectos,
+       COALESCE(
          json_agg(
            json_build_object(
              'semana', te.semana,
@@ -278,6 +285,12 @@ async function obtenerDatosSeekersSinCarga(gestorId) {
                SELECT 1 FROM time_entry_lines tel
                JOIN projects p2 ON p2.id = tel.project_id
                WHERE tel.time_entry_id = te.id AND p2.gestor_id = $1
+             ),
+             'proyectos_otros', (
+               SELECT json_agg(p_o.nombre ORDER BY p_o.nombre)
+               FROM time_entry_lines tel_o
+               JOIN projects p_o ON p_o.id = tel_o.project_id
+               WHERE tel_o.time_entry_id = te.id AND p_o.gestor_id != $1
              )
            )
          ) FILTER (WHERE te.id IS NOT NULL),

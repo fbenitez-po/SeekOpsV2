@@ -204,8 +204,13 @@ export default function HorasEquipo() {
                           {item.usuario.nombres} {item.usuario.apellidos}
                         </p>
                         <p className={`text-xs ${esCritico ? 'text-red-700' : 'text-yellow-700'}`}>
-                          {item.semanas_sin_carga} semana{item.semanas_sin_carga !== 1 ? 's' : ''} sin carga ·{' '}
-                          {esCritico ? 'Sin registros en ningún proyecto' : 'Tiene horas en otros proyectos'}
+                          {item.semanas_sin_carga} semana{item.semanas_sin_carga !== 1 ? 's' : ''} sin carga
+                          {item.proyectos_pendientes?.length > 0 && (
+                            <> · Pendiente en: <span className="font-medium">{item.proyectos_pendientes.map((p) => p.nombre).join(', ')}</span></>
+                          )}
+                          {!esCritico && item.proyectos_otros?.length > 0 && (
+                            <> · Cargó en: <span className="font-medium">{item.proyectos_otros.join(', ')}</span></>
+                          )}
                         </p>
                       </div>
                       <Button
