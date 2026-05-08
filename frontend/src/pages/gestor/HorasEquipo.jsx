@@ -173,14 +173,16 @@ export default function HorasEquipo() {
           <p className="text-muted-foreground">Aprobá o rechazá las horas de tu equipo</p>
         </div>
 
-        {seekersSinCarga.length > 0 && (
-          <Card>
+        <Card>
             <CardHeader>
               <CardTitle className="text-base">
                 Seekers con carga pendiente ({seekersSinCarga.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {seekersSinCarga.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Todo al día — todos los seekers tienen sus horas cargadas</p>
+              ) : (
               <div className="space-y-3">
                 {seekersSinCarga.map((item) => {
                   const esCritico = item.severidad === 'CRITICO';
@@ -221,9 +223,9 @@ export default function HorasEquipo() {
                   );
                 })}
               </div>
+              )}
             </CardContent>
           </Card>
-        )}
 
         <Card>
           <CardHeader>
