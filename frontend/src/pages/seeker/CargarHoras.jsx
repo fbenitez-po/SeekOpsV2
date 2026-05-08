@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { timeEntryApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
@@ -35,6 +35,7 @@ const lineaVacia = () => ({
 
 export default function CargarHoras() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [offsetSemana, setOffsetSemana] = useState(-1);
   const [lineas, setLineas] = useState([lineaVacia()]);
   const [error, setError] = useState('');
@@ -57,7 +58,10 @@ export default function CargarHoras() {
 
   const mutation = useMutation({
     mutationFn: (datos) => timeEntryApi.crear(datos),
-    onSuccess: () => navigate('/seeker'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time-entries'] });
+      navigate('/seeker');
+    },
     onError: (err) => setError(err.response?.data?.error || 'Error al guardar'),
   });
 
