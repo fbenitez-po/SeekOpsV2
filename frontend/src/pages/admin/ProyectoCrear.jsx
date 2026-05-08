@@ -44,7 +44,7 @@ export default function ProyectoCrear() {
   const [error, setError] = useState('');
 
   const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
-  const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTORES', activo: true, limit: 100 }).then((r) => r.data.data) });
+  const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTOR', activo: true, limit: 100 }).then((r) => r.data.data) });
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
   const { data: categorias } = useQuery({ queryKey: ['categorias-proyecto'], queryFn: () => configApi.categoriasProyecto().then((r) => r.data) });
   const { data: tiposServicio } = useQuery({ queryKey: ['tipos-servicio'], queryFn: () => configApi.tiposServicio().then((r) => r.data) });

@@ -17,6 +17,10 @@ function construirFiltros(filtros) {
     params.push(filtros.equipo_id);
     condiciones.push(`u.team_id = $${idx++}`);
   }
+  if (filtros.grupo) {
+    params.push(filtros.grupo);
+    condiciones.push(`u.id IN (SELECT ugm.user_id FROM user_group_members ugm JOIN user_groups ug ON ug.id = ugm.group_id WHERE ug.codigo = $${idx++})`);
+  }
 
   return { params, condiciones };
 }
