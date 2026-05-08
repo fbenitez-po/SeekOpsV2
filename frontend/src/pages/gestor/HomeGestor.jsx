@@ -238,7 +238,7 @@ export default function HomeGestor() {
                       ))}
                       {misPendientes.length > 2 && (
                         <button
-                          onClick={() => navigate('/seeker/mis-horas')}
+                          onClick={() => navigate('/gestor/mis-horas')}
                           className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
                         >
                           Ver {misPendientes.length - 2} más →
@@ -263,7 +263,7 @@ export default function HomeGestor() {
                       ))}
                       {misAprobadas.length > 2 && (
                         <button
-                          onClick={() => navigate('/seeker/mis-horas')}
+                          onClick={() => navigate('/gestor/mis-horas')}
                           className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
                         >
                           Ver {misAprobadas.length - 2} más →
@@ -288,7 +288,7 @@ export default function HomeGestor() {
                       <TarjetaEntradaPropia key={e.id} entrada={e} onClick={manejarClickEntradaPropia} />
                     ))}
                     <button
-                      onClick={() => navigate('/seeker/mis-horas')}
+                      onClick={() => navigate('/gestor/mis-horas')}
                       className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
                     >
                       Ver historial completo →

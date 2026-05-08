@@ -14,6 +14,7 @@ const navGestor = [
   { label: 'Mis equipos', href: '/gestor/equipo', icon: CheckSquare },
   { label: 'Proyecciones', href: '/gestor/proyecciones', icon: CalendarRange },
   { label: 'Cargar mis horas', href: '/gestor/cargar', icon: Clock },
+  { label: 'Mis horas', href: '/gestor/mis-horas', icon: History },
 ];
 
 const navAdmin = [
