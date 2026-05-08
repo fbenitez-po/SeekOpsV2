@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { projectApi, clientApi, userApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
@@ -43,6 +43,24 @@ export default function ProyectoCrear() {
   });
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const draft = sessionStorage.getItem('seekops_proyecto_crear_draft');
+    if (draft) {
+      try { setForm(JSON.parse(draft)); } catch {}
+      sessionStorage.removeItem('seekops_proyecto_crear_draft');
+    }
+  }, []);
+
+  const irACrearCliente = () => {
+    sessionStorage.setItem('seekops_proyecto_crear_draft', JSON.stringify(form));
+    navigate('/admin/clientes/crear?returnTo=/admin/proyectos/crear');
+  };
+
+  const irACrearGestor = () => {
+    sessionStorage.setItem('seekops_proyecto_crear_draft', JSON.stringify(form));
+    navigate('/admin/usuarios/crear?returnTo=/admin/proyectos/crear');
+  };
+
   const { data: clientes } = useQuery({ queryKey: ['clientes-select'], queryFn: () => clientApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
   const { data: gestores } = useQuery({ queryKey: ['gestores-select'], queryFn: () => userApi.listar({ grupo: 'GESTOR', activo: true, limit: 100 }).then((r) => r.data.data) });
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones-proyecto'], queryFn: () => configApi.segmentacionesProyecto().then((r) => r.data) });
@@ -62,112 +80,146 @@ export default function ProyectoCrear() {
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target?.value ?? e }));
 
+  const BtnNuevo = ({ onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 h-9 w-9 rounded-lg border border-[#e2e8f0] bg-white flex items-center justify-center text-[#64748b] hover:border-[#0f172a] hover:text-[#0f172a] transition-colors"
+    >
+      <Plus className="h-4 w-4" />
+    </button>
+  );
+
   return (
     <Layout>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">Nuevo proyecto</h1>
+      <div className="space-y-6">
+        <div>
+          <button type="button" onClick={() => navigate('/admin/proyectos')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver a proyectos
+          </button>
+          <h1 className="text-2xl font-bold">Nuevo proyecto</h1>
+        </div>
 
         <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate(form); }} className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Información básica</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Código *</Label>
-                <Input value={form.codigo} onChange={set('codigo')} required maxLength={20} placeholder="PRJ-001" />
-              </div>
-              <div className="space-y-2">
-                <Label>Nombre *</Label>
-                <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Descripción</Label>
-                <Textarea value={form.descripcion} onChange={set('descripcion')} maxLength={500} rows={2} />
-              </div>
-              <div className="space-y-2">
-                <Label>Cliente *</Label>
-                <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná cliente" /></SelectTrigger>
-                  <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Gestor *</Label>
-                <Select value={form.gestor_id} onValueChange={set('gestor_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná gestor" /></SelectTrigger>
-                  <SelectContent>{(gestores || []).map((g) => <SelectItem key={g.id} value={g.id}>{g.nombres} {g.apellidos}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Configuración</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Segmentación *</Label>
+            <CardHeader><CardTitle className="text-base">Datos del proyecto</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-3 gap-x-6 gap-y-3">
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Código *</Label>
+                <Input value={form.codigo} onChange={set('codigo')} required maxLength={20} placeholder="PRJ-001" className="flex-1 min-w-0" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Nombre *</Label>
+                <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} className="flex-1 min-w-0" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Descripción</Label>
+                <Input value={form.descripcion} onChange={set('descripcion')} maxLength={100} className="flex-1 min-w-0" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Cliente *</Label>
+                {clientes?.length === 0 ? (
+                  <button type="button" onClick={irACrearCliente}
+                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#cbd5e1] text-sm text-[#64748b] hover:border-[#0f172a] hover:text-[#0f172a] transition-colors bg-white">
+                    <Plus className="h-3.5 w-3.5" /> Agregar cliente
+                  </button>
+                ) : (
+                  <div className="flex flex-1 gap-2 min-w-0">
+                    <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
+                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <BtnNuevo onClick={irACrearCliente} />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Gestor *</Label>
+                {gestores?.length === 0 ? (
+                  <button type="button" onClick={irACrearGestor}
+                    className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#cbd5e1] text-sm text-[#64748b] hover:border-[#0f172a] hover:text-[#0f172a] transition-colors bg-white">
+                    <Plus className="h-3.5 w-3.5" /> Agregar gestor
+                  </button>
+                ) : (
+                  <div className="flex flex-1 gap-2 min-w-0">
+                    <Select value={form.gestor_id} onValueChange={set('gestor_id')}>
+                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectContent>{(gestores || []).map((g) => <SelectItem key={g.id} value={g.id}>{g.nombres} {g.apellidos}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <BtnNuevo onClick={irACrearGestor} />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-28 shrink-0 text-[#64748b]">Segmentación *</Label>
                 <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
                   <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Categoría de ingreso</Label>
-                <MultiCheckbox
-                  opciones={categorias || []}
-                  seleccionados={form.categorias_proyecto_ids}
-                  onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
-                />
-                {form.categorias_proyecto_ids.length > 0 && (
-                  <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo de servicio</Label>
-                <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                  <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Capa de productividad</Label>
-                <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha inicio</Label>
-                <Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} />
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha fin</Label>
-                <Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} />
-              </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Área aplicable</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={form.tiene_area}
-                  onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
-                  className="h-4 w-4 rounded border"
-                  style={{ accentColor: '#0f172a' }}
-                />
-                <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
-              </label>
-              {form.tiene_area && (
-                <div className="space-y-2">
-                  <Label>Área *</Label>
-                  <Select value={form.area_id} onValueChange={set('area_id')}>
-                    <SelectTrigger><SelectValue placeholder="Seleccioná el área" /></SelectTrigger>
-                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
-                  </Select>
+            <CardHeader><CardTitle className="text-base">Clasificación</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-2 gap-x-8 gap-y-3">
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Tipo de servicio</Label>
+                <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Capa productividad</Label>
+                <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Fecha inicio</Label>
+                <Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} className="flex-1" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Fecha fin</Label>
+                <Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} className="flex-1" />
+              </div>
+              <div className="col-span-2 flex items-start gap-3">
+                <Label className="w-36 shrink-0 pt-2 text-[#64748b]">Categoría de ingreso</Label>
+                <div className="flex-1 space-y-1">
+                  <MultiCheckbox
+                    opciones={categorias || []}
+                    seleccionados={form.categorias_proyecto_ids}
+                    onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
+                  />
+                  {form.categorias_proyecto_ids.length > 0 && (
+                    <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
+                  )}
                 </div>
-              )}
+              </div>
+              <div className="col-span-2 pt-2 border-t border-[#e2e8f0] space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.tiene_area}
+                    onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
+                    className="h-4 w-4 rounded border"
+                    style={{ accentColor: '#0f172a' }}
+                  />
+                  <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
+                </label>
+                {form.tiene_area && (
+                  <div className="flex items-center gap-3 max-w-xs">
+                    <Label className="shrink-0 text-[#64748b]">Área *</Label>
+                    <Select value={form.area_id} onValueChange={set('area_id')}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 

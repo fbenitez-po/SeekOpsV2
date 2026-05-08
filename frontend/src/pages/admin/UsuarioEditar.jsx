@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
 import { userApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -133,8 +134,13 @@ export default function UsuarioEditar() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">Editar usuario</h1>
+      <div className="max-w-2xl space-y-6">
+        <div>
+          <button type="button" onClick={() => navigate('/admin/usuarios')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver a usuarios
+          </button>
+          <h1 className="text-2xl font-bold">Editar usuario</h1>
+        </div>
 
         <Card>
           <CardHeader><CardTitle className="text-sm text-muted-foreground">Cuenta</CardTitle></CardHeader>

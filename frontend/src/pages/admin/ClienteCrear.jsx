@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { clientApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
@@ -11,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 export default function ClienteCrear() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [form, setForm] = useState({
     nombre: '', razon_social: '', razon_comercial: '', ruc: '',
     nombre_contacto: '', email_contacto: '', telefono: '', direccion: '',
@@ -22,7 +25,7 @@ export default function ClienteCrear() {
   const { data: sectores } = useQuery({ queryKey: ['sectores'], queryFn: () => configApi.sectores().then((r) => r.data) });
   const mutation = useMutation({
     mutationFn: (datos) => clientApi.crear(datos),
-    onSuccess: () => navigate('/admin/clientes'),
+    onSuccess: () => navigate(returnTo || '/admin/clientes'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear cliente'),
   });
 
@@ -30,8 +33,13 @@ export default function ClienteCrear() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">Nuevo cliente</h1>
+      <div className="max-w-2xl space-y-6">
+        <div>
+          <button type="button" onClick={() => navigate('/admin/clientes')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver a clientes
+          </button>
+          <h1 className="text-2xl font-bold">Nuevo cliente</h1>
+        </div>
 
         <form onSubmit={(e) => { e.preventDefault(); setError(''); mutation.mutate(form); }} className="space-y-4">
           <Card>
@@ -95,7 +103,7 @@ export default function ClienteCrear() {
           {error && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
 
           <div className="flex gap-3">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate('/admin/clientes')}>Cancelar</Button>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(returnTo || '/admin/clientes')}>Cancelar</Button>
             <Button type="submit" className="flex-1" disabled={mutation.isPending}>{mutation.isPending ? 'Creando...' : 'Crear cliente'}</Button>
           </div>
         </form>

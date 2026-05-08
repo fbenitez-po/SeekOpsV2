@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Pencil, ToggleLeft, ToggleRight, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, ToggleLeft, ToggleRight, Users } from 'lucide-react';
 import { projectApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -29,11 +29,16 @@ export default function ProyectosLista() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Proyectos</h1>
-          <Button onClick={() => navigate('/admin/proyectos/crear')} className="gap-2">
-            <Plus className="h-4 w-4" /> Nuevo proyecto
-          </Button>
+        <div>
+          <button type="button" onClick={() => navigate('/admin')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver al inicio
+          </button>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Proyectos</h1>
+            <Button onClick={() => navigate('/admin/proyectos/crear')} className="gap-2">
+              <Plus className="h-4 w-4" /> Nuevo proyecto
+            </Button>
+          </div>
         </div>
 
         <Input placeholder="Buscar por nombre o código..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />

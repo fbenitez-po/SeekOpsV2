@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { userApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
@@ -79,6 +80,8 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
 
 export default function UsuarioCrear() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [form, setForm] = useState({
     email: '', nombres: '', apellidos: '', numero_documento: '',
     puesto: '', celular: '', equipo_id: '', areas: [],
@@ -93,7 +96,7 @@ export default function UsuarioCrear() {
 
   const mutation = useMutation({
     mutationFn: (datos) => userApi.crear({ ...datos, celular: datos.celular || null }),
-    onSuccess: () => navigate('/admin/usuarios'),
+    onSuccess: () => navigate(returnTo || '/admin/usuarios'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear usuario'),
   });
 
@@ -111,8 +114,13 @@ export default function UsuarioCrear() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">Nuevo usuario</h1>
+      <div className="max-w-2xl space-y-6">
+        <div>
+          <button type="button" onClick={() => navigate('/admin/usuarios')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver a usuarios
+          </button>
+          <h1 className="text-2xl font-bold">Nuevo usuario</h1>
+        </div>
 
         <form onSubmit={manejarSubmit} className="space-y-4">
           <Card>
@@ -186,7 +194,7 @@ export default function UsuarioCrear() {
           {error && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
 
           <div className="flex gap-3">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate('/admin/usuarios')}>Cancelar</Button>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(returnTo || '/admin/usuarios')}>Cancelar</Button>
             <Button type="submit" className="flex-1" disabled={mutation.isPending}>{mutation.isPending ? 'Creando...' : 'Crear usuario'}</Button>
           </div>
         </form>

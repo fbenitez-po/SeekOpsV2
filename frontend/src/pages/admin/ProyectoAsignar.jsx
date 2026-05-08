@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Trash2, UserPlus } from 'lucide-react';
 import { projectApi, userApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -39,8 +39,11 @@ export default function ProyectoAsignar() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className="max-w-2xl space-y-6">
         <div>
+          <button type="button" onClick={() => navigate('/admin/proyectos')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver a proyectos
+          </button>
           <h1 className="text-2xl font-bold">Asignar usuarios</h1>
           <p className="text-muted-foreground">{proyecto?.nombre} ({proyecto?.codigo})</p>
         </div>

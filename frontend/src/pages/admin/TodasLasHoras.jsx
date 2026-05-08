@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Eye, X } from 'lucide-react';
+import { ArrowLeft, Check, Eye, X } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -41,6 +42,7 @@ function ModalAccion({ tipo, entrada, onCerrar, onConfirmar }) {
 }
 
 export default function TodasLasHoras() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [estado, setEstado] = useState('TODOS');
   const [modal, setModal] = useState(null);
@@ -70,6 +72,11 @@ export default function TodasLasHoras() {
   return (
     <Layout>
       <div className="space-y-6">
+        <div>
+          <button type="button" onClick={() => navigate('/admin')} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+            <ArrowLeft className="h-4 w-4" /> Volver al inicio
+          </button>
+        </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Todas las horas</h1>
           <Select value={estado} onValueChange={setEstado}>
