@@ -21,8 +21,15 @@ export default function ProyectoAsignar() {
   const { data: todosUsuarios } = useQuery({ queryKey: ['usuarios-select'], queryFn: () => userApi.listar({ activo: true, limit: 100 }).then((r) => r.data.data) });
 
   const usuariosAsignados = proyecto?.usuarios || [];
+  const gestores = usuariosAsignados.filter((u) => u.rol === 'GESTOR');
+  const seekers = usuariosAsignados.filter((u) => u.rol === 'SEEKER');
+
+  const gestorProyecto = proyecto?.gestor || null;
+  const gestorProyectoEnAsignados = gestores.some((u) => u.id === gestorProyecto?.id);
+
   const idsAsignados = usuariosAsignados.map((u) => u.id);
-  const usuariosDisponibles = (todosUsuarios || []).filter((u) => !idsAsignados.includes(u.id));
+  const idsExcluidos = [...idsAsignados, gestorProyecto?.id].filter(Boolean);
+  const usuariosDisponibles = (todosUsuarios || []).filter((u) => !idsExcluidos.includes(u.id));
 
   const mutAsignar = useMutation({
     mutationFn: () => projectApi.asignarUsuarios(id, [{ usuario_id: usuarioId, rol }]),
@@ -81,20 +88,55 @@ export default function ProyectoAsignar() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Usuarios asignados ({usuariosAsignados.length})</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Gestor del proyecto</CardTitle></CardHeader>
           <CardContent>
-            {usuariosAsignados.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin usuarios asignados</p>
+            {!gestorProyecto && gestores.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin gestor asignado</p>
             ) : (
               <div className="space-y-2">
-                {usuariosAsignados.map((u) => (
+                {gestorProyecto && !gestorProyectoEnAsignados && (
+                  <div className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <p className="text-sm font-medium">{gestorProyecto.nombres} {gestorProyecto.apellidos}</p>
+                      <p className="text-xs text-muted-foreground">Gestor principal del proyecto</p>
+                    </div>
+                    <Badge variant="secondary">GESTOR</Badge>
+                  </div>
+                )}
+                {gestores.map((u) => (
                   <div key={u.id} className="flex items-center justify-between rounded-md border p-3">
                     <div>
                       <p className="text-sm font-medium">{u.nombres} {u.apellidos}</p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{u.rol}</Badge>
+                      <Badge variant="secondary">GESTOR</Badge>
+                      <Button size="sm" variant="ghost" onClick={() => mutDesasignar.mutate(u.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Seekers asignados ({seekers.length})</CardTitle></CardHeader>
+          <CardContent>
+            {seekers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sin seekers asignados</p>
+            ) : (
+              <div className="space-y-2">
+                {seekers.map((u) => (
+                  <div key={u.id} className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <p className="text-sm font-medium">{u.nombres} {u.apellidos}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">SEEKER</Badge>
                       <Button size="sm" variant="ghost" onClick={() => mutDesasignar.mutate(u.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
