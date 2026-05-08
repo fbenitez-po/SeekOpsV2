@@ -52,8 +52,8 @@ export default function AjustarHoras() {
     mutation.mutate({
       lineas: lineas.map((l) => ({
         id: l.id,
-        horas: parseInt(l.horas) || 0,
-        horas_extra: parseInt(l.horas_extra) || 0,
+        horas: parseFloat(l.horas) || 0,
+        horas_extra: parseFloat(l.horas_extra) || 0,
         comentario: l.comentario,
       })),
     });
@@ -105,6 +105,7 @@ export default function AjustarHoras() {
                       type="number"
                       min="0"
                       max="24"
+                      step="0.5"
                       value={linea.horas}
                       onChange={(e) => actualizarLinea(linea.id, 'horas', e.target.value)}
                       required
@@ -116,6 +117,7 @@ export default function AjustarHoras() {
                       type="number"
                       min="0"
                       max="8"
+                      step="0.5"
                       value={linea.horas_extra}
                       onChange={(e) => actualizarLinea(linea.id, 'horas_extra', e.target.value)}
                     />

@@ -37,7 +37,7 @@ router.post(
     body('user_id').isUUID().withMessage('user_id inválido'),
     body('fecha_inicio').isDate().withMessage('fecha_inicio inválida (YYYY-MM-DD)'),
     body('fecha_fin').isDate().withMessage('fecha_fin inválida (YYYY-MM-DD)'),
-    body('horas_proyectadas').isInt({ min: 1 }).withMessage('horas_proyectadas debe ser entero positivo'),
+    body('horas_proyectadas').isFloat({ min: 0.5 }).withMessage('horas_proyectadas debe ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_proyectadas debe ser múltiplo de 0.5'); return true; }),
     body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('notas max 500 caracteres'),
   ],
   validate,
@@ -58,7 +58,7 @@ router.put(
   [
     body('fecha_inicio').optional().isDate().withMessage('fecha_inicio inválida'),
     body('fecha_fin').optional().isDate().withMessage('fecha_fin inválida'),
-    body('horas_proyectadas').optional().isInt({ min: 1 }).withMessage('horas_proyectadas debe ser entero positivo'),
+    body('horas_proyectadas').optional().isFloat({ min: 0.5 }).withMessage('horas_proyectadas debe ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_proyectadas debe ser múltiplo de 0.5'); return true; }),
     body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('notas max 500 caracteres'),
   ],
   validate,

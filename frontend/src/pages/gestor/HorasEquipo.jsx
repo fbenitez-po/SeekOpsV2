@@ -41,6 +41,7 @@ function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
                       type="number"
                       min="0"
                       max="24"
+                      step="0.5"
                       className="w-16 h-8 text-center text-sm"
                       value={lineas[idx].horas}
                       onChange={(e) => actualizarLinea(idx, 'horas', e.target.value)}
@@ -52,6 +53,7 @@ function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
                       type="number"
                       min="0"
                       max="8"
+                      step="0.5"
                       className="w-16 h-8 text-center text-sm"
                       value={lineas[idx].horas_extra}
                       onChange={(e) => actualizarLinea(idx, 'horas_extra', e.target.value)}

@@ -22,8 +22,8 @@ router.post(
     body('semana').matches(/^S\d{2}\/\d{2}$/).withMessage('semana debe tener formato S15/26'),
     body('lineas').isArray({ min: 1 }).withMessage('lineas debe ser un array con al menos un elemento'),
     body('lineas.*.proyecto_id').isUUID().withMessage('proyecto_id inválido'),
-    body('lineas.*.horas').isInt({ min: 0 }).withMessage('horas debe ser un número mayor o igual a 0'),
-    body('lineas.*.horas_extra').optional().isInt({ min: 0, max: 8 }).withMessage('horas_extra debe ser entre 0 y 8'),
+    body('lineas.*.horas').isFloat({ min: 0 }).withMessage('horas debe ser un número mayor o igual a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas debe ser múltiplo de 0.5'); return true; }),
+    body('lineas.*.horas_extra').optional().isFloat({ min: 0, max: 8 }).withMessage('horas_extra debe ser entre 0 y 8').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_extra debe ser múltiplo de 0.5'); return true; }),
   ],
   validate,
   async (req, res, next) => {
@@ -62,8 +62,8 @@ router.put(
   [
     body('lineas').isArray({ min: 1 }).withMessage('lineas es requerido'),
     body('lineas.*.id').isUUID().withMessage('id de línea inválido'),
-    body('lineas.*.horas').isInt({ min: 0 }).withMessage('horas debe ser un número mayor o igual a 0'),
-    body('lineas.*.horas_extra').optional().isInt({ min: 0, max: 8 }).withMessage('horas_extra debe ser entre 0 y 8'),
+    body('lineas.*.horas').isFloat({ min: 0 }).withMessage('horas debe ser un número mayor o igual a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas debe ser múltiplo de 0.5'); return true; }),
+    body('lineas.*.horas_extra').optional().isFloat({ min: 0, max: 8 }).withMessage('horas_extra debe ser entre 0 y 8').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_extra debe ser múltiplo de 0.5'); return true; }),
   ],
   validate,
   async (req, res, next) => {

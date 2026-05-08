@@ -22,7 +22,7 @@ async function crear(body, gestorId, roles) {
     throw crearError('fecha_fin debe ser mayor o igual a fecha_inicio');
   }
 
-  if (parseInt(horas_proyectadas) <= 0) {
+  if (parseFloat(horas_proyectadas) <= 0) {
     throw crearError('horas_proyectadas debe ser mayor a 0');
   }
 
@@ -52,7 +52,7 @@ async function actualizar(id, body, gestorId, roles) {
     throw crearError('fecha_fin debe ser mayor o igual a fecha_inicio');
   }
 
-  if (horas_proyectadas !== undefined && parseInt(horas_proyectadas) <= 0) {
+  if (horas_proyectadas !== undefined && parseFloat(horas_proyectadas) <= 0) {
     throw crearError('horas_proyectadas debe ser mayor a 0');
   }
 

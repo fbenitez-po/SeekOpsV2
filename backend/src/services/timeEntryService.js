@@ -2,8 +2,8 @@ const { ErrorApp } = require('../middlewares/errorHandler');
 const data = require('../data/timeEntryData');
 
 function construirEntrada(entrada, lineas, aprobaciones) {
-  const totalHoras = lineas.reduce((s, l) => s + parseInt(l.horas || 0), 0);
-  const totalExtras = lineas.reduce((s, l) => s + parseInt(l.horas_extra || 0), 0);
+  const totalHoras = lineas.reduce((s, l) => s + parseFloat(l.horas || 0), 0);
+  const totalExtras = lineas.reduce((s, l) => s + parseFloat(l.horas_extra || 0), 0);
 
   return {
     id: entrada.id,
@@ -25,8 +25,8 @@ function construirEntrada(entrada, lineas, aprobaciones) {
       categoria_ingreso: l.categoria_ingreso_id
         ? { id: l.categoria_ingreso_id, nombre: l.categoria_nombre }
         : null,
-      horas: parseInt(l.horas),
-      horas_extra: parseInt(l.horas_extra),
+      horas: parseFloat(l.horas),
+      horas_extra: parseFloat(l.horas_extra),
       comentario: l.comentario || '',
     })),
     total_horas: totalHoras,

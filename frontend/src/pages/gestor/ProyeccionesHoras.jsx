@@ -125,7 +125,7 @@ export default function ProyeccionesHoras() {
         user_id: s.user_id,
         fecha_inicio: s.fecha_inicio,
         fecha_fin: s.fecha_fin,
-        horas_proyectadas: parseInt(s.horas_proyectadas),
+        horas_proyectadas: parseFloat(s.horas_proyectadas),
         notas: form.notas || null,
       };
       mutActualizar.mutate({ id: editando.id, datos });
@@ -141,7 +141,7 @@ export default function ProyeccionesHoras() {
             user_id: s.user_id,
             fecha_inicio: s.fecha_inicio,
             fecha_fin: s.fecha_fin,
-            horas_proyectadas: parseInt(s.horas_proyectadas),
+            horas_proyectadas: parseFloat(s.horas_proyectadas),
             notas: form.notas || null,
           })
         )
@@ -282,8 +282,9 @@ export default function ProyeccionesHoras() {
                               <label className="text-xs font-medium text-muted-foreground">Horas proyectadas *</label>
                               <input
                                 type="number"
-                                min="1"
+                                min="0.5"
                                 max="9999"
+                                step="0.5"
                                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                 placeholder="Ej: 160"
                                 value={seeker.horas_proyectadas}

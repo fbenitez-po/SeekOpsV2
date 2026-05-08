@@ -91,8 +91,8 @@ export default function CargarHoras() {
       lineas: lineas.map((l) => ({
         proyecto_id: l.proyecto_id,
         categoria_ingreso_id: l.categoria_ingreso_id || null,
-        horas: parseInt(l.horas) || 0,
-        horas_extra: parseInt(l.horas_extra) || 0,
+        horas: parseFloat(l.horas) || 0,
+        horas_extra: parseFloat(l.horas_extra) || 0,
         comentario: l.comentario,
       })),
     });
@@ -209,6 +209,7 @@ export default function CargarHoras() {
                         type="number"
                         min="0"
                         max={horasEsperadas}
+                        step="0.5"
                         value={linea.horas}
                         onChange={(e) => actualizarLinea(linea.id, 'horas', e.target.value)}
                         required
@@ -221,6 +222,7 @@ export default function CargarHoras() {
                         type="number"
                         min="0"
                         max="8"
+                        step="0.5"
                         value={linea.horas_extra}
                         onChange={(e) => actualizarLinea(linea.id, 'horas_extra', e.target.value)}
                         placeholder="0"
