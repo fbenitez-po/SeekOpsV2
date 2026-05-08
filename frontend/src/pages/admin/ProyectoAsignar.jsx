@@ -148,7 +148,6 @@ export default function ProyectoAsignar() {
           </CardContent>
         </Card>
 
-        <Button variant="outline" onClick={() => navigate('/admin/proyectos')}>Volver a proyectos</Button>
       </div>
     </Layout>
   );
