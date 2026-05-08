@@ -7,8 +7,8 @@ const authService = require('../services/authService');
 router.post(
   '/login',
   [
-    body('email').isEmail().withMessage('email inválido'),
-    body('password').notEmpty().withMessage('password es requerido'),
+    body('email').isEmail().withMessage('El email ingresado no es válido'),
+    body('password').notEmpty().withMessage('La contraseña es requerida'),
   ],
   validate,
   async (req, res, next) => {
@@ -33,7 +33,7 @@ router.post('/logout', verificarToken, async (req, res, next) => {
 
 router.post(
   '/refresh-token',
-  [body('refresh_token').notEmpty().withMessage('refresh_token es requerido')],
+  [body('refresh_token').notEmpty().withMessage('El token de sesión es requerido')],
   validate,
   async (req, res, next) => {
     try {
@@ -47,7 +47,7 @@ router.post(
 
 router.post(
   '/solicitar-reset',
-  [body('email').isEmail().withMessage('email inválido')],
+  [body('email').isEmail().withMessage('El email ingresado no es válido')],
   validate,
   async (req, res, next) => {
     try {
@@ -62,9 +62,9 @@ router.post(
 router.post(
   '/confirmar-reset',
   [
-    body('token').notEmpty().withMessage('token es requerido'),
+    body('token').notEmpty().withMessage('El token de recuperación es requerido'),
     body('nueva_password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres'),
-    body('confirmar_password').notEmpty().withMessage('confirmar_password es requerido'),
+    body('confirmar_password').notEmpty().withMessage('La confirmación de contraseña es requerida'),
   ],
   validate,
   async (req, res, next) => {

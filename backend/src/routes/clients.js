@@ -7,13 +7,13 @@ const service = require('../services/clientService');
 router.use(verificarToken, soloAdmin);
 
 const validacionesBase = [
-  body('nombre').notEmpty().isLength({ max: 100 }).withMessage('nombre es requerido (max 100)'),
-  body('ruc').matches(/^\d{11,14}$/).withMessage('ruc debe tener 11-14 dígitos'),
+  body('nombre').notEmpty().isLength({ max: 100 }).withMessage('El nombre es requerido (máximo 100 caracteres)'),
+  body('ruc').matches(/^\d{11,14}$/).withMessage('El RUC debe tener entre 11 y 14 dígitos'),
   body('razon_social').optional({ nullable: true }).isLength({ max: 150 }),
   body('razon_comercial').optional({ nullable: true }).isLength({ max: 150 }),
-  body('email_contacto').optional({ nullable: true }).isEmail().withMessage('email_contacto inválido'),
-  body('categoria_usuario_id').isUUID().withMessage('categoria_usuario_id inválido'),
-  body('segmentacion_id').isUUID().withMessage('segmentacion_id inválido'),
+  body('email_contacto').optional({ nullable: true }).isEmail().withMessage('El email de contacto no es válido'),
+  body('categoria_usuario_id').isUUID().withMessage('La categoría seleccionada no es válida'),
+  body('segmentacion_id').isUUID().withMessage('La segmentación seleccionada no es válida'),
 ];
 
 router.get('/', async (req, res, next) => {
