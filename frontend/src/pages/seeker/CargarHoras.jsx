@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { timeEntryApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -31,6 +31,7 @@ const lineaVacia = () => ({
   horas: '',
   horas_extra: '',
   comentario: '',
+  expandido: true,
 });
 
 export default function CargarHoras() {
@@ -71,8 +72,22 @@ export default function CargarHoras() {
     setLineas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
   }
 
+  function toggleLinea(id) {
+    setLineas((prev) => prev.map((l) => (l.id === id ? { ...l, expandido: !l.expandido } : l)));
+  }
+
   function agregarLinea() {
-    setLineas((prev) => [...prev, lineaVacia()]);
+    setError('');
+    const incompleta = lineas.find((l) => !l.proyecto_id || !l.horas);
+    if (incompleta) {
+      setLineas((prev) =>
+        prev.map((l) => (l.id === incompleta.id ? { ...l, expandido: true } : l))
+      );
+      document.getElementById(`proyecto-card-${incompleta.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setError('Completá el proyecto anterior antes de agregar otro.');
+      return;
+    }
+    setLineas((prev) => [...prev.map((l) => ({ ...l, expandido: false })), lineaVacia()]);
   }
 
   function eliminarLinea(id) {
@@ -156,95 +171,121 @@ export default function CargarHoras() {
             const esAreaProject = proyectoSeleccionado?.categoria_ingreso?.nombre === 'Area';
 
             return (
-              <Card key={linea.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Proyecto {idx + 1}
-                  </CardTitle>
-                  {lineas.length > 1 && (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => eliminarLinea(linea.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Proyecto</Label>
-                    <Select
-                      value={linea.proyecto_id}
-                      onValueChange={(v) => actualizarLinea(linea.id, 'proyecto_id', v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccioná un proyecto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {proyectosDisponibles.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.nombre} ({p.codigo})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <Card key={linea.id} id={`proyecto-card-${linea.id}`}>
+                <CardHeader
+                  className="flex flex-row items-center justify-between pb-2 cursor-pointer select-none"
+                  onClick={() => toggleLinea(linea.id)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Proyecto {idx + 1}
+                    </CardTitle>
+                    {!linea.expandido && (
+                      <p className="text-sm font-medium text-foreground mt-0.5 truncate">
+                        {proyectoSeleccionado
+                          ? `${proyectoSeleccionado.nombre}${linea.horas ? ` · ${linea.horas}h` : ''}`
+                          : <span className="text-muted-foreground italic">Sin proyecto seleccionado</span>
+                        }
+                      </p>
+                    )}
                   </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {lineas.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); eliminarLinea(linea.id); }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                    <div className={`p-1 transition-transform duration-200 ${linea.expandido ? 'rotate-180' : ''}`}>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardHeader>
 
-                  {esAreaProject && (
+                {linea.expandido && (
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Categoría de ingreso</Label>
+                      <Label>Proyecto</Label>
                       <Select
-                        value={linea.categoria_ingreso_id || ''}
-                        onValueChange={(v) => actualizarLinea(linea.id, 'categoria_ingreso_id', v)}
+                        value={linea.proyecto_id}
+                        onValueChange={(v) => actualizarLinea(linea.id, 'proyecto_id', v)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Seleccioná categoría" />
+                          <SelectValue placeholder="Seleccioná un proyecto" />
                         </SelectTrigger>
                         <SelectContent>
-                          {(categorias || []).map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                          {proyectosDisponibles.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nombre} ({p.codigo})
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
 
-                  <div className="grid grid-cols-2 gap-4">
+                    {esAreaProject && (
+                      <div className="space-y-2">
+                        <Label>Categoría de ingreso</Label>
+                        <Select
+                          value={linea.categoria_ingreso_id || ''}
+                          onValueChange={(v) => actualizarLinea(linea.id, 'categoria_ingreso_id', v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccioná categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(categorias || []).map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Horas (0-{horasEsperadas})</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max={horasEsperadas}
+                          step="0.5"
+                          value={linea.horas}
+                          onChange={(e) => actualizarLinea(linea.id, 'horas', e.target.value)}
+                          required
+                          placeholder="8"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Horas extras (0-8)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="8"
+                          step="0.5"
+                          value={linea.horas_extra}
+                          onChange={(e) => actualizarLinea(linea.id, 'horas_extra', e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label>Horas (0-{horasEsperadas})</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max={horasEsperadas}
-                        step="0.5"
-                        value={linea.horas}
-                        onChange={(e) => actualizarLinea(linea.id, 'horas', e.target.value)}
-                        required
-                        placeholder="8"
+                      <Label>Comentario (opcional)</Label>
+                      <Textarea
+                        value={linea.comentario}
+                        onChange={(e) => actualizarLinea(linea.id, 'comentario', e.target.value)}
+                        maxLength={500}
+                        placeholder="Descripción de las tareas realizadas..."
+                        rows={2}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Horas extras (0-8)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="8"
-                        step="0.5"
-                        value={linea.horas_extra}
-                        onChange={(e) => actualizarLinea(linea.id, 'horas_extra', e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Comentario (opcional)</Label>
-                    <Textarea
-                      value={linea.comentario}
-                      onChange={(e) => actualizarLinea(linea.id, 'comentario', e.target.value)}
-                      maxLength={500}
-                      placeholder="Descripción de las tareas realizadas..."
-                      rows={2}
-                    />
-                  </div>
-                </CardContent>
+                  </CardContent>
+                )}
               </Card>
             );
           })}

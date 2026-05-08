@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, X, CalendarRange } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, CalendarRange, ChevronDown } from 'lucide-react';
 import { projectionApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 
 function seekerVacio() {
-  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', categoria_id: '' };
+  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', categoria_id: '', expandido: true };
 }
 
 function formatFecha(fecha) {
@@ -111,8 +111,31 @@ export default function ProyeccionesHoras() {
     }));
   }
 
+  function toggleSeeker(id) {
+    setForm((prev) => ({
+      ...prev,
+      seekers: prev.seekers.map((s) => (s.id === id ? { ...s, expandido: !s.expandido } : s)),
+    }));
+  }
+
   function agregarSeeker() {
-    setForm((prev) => ({ ...prev, seekers: [...prev.seekers, seekerVacio()] }));
+    setError('');
+    const incompleto = form.seekers.find(
+      (s) => !s.user_id || !s.fecha_inicio || !s.fecha_fin || !s.horas_proyectadas
+    );
+    if (incompleto) {
+      setForm((prev) => ({
+        ...prev,
+        seekers: prev.seekers.map((s) => (s.id === incompleto.id ? { ...s, expandido: true } : s)),
+      }));
+      document.getElementById(`seeker-card-${incompleto.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setError('Completá el seeker anterior antes de agregar otro.');
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      seekers: [...prev.seekers.map((s) => ({ ...s, expandido: false })), seekerVacio()],
+    }));
   }
 
   function eliminarSeeker(id) {
@@ -232,88 +255,116 @@ export default function ProyeccionesHoras() {
                       const opciones = usuariosDisponibles.filter(
                         (u) => u.id === seeker.user_id || !seleccionados.includes(u.id)
                       );
+                      const seekerSeleccionado = usuariosDisponibles.find((u) => u.id === seeker.user_id);
                       return (
-                        <div key={seeker.id} className="rounded-lg border border-slate-200 p-3 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <select
-                              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                              value={seeker.user_id}
-                              onChange={(e) => actualizarSeeker(seeker.id, 'user_id', e.target.value)}
-                              required
-                              disabled={!!editando || !form.project_id}
-                            >
-                              <option value="">
-                                {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
-                              </option>
-                              {opciones.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                  {u.nombres} {u.apellidos}
-                                </option>
-                              ))}
-                            </select>
-                            {!editando && form.seekers.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => eliminarSeeker(seeker.id)}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">Categoría</label>
-                            <select
-                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                              value={seeker.categoria_id}
-                              onChange={(e) => actualizarSeeker(seeker.id, 'categoria_id', e.target.value)}
-                            >
-                              <option value="">Sin categoría</option>
-                              {(dataCategorias || []).map((c) => (
-                                <option key={c.id} value={c.id}>{c.nombre}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">Fecha inicio *</label>
-                              <input
-                                type="date"
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={seeker.fecha_inicio}
-                                onChange={(e) => actualizarSeeker(seeker.id, 'fecha_inicio', e.target.value)}
-                                required
-                                disabled={!!editando}
-                              />
+                        <div key={seeker.id} id={`seeker-card-${seeker.id}`} className="rounded-lg border border-slate-200">
+                          {/* Header colapsable */}
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 cursor-pointer select-none"
+                            onClick={() => toggleSeeker(seeker.id)}
+                          >
+                            <div className="flex-1 min-w-0">
+                              {seekerSeleccionado ? (
+                                <p className="text-sm font-medium truncate">
+                                  {seekerSeleccionado.nombres} {seekerSeleccionado.apellidos}
+                                  {!seeker.expandido && seeker.horas_proyectadas && ` · ${seeker.horas_proyectadas}h`}
+                                </p>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">Sin seeker seleccionado</p>
+                              )}
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">Fecha fin *</label>
-                              <input
-                                type="date"
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                value={seeker.fecha_fin}
-                                onChange={(e) => actualizarSeeker(seeker.id, 'fecha_fin', e.target.value)}
-                                min={seeker.fecha_inicio || undefined}
-                                required
-                                disabled={!!editando}
-                              />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">Horas proyectadas *</label>
-                              <input
-                                type="number"
-                                min="0.5"
-                                max="9999"
-                                step="0.5"
-                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                placeholder="Ej: 160"
-                                value={seeker.horas_proyectadas}
-                                onChange={(e) => actualizarSeeker(seeker.id, 'horas_proyectadas', e.target.value)}
-                                required
-                                disabled={!!editando}
-                              />
+                            <div className="flex items-center gap-1 shrink-0">
+                              {!editando && form.seekers.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); eliminarSeeker(seeker.id); }}
+                                  className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                              <div className={`p-1 transition-transform duration-200 ${seeker.expandido ? 'rotate-180' : ''}`}>
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              </div>
                             </div>
                           </div>
+
+                          {/* Contenido expandido */}
+                          {seeker.expandido && (
+                            <div className="px-3 pb-3 space-y-3 border-t border-slate-100 pt-3">
+                              <div className="flex items-center gap-2">
+                                <select
+                                  className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                  value={seeker.user_id}
+                                  onChange={(e) => actualizarSeeker(seeker.id, 'user_id', e.target.value)}
+                                  required
+                                  disabled={!!editando || !form.project_id}
+                                >
+                                  <option value="">
+                                    {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
+                                  </option>
+                                  {opciones.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                      {u.nombres} {u.apellidos}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">Categoría</label>
+                                <select
+                                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                  value={seeker.categoria_id}
+                                  onChange={(e) => actualizarSeeker(seeker.id, 'categoria_id', e.target.value)}
+                                >
+                                  <option value="">Sin categoría</option>
+                                  {(dataCategorias || []).map((c) => (
+                                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-muted-foreground">Fecha inicio *</label>
+                                  <input
+                                    type="date"
+                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                    value={seeker.fecha_inicio}
+                                    onChange={(e) => actualizarSeeker(seeker.id, 'fecha_inicio', e.target.value)}
+                                    required
+                                    disabled={!!editando}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-muted-foreground">Fecha fin *</label>
+                                  <input
+                                    type="date"
+                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                    value={seeker.fecha_fin}
+                                    onChange={(e) => actualizarSeeker(seeker.id, 'fecha_fin', e.target.value)}
+                                    min={seeker.fecha_inicio || undefined}
+                                    required
+                                    disabled={!!editando}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-muted-foreground">Horas proyectadas *</label>
+                                  <input
+                                    type="number"
+                                    min="0.5"
+                                    max="9999"
+                                    step="0.5"
+                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                    placeholder="Ej: 160"
+                                    value={seeker.horas_proyectadas}
+                                    onChange={(e) => actualizarSeeker(seeker.id, 'horas_proyectadas', e.target.value)}
+                                    required
+                                    disabled={!!editando}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

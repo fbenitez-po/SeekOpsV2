@@ -27,13 +27,17 @@ export function SelectContent({ className, children, ...props }) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
+        position="popper"
+        sideOffset={4}
         className={cn(
           'relative z-50 max-h-96 min-w-[8rem] overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md',
           className
         )}
         {...props}
       >
-        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport className="p-1 min-w-[var(--radix-select-trigger-width)]">
+          {children}
+        </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
