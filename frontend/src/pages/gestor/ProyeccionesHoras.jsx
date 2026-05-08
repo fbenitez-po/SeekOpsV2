@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, X, CalendarRange, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, CalendarRange, ChevronDown, AlertTriangle } from 'lucide-react';
 import { projectionApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -29,12 +29,20 @@ export default function ProyeccionesHoras() {
   const [form, setForm] = useState(FORM_VACIO);
   const [error, setError] = useState('');
   const [confirmarEliminar, setConfirmarEliminar] = useState(null);
+  const [verTodasAlertas, setVerTodasAlertas] = useState(false);
   const [creandoMultiple, setCreandoMultiple] = useState(false);
 
   const { data: dataProyecciones, isLoading } = useQuery({
     queryKey: ['proyecciones'],
     queryFn: () => projectionApi.listar().then((r) => r.data.data),
   });
+
+  const { data: dataAlertas } = useQuery({
+    queryKey: ['proyecciones-alertas'],
+    queryFn: () => projectionApi.alertas().then((r) => r.data.data),
+  });
+
+  const alertasSinProyeccion = dataAlertas || [];
 
   const { data: dataProyectos } = useQuery({
     queryKey: ['projects-gestor'],
@@ -404,6 +412,55 @@ export default function ProyeccionesHoras() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Alertas: cargas sin proyección vigente */}
+        {alertasSinProyeccion.length > 0 && (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base text-amber-900">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                Cargas sin proyección vigente ({alertasSinProyeccion.length})
+              </CardTitle>
+              <p className="text-sm text-amber-700">
+                Estos seekers registraron horas en proyectos sin proyección definida para ese período.
+              </p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-t border-amber-200 bg-amber-100/50">
+                      <th className="px-4 py-2.5 text-left font-medium text-amber-800">Seeker</th>
+                      <th className="px-4 py-2.5 text-left font-medium text-amber-800">Proyecto</th>
+                      <th className="px-4 py-2.5 text-left font-medium text-amber-800">Semana</th>
+                      <th className="px-4 py-2.5 text-right font-medium text-amber-800">Horas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(verTodasAlertas ? alertasSinProyeccion : alertasSinProyeccion.slice(0, 2)).map((a) => (
+                      <tr key={a.time_entry_id} className="border-t border-amber-100 hover:bg-amber-100/40">
+                        <td className="px-4 py-2.5 font-medium text-amber-900">
+                          {a.usuario_nombres} {a.usuario_apellidos}
+                        </td>
+                        <td className="px-4 py-2.5 text-amber-800">{a.proyecto_nombre}</td>
+                        <td className="px-4 py-2.5 text-amber-700">{a.semana}</td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-amber-900">{a.horas_cargadas}h</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {alertasSinProyeccion.length > 2 && (
+                <button
+                  onClick={() => setVerTodasAlertas((v) => !v)}
+                  className="w-full py-2.5 text-sm font-medium text-amber-700 hover:text-amber-900 hover:bg-amber-100/50 transition-colors border-t border-amber-200"
+                >
+                  {verTodasAlertas ? 'Ver menos' : `Ver ${alertasSinProyeccion.length - 2} más`}
+                </button>
+              )}
             </CardContent>
           </Card>
         )}

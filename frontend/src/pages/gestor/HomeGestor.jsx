@@ -67,6 +67,11 @@ export default function HomeGestor() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
   });
 
+  const { data: dataSeekersSinCarga } = useQuery({
+    queryKey: ['seekers-sin-carga'],
+    queryFn: () => timeEntryApi.seekersSinCarga().then((r) => r.data),
+  });
+
   const { data: dataAprobadas } = useQuery({
     queryKey: ['time-entries-gestor', 'APROBADO_CON_OBSERVACION'],
     queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION', limit: 50 }).then((r) => r.data),
@@ -88,6 +93,8 @@ export default function HomeGestor() {
   const alertasSinProyeccion = dataAlertas || [];
   const todasPendientes = dataPendientes?.data || [];
   const pendientesEquipo = todasPendientes;
+  const seekersSinCarga = dataSeekersSinCarga?.data || [];
+  const totalHorasEquipo = pendientesEquipo.length + seekersSinCarga.length;
   const misPendientes = todasPendientes.filter((e) => e.usuario.id === usuario?.id);
   const misAprobadas = (dataAprobadas?.data || []).filter((e) => e.usuario.id === usuario?.id);
   const miHistorial = (dataHistorial?.data || []).filter((e) => e.usuario.id === usuario?.id);
@@ -110,70 +117,71 @@ export default function HomeGestor() {
           </Button>
         </div>
 
-        {/* Alerta: horas cargadas sin proyección vigente */}
-        {alertasSinProyeccion.length > 0 && (
-          <Card
-            className="cursor-pointer border-amber-300 bg-amber-50 hover:bg-amber-100/70 transition-colors"
-            onClick={() => navigate('/gestor/proyecciones')}
-          >
-            <CardContent className="flex items-start justify-between gap-4 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
-                  <AlertTriangle className="h-5 w-5 text-amber-700" />
+        {/* Alertas en fila */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {alertasSinProyeccion.length > 0 && (
+            <Card
+              className="cursor-pointer border-amber-300 bg-amber-50 hover:bg-amber-100/70 transition-colors"
+              onClick={() => navigate('/gestor/proyecciones')}
+            >
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                    <AlertTriangle className="h-4 w-4 text-amber-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">
+                      {alertasSinProyeccion.length} sin proyección vigente
+                    </p>
+                    <p className="text-xs text-amber-700">Ver detalle en Proyecciones</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="font-semibold text-amber-900">
-                    {alertasSinProyeccion.length} carga{alertasSinProyeccion.length > 1 ? 's' : ''} sin proyección vigente
-                  </p>
-                  <p className="text-sm text-amber-800">
-                    Los siguientes seekers registraron horas en proyectos sin proyección definida para ese período.
-                  </p>
-                  <ul className="space-y-1">
-                    {alertasSinProyeccion.slice(0, 4).map((a) => (
-                      <li key={a.time_entry_id} className="text-sm text-amber-800">
-                        <span className="font-medium">{a.usuario_nombres} {a.usuario_apellidos}</span>
-                        {' — '}{a.proyecto_nombre}
-                        {' · '}<span className="text-amber-700">{a.semana} · {a.horas_cargadas}h</span>
-                      </li>
-                    ))}
-                    {alertasSinProyeccion.length > 4 && (
-                      <li className="text-sm font-medium text-amber-700">
-                        + {alertasSinProyeccion.length - 4} más — hacé clic para ver todo
-                      </li>
-                    )}
-                  </ul>
+                <Badge className="shrink-0 bg-amber-200 text-amber-900 hover:bg-amber-200">
+                  {alertasSinProyeccion.length}
+                </Badge>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card
+            className="cursor-pointer hover:bg-muted/30 transition-colors"
+            onClick={() => navigate('/gestor/equipo')}
+          >
+            <CardContent className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                  <Users className="h-4 w-4 text-slate-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Horas del equipo</p>
+                  {totalHorasEquipo === 0 ? (
+                    <p className="text-xs text-muted-foreground">Todo el equipo está al día</p>
+                  ) : (
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {seekersSinCarga.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span className="text-amber-800 font-medium">{seekersSinCarga.length}</span>
+                          <span className="text-muted-foreground">sin cargar</span>
+                        </span>
+                      )}
+                      {pendientesEquipo.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                          <span className="text-blue-800 font-medium">{pendientesEquipo.length}</span>
+                          <span className="text-muted-foreground">pendientes</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-              <Badge className="shrink-0 bg-amber-200 text-amber-900 hover:bg-amber-200">
-                {alertasSinProyeccion.length}
-              </Badge>
+              {totalHorasEquipo > 0 && (
+                <Badge variant="secondary" className="shrink-0 font-semibold">{totalHorasEquipo}</Badge>
+              )}
             </CardContent>
           </Card>
-        )}
-
-        <Card
-          className="cursor-pointer hover:bg-muted/30 transition-colors"
-          onClick={() => navigate('/gestor/equipo')}
-        >
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                <Users className="h-5 w-5 text-amber-700" />
-              </div>
-              <div>
-                <p className="font-semibold">Horas del equipo pendientes</p>
-                <p className="text-sm text-muted-foreground">
-                  {pendientesEquipo.length === 0
-                    ? 'No hay horas pendientes de aprobación'
-                    : `${pendientesEquipo.length} entrada${pendientesEquipo.length > 1 ? 's' : ''} esperando tu revisión`}
-                </p>
-              </div>
-            </div>
-            {pendientesEquipo.length > 0 && (
-              <Badge variant="warning">{pendientesEquipo.length}</Badge>
-            )}
-          </CardContent>
-        </Card>
+        </div>
 
         {esSeeker() && (
           <div className="space-y-6 border-t pt-6">
