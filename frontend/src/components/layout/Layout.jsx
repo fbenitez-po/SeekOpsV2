@@ -10,7 +10,7 @@ const navSeeker = [
 
 const navGestor = [
   { label: 'Inicio', href: '/gestor', icon: LayoutDashboard },
-  { label: 'Horas del equipo', href: '/gestor/equipo', icon: CheckSquare },
+  { label: 'Mis equipos', href: '/gestor/equipo', icon: CheckSquare },
   { label: 'Proyecciones', href: '/gestor/proyecciones', icon: CalendarRange },
   { label: 'Cargar mis horas', href: '/gestor/cargar', icon: Clock },
 ];

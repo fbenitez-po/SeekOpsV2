@@ -153,7 +153,7 @@ export default function HomeGestor() {
                   <Users className="h-4 w-4 text-slate-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Horas del equipo</p>
+                  <p className="text-sm font-semibold">Mis equipos</p>
                   {totalHorasEquipo === 0 ? (
                     <p className="text-xs text-muted-foreground">Todo el equipo está al día</p>
                   ) : (
