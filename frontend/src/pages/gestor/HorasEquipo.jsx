@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, CheckCheck, X, Bell } from 'lucide-react';
+import { Check, CheckCheck, X, Bell, CircleCheck } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -181,7 +181,10 @@ export default function HorasEquipo() {
             </CardHeader>
             <CardContent>
               {seekersSinCarga.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Todo al día — todos los seekers tienen sus horas cargadas</p>
+                <div className="flex items-center gap-3 rounded-md border border-green-200 bg-green-50 px-4 py-3">
+                  <CircleCheck className="h-5 w-5 shrink-0 text-green-600" />
+                  <p className="text-sm font-medium text-green-800">Todo en orden — tu equipo está al día con las cargas</p>
+                </div>
               ) : (
               <div className="space-y-3">
                 {seekersSinCarga.map((item) => {
