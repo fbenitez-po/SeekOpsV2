@@ -179,7 +179,7 @@ export default function CargarHoras() {
               .filter((p) => seleccionados[p.id])
               .map((proyecto) => {
                 const d = seleccionados[proyecto.id];
-                const esArea = proyecto.categoria_ingreso?.nombre === 'Area';
+                const esArea = Boolean(proyecto.area);
 
                 return (
                   <div key={proyecto.id}>
