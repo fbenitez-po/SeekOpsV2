@@ -20,7 +20,6 @@ export default function ClienteEditar() {
   const { data: cliente } = useQuery({ queryKey: ['cliente', id], queryFn: () => clientApi.obtener(id).then((r) => r.data) });
   const { data: segmentaciones } = useQuery({ queryKey: ['segmentaciones'], queryFn: () => configApi.segmentaciones().then((r) => r.data) });
   const { data: sectores } = useQuery({ queryKey: ['sectores'], queryFn: () => configApi.sectores().then((r) => r.data) });
-  const { data: categoriasCliente } = useQuery({ queryKey: ['categorias-cliente'], queryFn: () => configApi.categoriasUsuario().then((r) => r.data) });
 
   useEffect(() => {
     if (cliente) {
@@ -33,7 +32,6 @@ export default function ClienteEditar() {
         email_contacto: cliente.email_contacto || '',
         telefono: cliente.telefono || '',
         direccion: cliente.direccion || '',
-        categoria_usuario_id: cliente.categoria_usuario?.id || '',
         segmentacion_id: cliente.segmentacion?.id || '',
         sector_id: cliente.sector?.id || '',
         activo: cliente.activo,
@@ -67,13 +65,6 @@ export default function ClienteEditar() {
               <div className="space-y-2"><Label>RUC *</Label><Input value={form.ruc} onChange={set('ruc')} required /></div>
               <div className="space-y-2"><Label>Razón social</Label><Input value={form.razon_social} onChange={set('razon_social')} /></div>
               <div className="space-y-2"><Label>Razón comercial</Label><Input value={form.razon_comercial} onChange={set('razon_comercial')} /></div>
-              <div className="space-y-2">
-                <Label>Categoría *</Label>
-                <Select value={form.categoria_usuario_id} onValueChange={set('categoria_usuario_id')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(categoriasCliente || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
                 <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>

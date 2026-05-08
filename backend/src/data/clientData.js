@@ -80,15 +80,15 @@ async function rucExiste(ruc, excluirId = null) {
 async function crearCliente(datos) {
   const { rows: [cliente] } = await pool.query(
     `INSERT INTO clients (nombre, razon_social, razon_comercial, ruc, nombre_contacto,
-                          email_contacto, telefono, direccion, client_category_id,
+                          email_contacto, telefono, direccion,
                           segmentation_id, sector_id, activo)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      RETURNING id, nombre, ruc, activo, created_at`,
     [
       datos.nombre, datos.razon_social || null, datos.razon_comercial || null,
       datos.ruc, datos.nombre_contacto || null, datos.email_contacto || null,
       datos.telefono || null, datos.direccion || null,
-      datos.categoria_usuario_id, datos.segmentacion_id, datos.sector_id || null,
+      datos.segmentacion_id, datos.sector_id || null,
       datos.activo !== false,
     ]
   );
@@ -109,7 +109,6 @@ async function actualizarCliente(id, datos) {
     email_contacto: datos.email_contacto,
     telefono: datos.telefono,
     direccion: datos.direccion,
-    client_category_id: datos.categoria_usuario_id,
     segmentation_id: datos.segmentacion_id,
     sector_id: datos.sector_id,
     activo: datos.activo,

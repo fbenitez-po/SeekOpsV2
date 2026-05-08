@@ -12,7 +12,6 @@ const validacionesBase = [
   body('razon_social').optional({ nullable: true }).isLength({ max: 150 }),
   body('razon_comercial').optional({ nullable: true }).isLength({ max: 150 }),
   body('email_contacto').optional({ nullable: true }).isEmail().withMessage('El email de contacto no es válido'),
-  body('categoria_usuario_id').isUUID().withMessage('La categoría seleccionada no es válida'),
   body('segmentacion_id').isUUID().withMessage('La segmentación seleccionada no es válida'),
 ];
 
