@@ -122,20 +122,6 @@ router.post(
   }
 );
 
-router.post(
-  '/:id/observar',
-  [body('comentario_observacion').notEmpty().withMessage('El comentario es requerido')],
-  validate,
-  async (req, res, next) => {
-    try {
-      const { usuario_id, roles } = req.usuario;
-      const resultado = await service.observar(req.params.id, usuario_id, roles, req.body);
-      res.json(resultado);
-    } catch (err) {
-      next(err);
-    }
-  }
-);
 
 router.post(
   '/:id/rechazar',

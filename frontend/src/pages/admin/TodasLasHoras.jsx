@@ -14,7 +14,6 @@ import { ESTADO_LABELS, formatearFecha } from '../../lib/utils';
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
   APROBADO: 'success',
-  OBSERVADO: 'info',
   RECHAZADO: 'destructive',
 };
 
@@ -79,7 +78,6 @@ export default function TodasLasHoras() {
               <SelectItem value="TODOS">Todos los estados</SelectItem>
               <SelectItem value="PENDIENTE">Pendiente</SelectItem>
               <SelectItem value="APROBADO">Aprobado</SelectItem>
-              <SelectItem value="OBSERVADO">Observado</SelectItem>
               <SelectItem value="RECHAZADO">Rechazado</SelectItem>
             </SelectContent>
           </Select>

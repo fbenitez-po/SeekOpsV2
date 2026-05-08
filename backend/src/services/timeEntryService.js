@@ -126,7 +126,7 @@ async function ajustar(id, usuarioId, lineas) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
   if (entrada.user_id !== usuarioId) throw new ErrorApp('Solo el dueño del registro puede editarlo', 403);
-  if (entrada.estado !== 'OBSERVADO') throw new ErrorApp('Solo se pueden editar registros en estado OBSERVADO', 403);
+  if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden editar registros en estado PENDIENTE', 403);
 
   for (const linea of lineas) {
     if (linea.horas < 0) throw new ErrorApp('horas debe ser mayor o igual a 0', 400);
@@ -156,22 +156,6 @@ async function aprobar(id, usuarioId, roles) {
   return { id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
-async function observar(id, usuarioId, roles, datos) {
-  const entrada = await data.buscarEntradaPorId(id);
-  if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
-  if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden observar registros en estado PENDIENTE', 403);
-
-  if (!datos.comentario_observacion) throw new ErrorApp('comentario_observacion es requerido', 400);
-
-  if (!roles.includes('ADMIN')) {
-    const lineaPrincipal = await data.obtenerProyectoDeEntrada(id);
-    const esGestor = lineaPrincipal && await data.esGestorDelProyecto(usuarioId, lineaPrincipal.project_id);
-    if (!esGestor) throw new ErrorApp('Solo el gestor del proyecto o un administrador puede observar', 403);
-  }
-
-  await data.registrarAprobacion({ entradaId: id, accion: 'OBSERVAR', usuarioId, datos });
-  return { id, estado: 'OBSERVADO', observado_en: new Date().toISOString(), ...datos };
-}
 
 async function aprobarConObservacion(id, usuarioId, roles, datos) {
   const entrada = await data.buscarEntradaPorId(id);
@@ -322,4 +306,4 @@ async function enviarRecordatorio(gestorId, seekerId, roles) {
   return { ok: true };
 }
 
-module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, aprobarConObservacion, observar, rechazar, obtenerSemanasSinCarga, obtenerSeekersSinCarga, enviarRecordatorio };
+module.exports = { listar, obtenerPorId, crear, ajustar, aprobar, aprobarConObservacion, rechazar, obtenerSemanasSinCarga, obtenerSeekersSinCarga, enviarRecordatorio };

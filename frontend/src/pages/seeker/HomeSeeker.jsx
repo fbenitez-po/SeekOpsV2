@@ -12,7 +12,6 @@ const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
   APROBADO: 'success',
   APROBADO_CON_OBSERVACION: 'success',
-  OBSERVADO: 'info',
   RECHAZADO: 'destructive',
 };
 

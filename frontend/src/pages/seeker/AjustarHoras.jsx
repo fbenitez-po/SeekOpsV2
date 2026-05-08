@@ -67,8 +67,6 @@ export default function AjustarHoras() {
 
   if (isLoading) return <Layout><p className="text-muted-foreground">Cargando...</p></Layout>;
 
-  const ultimaObservacion = entrada?.aprobaciones?.slice().reverse().find((a) => a.accion === 'OBSERVADO');
-
   return (
     <Layout>
       <div className="mx-auto max-w-2xl space-y-6">
@@ -76,26 +74,6 @@ export default function AjustarHoras() {
           <h1 className="text-2xl font-bold">Ajustar horas</h1>
           <p className="text-muted-foreground">Semana: {entrada?.semana}</p>
         </div>
-
-        {ultimaObservacion && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-sm text-blue-800">Observación del gestor</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-blue-900">{ultimaObservacion.comentario}</p>
-              {ultimaObservacion.sugerencia_horas !== null && (
-                <p className="text-sm text-blue-700">
-                  Sugerencia: {ultimaObservacion.sugerencia_horas}h normales
-                  {ultimaObservacion.sugerencia_extras !== null && ` · ${ultimaObservacion.sugerencia_extras}h extras`}
-                </p>
-              )}
-              <p className="text-xs text-blue-600">
-                {ultimaObservacion.realizado_por.nombres} {ultimaObservacion.realizado_por.apellidos} · {formatearFechaHora(ultimaObservacion.fecha)}
-              </p>
-            </CardContent>
-          </Card>
-        )}
 
         <form onSubmit={manejarSubmit} className="space-y-4">
           {lineas.map((linea) => (

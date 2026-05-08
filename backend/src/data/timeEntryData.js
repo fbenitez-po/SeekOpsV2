@@ -212,7 +212,7 @@ async function actualizarLineasEntrada(entradaId, lineas, usuarioId) {
 }
 
 async function registrarAprobacion({ entradaId, accion, usuarioId, datos = {} }) {
-  const estadoMap = { APROBAR: 'APROBADO', APROBAR_CON_OBSERVACION: 'APROBADO_CON_OBSERVACION', OBSERVAR: 'OBSERVADO', RECHAZAR: 'RECHAZADO' };
+  const estadoMap = { APROBAR: 'APROBADO', APROBAR_CON_OBSERVACION: 'APROBADO_CON_OBSERVACION', RECHAZAR: 'RECHAZADO' };
   const nuevoEstado = estadoMap[accion];
 
   const client = await pool.connect();
