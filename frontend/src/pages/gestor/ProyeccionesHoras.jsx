@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, X, CalendarRange } from 'lucide-react';
-import { projectionApi, projectApi, userApi } from '../../services/api';
-import useAuthStore from '../../store/authStore';
+import { projectionApi, projectApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
+
+function seekerVacio() {
+  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '' };
+}
 
 function formatFecha(fecha) {
   if (!fecha) return '—';
@@ -15,22 +17,19 @@ function formatFecha(fecha) {
 
 const FORM_VACIO = {
   project_id: '',
-  user_id: '',
-  fecha_inicio: '',
-  fecha_fin: '',
-  horas_proyectadas: '',
   notas: '',
+  seekers: [seekerVacio()],
 };
 
 export default function ProyeccionesHoras() {
-  const { usuario } = useAuthStore();
   const qc = useQueryClient();
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [editando, setEditando] = useState(null); // proyección completa si se edita
+  const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(FORM_VACIO);
   const [error, setError] = useState('');
   const [confirmarEliminar, setConfirmarEliminar] = useState(null);
+  const [creandoMultiple, setCreandoMultiple] = useState(false);
 
   const { data: dataProyecciones, isLoading } = useQuery({
     queryKey: ['proyecciones'],
@@ -42,25 +41,13 @@ export default function ProyeccionesHoras() {
     queryFn: () => projectApi.listar({ activo: 'true', limit: 100 }).then((r) => r.data.data),
   });
 
-  const { data: dataUsuarios } = useQuery({
-    queryKey: ['users-todos'],
-    queryFn: () => userApi.listar({ activo: 'true', limit: 200 }).then((r) => r.data.data),
+  const { data: dataProyectoDetalle } = useQuery({
+    queryKey: ['project-detalle', form.project_id],
+    queryFn: () => projectApi.obtener(form.project_id).then((r) => r.data),
     enabled: !!form.project_id,
   });
 
-  // Filtrar usuarios asignados al proyecto seleccionado
-  const proyectoSeleccionado = (dataProyectos || []).find((p) => p.id === form.project_id);
-  const usuariosDelProyecto = proyectoSeleccionado?.usuarios || (dataUsuarios || []);
-
-  const mutCrear = useMutation({
-    mutationFn: (datos) => projectionApi.crear(datos),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['proyecciones'] });
-      qc.invalidateQueries({ queryKey: ['proyecciones-alertas'] });
-      cerrarFormulario();
-    },
-    onError: (err) => setError(err.response?.data?.error || 'Error al guardar'),
-  });
+  const usuariosDisponibles = dataProyectoDetalle?.usuarios || [];
 
   const mutActualizar = useMutation({
     mutationFn: ({ id, datos }) => projectionApi.actualizar(id, datos),
@@ -92,11 +79,10 @@ export default function ProyeccionesHoras() {
     setEditando(proy);
     setForm({
       project_id: proy.project_id,
-      user_id: proy.user_id,
       fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '',
       fecha_fin: proy.fecha_fin?.slice(0, 10) || '',
-      horas_proyectadas: String(proy.horas_proyectadas),
       notas: proy.notas || '',
+      seekers: [{ id: crypto.randomUUID(), user_id: proy.user_id, fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '', fecha_fin: proy.fecha_fin?.slice(0, 10) || '', horas_proyectadas: String(proy.horas_proyectadas) }],
     });
     setError('');
     setMostrarFormulario(true);
@@ -113,28 +99,65 @@ export default function ProyeccionesHoras() {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
 
-  function guardar(e) {
+  function actualizarSeeker(id, campo, valor) {
+    setForm((prev) => ({
+      ...prev,
+      seekers: prev.seekers.map((s) => (s.id === id ? { ...s, [campo]: valor } : s)),
+    }));
+  }
+
+  function agregarSeeker() {
+    setForm((prev) => ({ ...prev, seekers: [...prev.seekers, seekerVacio()] }));
+  }
+
+  function eliminarSeeker(id) {
+    setForm((prev) => ({ ...prev, seekers: prev.seekers.filter((s) => s.id !== id) }));
+  }
+
+  async function guardar(e) {
     e.preventDefault();
     setError('');
 
-    const datos = {
-      project_id: form.project_id,
-      user_id: form.user_id,
-      fecha_inicio: form.fecha_inicio,
-      fecha_fin: form.fecha_fin,
-      horas_proyectadas: parseInt(form.horas_proyectadas),
-      notas: form.notas || null,
-    };
-
     if (editando) {
+      const s = form.seekers[0];
+      const datos = {
+        project_id: form.project_id,
+        user_id: s.user_id,
+        fecha_inicio: s.fecha_inicio,
+        fecha_fin: s.fecha_fin,
+        horas_proyectadas: parseInt(s.horas_proyectadas),
+        notas: form.notas || null,
+      };
       mutActualizar.mutate({ id: editando.id, datos });
-    } else {
-      mutCrear.mutate(datos);
+      return;
+    }
+
+    setCreandoMultiple(true);
+    try {
+      await Promise.all(
+        form.seekers.map((s) =>
+          projectionApi.crear({
+            project_id: form.project_id,
+            user_id: s.user_id,
+            fecha_inicio: s.fecha_inicio,
+            fecha_fin: s.fecha_fin,
+            horas_proyectadas: parseInt(s.horas_proyectadas),
+            notas: form.notas || null,
+          })
+        )
+      );
+      qc.invalidateQueries({ queryKey: ['proyecciones'] });
+      qc.invalidateQueries({ queryKey: ['proyecciones-alertas'] });
+      cerrarFormulario();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al guardar');
+    } finally {
+      setCreandoMultiple(false);
     }
   }
 
   const proyecciones = dataProyecciones || [];
-  const guardando = mutCrear.isPending || mutActualizar.isPending;
+  const guardando = mutActualizar.isPending || creandoMultiple;
 
   return (
     <Layout>
@@ -174,7 +197,7 @@ export default function ProyeccionesHoras() {
                   </div>
                 )}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-4">
                   {/* Proyecto */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">Proyecto *</label>
@@ -194,65 +217,96 @@ export default function ProyeccionesHoras() {
                     </select>
                   </div>
 
-                  {/* Usuario */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Seeker *</label>
-                    <select
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.user_id}
-                      onChange={(e) => cambiarCampo('user_id', e.target.value)}
-                      required
-                      disabled={!!editando || !form.project_id}
-                    >
-                      <option value="">
-                        {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
-                      </option>
-                      {(dataUsuarios || []).map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.nombres} {u.apellidos}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Fecha inicio */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Fecha inicio *</label>
-                    <input
-                      type="date"
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.fecha_inicio}
-                      onChange={(e) => cambiarCampo('fecha_inicio', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Fecha fin */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Fecha fin *</label>
-                    <input
-                      type="date"
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={form.fecha_fin}
-                      onChange={(e) => cambiarCampo('fecha_fin', e.target.value)}
-                      min={form.fecha_inicio || undefined}
-                      required
-                    />
-                  </div>
-
-                  {/* Horas proyectadas */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Horas proyectadas *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="9999"
-                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                      placeholder="Ej: 160"
-                      value={form.horas_proyectadas}
-                      onChange={(e) => cambiarCampo('horas_proyectadas', e.target.value)}
-                      required
-                    />
+                  {/* Seekers */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Seekers *</label>
+                    {form.seekers.map((seeker) => {
+                      const seleccionados = form.seekers.map((s) => s.user_id).filter(Boolean);
+                      const opciones = usuariosDisponibles.filter(
+                        (u) => u.id === seeker.user_id || !seleccionados.includes(u.id)
+                      );
+                      return (
+                        <div key={seeker.id} className="rounded-lg border border-slate-200 p-3 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <select
+                              className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                              value={seeker.user_id}
+                              onChange={(e) => actualizarSeeker(seeker.id, 'user_id', e.target.value)}
+                              required
+                              disabled={!!editando || !form.project_id}
+                            >
+                              <option value="">
+                                {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
+                              </option>
+                              {opciones.map((u) => (
+                                <option key={u.id} value={u.id}>
+                                  {u.nombres} {u.apellidos}
+                                </option>
+                              ))}
+                            </select>
+                            {!editando && form.seekers.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => eliminarSeeker(seeker.id)}
+                                className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">Fecha inicio *</label>
+                              <input
+                                type="date"
+                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                value={seeker.fecha_inicio}
+                                onChange={(e) => actualizarSeeker(seeker.id, 'fecha_inicio', e.target.value)}
+                                required
+                                disabled={!!editando}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">Fecha fin *</label>
+                              <input
+                                type="date"
+                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                value={seeker.fecha_fin}
+                                onChange={(e) => actualizarSeeker(seeker.id, 'fecha_fin', e.target.value)}
+                                min={seeker.fecha_inicio || undefined}
+                                required
+                                disabled={!!editando}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">Horas proyectadas *</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="9999"
+                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                placeholder="Ej: 160"
+                                value={seeker.horas_proyectadas}
+                                onChange={(e) => actualizarSeeker(seeker.id, 'horas_proyectadas', e.target.value)}
+                                required
+                                disabled={!!editando}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {!editando && (
+                      <button
+                        type="button"
+                        onClick={agregarSeeker}
+                        disabled={!form.project_id}
+                        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Agregar seeker
+                      </button>
+                    )}
                   </div>
 
                   {/* Notas */}
