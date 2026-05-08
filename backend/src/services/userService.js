@@ -78,7 +78,7 @@ async function crear(datos) {
 
   const fechaIngreso = new Date(datos.fecha_ingreso);
   if (fechaIngreso > new Date()) {
-    throw new ErrorApp('fecha_ingreso no puede ser futura', 400);
+    throw new ErrorApp('La fecha de ingreso no puede ser una fecha futura', 400);
   }
 
   if (!datos.areas || datos.areas.length === 0) {
@@ -100,7 +100,7 @@ async function actualizar(id, datos) {
   if (!existe) throw new ErrorApp('Usuario no encontrado', 404);
 
   if (datos.numero_documento && await data.documentoExiste(datos.numero_documento, id)) {
-    throw new ErrorApp('numero_documento ya está en uso por otro usuario', 400);
+    throw new ErrorApp('El número de documento ya está en uso por otro usuario', 400);
   }
 
   if (datos.areas !== undefined && datos.areas.length === 0) {

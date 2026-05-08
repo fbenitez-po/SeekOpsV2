@@ -7,16 +7,16 @@ const service = require('../services/userService');
 router.use(verificarToken, soloAdmin);
 
 const validacionesBase = [
-  body('nombres').notEmpty().isLength({ max: 100 }).withMessage('nombres es requerido (max 100)'),
-  body('apellidos').notEmpty().isLength({ max: 100 }).withMessage('apellidos es requerido (max 100)'),
-  body('numero_documento').matches(/^\d{6,20}$/).withMessage('numero_documento debe tener 6-20 dígitos'),
-  body('puesto').notEmpty().isLength({ max: 100 }).withMessage('puesto es requerido (max 100)'),
-  body('celular').optional({ checkFalsy: true }).isMobilePhone('any').withMessage('celular con formato inválido'),
-  body('equipo_id').isUUID().withMessage('equipo_id inválido'),
-  body('areas').isArray({ min: 1 }).withMessage('areas debe tener al menos un elemento'),
-  body('areas.*').isUUID().withMessage('cada área debe ser un UUID válido'),
-  body('fecha_ingreso').isDate().withMessage('fecha_ingreso inválida'),
-  body('grupos').isArray({ min: 1 }).withMessage('grupos debe tener al menos un elemento'),
+  body('nombres').notEmpty().isLength({ max: 100 }).withMessage('El nombre es requerido (máx. 100 caracteres)'),
+  body('apellidos').notEmpty().isLength({ max: 100 }).withMessage('Los apellidos son requeridos (máx. 100 caracteres)'),
+  body('numero_documento').matches(/^\d{6,20}$/).withMessage('El número de documento debe tener entre 6 y 20 dígitos'),
+  body('puesto').notEmpty().isLength({ max: 100 }).withMessage('El puesto es requerido (máx. 100 caracteres)'),
+  body('celular').optional({ checkFalsy: true }).isMobilePhone('any').withMessage('El celular tiene un formato inválido'),
+  body('equipo_id').isUUID().withMessage('El equipo seleccionado no es válido'),
+  body('areas').isArray({ min: 1 }).withMessage('Debe seleccionar al menos un área'),
+  body('areas.*').isUUID().withMessage('Cada área debe ser un valor válido'),
+  body('fecha_ingreso').isDate().withMessage('La fecha de ingreso no es válida'),
+  body('grupos').isArray({ min: 1 }).withMessage('Debe seleccionar al menos un grupo'),
 ];
 
 router.get('/', async (req, res, next) => {
@@ -29,7 +29,7 @@ router.get('/', async (req, res, next) => {
 
 router.post(
   '/',
-  [body('email').isEmail().withMessage('email inválido'), ...validacionesBase],
+  [body('email').isEmail().withMessage('El email no tiene un formato válido'), ...validacionesBase],
   validate,
   async (req, res, next) => {
     try {

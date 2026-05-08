@@ -33,13 +33,13 @@ router.get('/', async (req, res, next) => {
 router.post(
   '/',
   [
-    body('project_id').isUUID().withMessage('project_id inválido'),
-    body('user_id').isUUID().withMessage('user_id inválido'),
-    body('fecha_inicio').isDate().withMessage('fecha_inicio inválida (YYYY-MM-DD)'),
-    body('fecha_fin').isDate().withMessage('fecha_fin inválida (YYYY-MM-DD)'),
-    body('horas_proyectadas').isFloat({ min: 0.5 }).withMessage('horas_proyectadas debe ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_proyectadas debe ser múltiplo de 0.5'); return true; }),
-    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('categoria_id inválido'),
-    body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('notas max 500 caracteres'),
+    body('project_id').isUUID().withMessage('El proyecto seleccionado no es válido'),
+    body('user_id').isUUID().withMessage('El usuario seleccionado no es válido'),
+    body('fecha_inicio').isDate().withMessage('La fecha de inicio no es válida (YYYY-MM-DD)'),
+    body('fecha_fin').isDate().withMessage('La fecha de fin no es válida (YYYY-MM-DD)'),
+    body('horas_proyectadas').isFloat({ min: 0.5 }).withMessage('Las horas proyectadas deben ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('Las horas proyectadas deben ser múltiplo de 0.5'); return true; }),
+    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
+    body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('Las notas no pueden superar 500 caracteres'),
   ],
   validate,
   async (req, res, next) => {
@@ -57,11 +57,11 @@ router.post(
 router.put(
   '/:id',
   [
-    body('fecha_inicio').optional().isDate().withMessage('fecha_inicio inválida'),
-    body('fecha_fin').optional().isDate().withMessage('fecha_fin inválida'),
-    body('horas_proyectadas').optional().isFloat({ min: 0.5 }).withMessage('horas_proyectadas debe ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('horas_proyectadas debe ser múltiplo de 0.5'); return true; }),
-    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('categoria_id inválido'),
-    body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('notas max 500 caracteres'),
+    body('fecha_inicio').optional().isDate().withMessage('La fecha de inicio no es válida'),
+    body('fecha_fin').optional().isDate().withMessage('La fecha de fin no es válida'),
+    body('horas_proyectadas').optional().isFloat({ min: 0.5 }).withMessage('Las horas proyectadas deben ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('Las horas proyectadas deben ser múltiplo de 0.5'); return true; }),
+    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
+    body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('Las notas no pueden superar 500 caracteres'),
   ],
   validate,
   async (req, res, next) => {
