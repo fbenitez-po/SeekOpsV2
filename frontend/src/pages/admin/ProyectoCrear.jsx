@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { projectApi, clientApi, userApi, configApi } from '../../services/api';
@@ -35,6 +35,7 @@ function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
 
 export default function ProyectoCrear() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({
     codigo: '', nombre: '', cliente_id: '',
     segmentacion_id: '', categorias_proyecto_ids: [], tipo_servicio_id: '', capa_productividad_id: '',
@@ -74,7 +75,7 @@ export default function ProyectoCrear() {
       const { tiene_area, ...resto } = datos;
       return projectApi.crear({ ...resto, area_id: tiene_area ? resto.area_id || null : null });
     },
-    onSuccess: () => navigate('/admin/proyectos'),
+    onSuccess: () => navigate(searchParams.get('returnTo') || '/admin/proyectos'),
     onError: (err) => setError(err.response?.data?.error || 'Error al crear proyecto'),
   });
 

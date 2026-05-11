@@ -136,6 +136,16 @@ export const gastosAdminApi = {
   eliminar: (id) => api.delete(`/gastos-admin/${id}`),
 };
 
+// Comercial
+export const comercialApi = {
+  listar: (params) => api.get('/comercial', { params }),
+  obtener: (id) => api.get(`/comercial/${id}`),
+  crear: (datos) => api.post('/comercial', datos),
+  actualizar: (id, datos) => api.put(`/comercial/${id}`, datos),
+  eliminar: (id) => api.delete(`/comercial/${id}`),
+  tiposDocumento: () => api.get('/comercial/tipos-documento'),
+};
+
 // Config
 export const configApi = {
   equipos: () => api.get('/config/equipos'),

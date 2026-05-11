@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays, TrendingUp, Receipt, ShoppingCart, UserRound } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays, TrendingUp, Receipt, ShoppingCart, UserRound, ChevronRight, DollarSign, Briefcase } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
@@ -23,6 +24,10 @@ const navAdmin = [
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
   { label: 'Clientes', href: '/admin/clientes', icon: Building2 },
   { label: 'Proyectos', href: '/admin/proyectos', icon: FolderOpen },
+  { label: 'Comercial', href: '/admin/comercial', icon: Briefcase },
+];
+
+const navFinanzas = [
   { label: 'Períodos', href: '/admin/periodos', icon: CalendarDays },
   { label: 'Ingresos', href: '/admin/ingresos', icon: TrendingUp },
   { label: 'Costos de Venta', href: '/admin/costos-venta', icon: ShoppingCart },
@@ -30,10 +35,15 @@ const navAdmin = [
   { label: 'Gastos Admin.', href: '/admin/gastos-admin', icon: Receipt },
 ];
 
+const finanzasHrefs = navFinanzas.map((i) => i.href);
+
 export default function Layout({ children }) {
   const { usuario, logout, esAdmin, esGestor } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  const enFinanzas = finanzasHrefs.some((h) => pathname.startsWith(h));
+  const [finanzasAbierto, setFinanzasAbierto] = useState(enFinanzas);
 
   const navItems = esAdmin() ? navAdmin : esGestor() ? navGestor : navSeeker;
 
@@ -44,7 +54,6 @@ export default function Layout({ children }) {
 
   return (
     <div className="flex h-screen" style={{ background: '#f8fafc' }}>
-      {/* Sidebar — navy oscuro, igual al color primary del preview */}
       <aside className="flex w-56 flex-col" style={{ background: '#0f172a' }}>
         {/* Logo */}
         <div className="flex h-16 items-center px-6 border-b border-white/10">
@@ -57,7 +66,7 @@ export default function Layout({ children }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-0.5 p-3 pt-4">
+        <nav className="flex-1 space-y-0.5 p-3 pt-4 overflow-y-auto">
           {navItems.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
@@ -73,6 +82,46 @@ export default function Layout({ children }) {
               {label}
             </Link>
           ))}
+
+          {/* Grupo Finanzas — solo para admin */}
+          {esAdmin() && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setFinanzasAbierto((v) => !v)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  enFinanzas ? 'text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                )}
+              >
+                <DollarSign className="h-4 w-4 flex-shrink-0" />
+                <span className="flex-1 text-left">Finanzas</span>
+                <ChevronRight
+                  className={cn('h-3.5 w-3.5 transition-transform duration-200', finanzasAbierto && 'rotate-90')}
+                />
+              </button>
+
+              {finanzasAbierto && (
+                <div className="mt-0.5 space-y-0.5 pl-3">
+                  {navFinanzas.map(({ label, href, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      to={href}
+                      className={cn(
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                        pathname.startsWith(href)
+                          ? 'bg-white/15 text-white'
+                          : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      )}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* User + logout */}
