@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
@@ -23,6 +23,7 @@ const navAdmin = [
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users },
   { label: 'Clientes', href: '/admin/clientes', icon: Building2 },
   { label: 'Proyectos', href: '/admin/proyectos', icon: FolderOpen },
+  { label: 'Períodos', href: '/admin/periodos', icon: CalendarDays },
 ];
 
 export default function Layout({ children }) {

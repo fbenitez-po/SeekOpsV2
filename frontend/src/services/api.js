@@ -93,6 +93,12 @@ export const projectionApi = {
   alertas: () => api.get('/projections/alertas'),
 };
 
+// Periodos
+export const periodosApi = {
+  listar: () => api.get('/periodos'),
+  toggle: (id) => api.patch(`/periodos/${id}/toggle`),
+};
+
 // Config
 export const configApi = {
   equipos: () => api.get('/config/equipos'),
