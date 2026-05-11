@@ -99,6 +99,15 @@ export const periodosApi = {
   toggle: (id) => api.patch(`/periodos/${id}/toggle`),
 };
 
+// Ingresos
+export const ingresosApi = {
+  listar: (params) => api.get('/ingresos', { params }),
+  crear: (datos) => api.post('/ingresos', datos),
+  actualizar: (id, datos) => api.put(`/ingresos/${id}`, datos),
+  eliminar: (id) => api.delete(`/ingresos/${id}`),
+  importar: (filas) => api.post('/ingresos/importar', filas),
+};
+
 // Config
 export const configApi = {
   equipos: () => api.get('/config/equipos'),

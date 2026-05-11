@@ -30,6 +30,8 @@ import ProyectoEditarPage from './pages/admin/ProyectoEditar';
 import ProyectoAsignarPage from './pages/admin/ProyectoAsignar';
 import TodasLasHorasPage from './pages/admin/TodasLasHoras';
 import PeriodosAdminPage from './pages/admin/PeriodosAdmin';
+import IngresosAdminPage from './pages/admin/IngresosAdmin';
+import IngresosCrearPage from './pages/admin/IngresosCrear';
 
 function RutaProtegida({ children, roles }) {
   const usuario = useAuthStore((s) => s.usuario);
@@ -88,6 +90,8 @@ export default function App() {
         <Route path="/admin/proyectos/:id/usuarios" element={<RutaProtegida roles={['ADMIN']}><ProyectoAsignarPage /></RutaProtegida>} />
         <Route path="/admin/horas" element={<RutaProtegida roles={['ADMIN']}><TodasLasHorasPage /></RutaProtegida>} />
         <Route path="/admin/periodos" element={<RutaProtegida roles={['ADMIN']}><PeriodosAdminPage /></RutaProtegida>} />
+        <Route path="/admin/ingresos" element={<RutaProtegida roles={['ADMIN']}><IngresosAdminPage /></RutaProtegida>} />
+        <Route path="/admin/ingresos/crear" element={<RutaProtegida roles={['ADMIN']}><IngresosCrearPage /></RutaProtegida>} />
       </Routes>
     </BrowserRouter>
   );
