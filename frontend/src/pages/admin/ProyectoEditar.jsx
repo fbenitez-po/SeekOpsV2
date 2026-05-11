@@ -105,7 +105,7 @@ export default function ProyectoEditar() {
                 <Label>Cliente *</Label>
                 <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.razon_comercial || c.razon_social}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">

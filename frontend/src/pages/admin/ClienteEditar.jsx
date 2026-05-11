@@ -25,7 +25,6 @@ export default function ClienteEditar() {
   useEffect(() => {
     if (cliente) {
       setForm({
-        nombre: cliente.nombre || '',
         razon_social: cliente.razon_social || '',
         razon_comercial: cliente.razon_comercial || '',
         ruc: cliente.ruc || '',
@@ -67,10 +66,9 @@ export default function ClienteEditar() {
           <Card>
             <CardHeader><CardTitle className="text-base">Información comercial</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2"><Label>Nombre *</Label><Input value={form.nombre} onChange={set('nombre')} required /></div>
-              <div className="space-y-2"><Label>RUC *</Label><Input value={form.ruc} onChange={set('ruc')} required /></div>
-              <div className="space-y-2"><Label>Razón social</Label><Input value={form.razon_social} onChange={set('razon_social')} /></div>
+              <div className="space-y-2"><Label>Razón social *</Label><Input value={form.razon_social} onChange={set('razon_social')} required /></div>
               <div className="space-y-2"><Label>Razón comercial</Label><Input value={form.razon_comercial} onChange={set('razon_comercial')} /></div>
+              <div className="space-y-2"><Label>RUC *</Label><Input value={form.ruc} onChange={set('ruc')} required /></div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
                 <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
@@ -89,10 +87,10 @@ export default function ClienteEditar() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Contacto</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Contacto comercial</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2"><Label>Nombre de contacto</Label><Input value={form.nombre_contacto} onChange={set('nombre_contacto')} /></div>
-              <div className="space-y-2"><Label>Email de contacto</Label><Input type="email" value={form.email_contacto} onChange={set('email_contacto')} /></div>
+              <div className="space-y-2"><Label>Nombre de contacto comercial</Label><Input value={form.nombre_contacto} onChange={set('nombre_contacto')} /></div>
+              <div className="space-y-2"><Label>Email de contacto comercial</Label><Input type="email" value={form.email_contacto} onChange={set('email_contacto')} /></div>
               <div className="space-y-2"><Label>Teléfono</Label><Input value={form.telefono} onChange={set('telefono')} /></div>
               <div className="space-y-2"><Label>Dirección</Label><Input value={form.direccion} onChange={set('direccion')} /></div>
             </CardContent>

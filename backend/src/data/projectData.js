@@ -40,7 +40,7 @@ async function listarProyectos(filtros, usuarioId, roles) {
   const sql = `
     SELECT p.id, p.code as codigo, p.nombre, p.descripcion, p.activo,
            p.fecha_inicio, p.fecha_fin,
-           c.id as cliente_id, c.nombre as cliente_nombre,
+           c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre,
            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
            s.id as seg_id, s.nombre as seg_nombre,
            (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)
@@ -75,7 +75,7 @@ async function buscarProyectoPorId(id) {
   return consultarUno(
     `SELECT p.id, p.code as codigo, p.nombre, p.descripcion, p.activo,
             p.fecha_inicio, p.fecha_fin, p.created_at, p.updated_at,
-            c.id as cliente_id, c.nombre as cliente_nombre, c.ruc,
+            c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre, c.ruc,
             g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
             s.id as seg_id, s.nombre as seg_nombre,
             (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)

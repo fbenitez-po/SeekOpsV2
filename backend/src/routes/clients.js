@@ -7,9 +7,8 @@ const service = require('../services/clientService');
 router.use(verificarToken, soloAdmin);
 
 const validacionesBase = [
-  body('nombre').notEmpty().isLength({ max: 100 }).withMessage('El nombre es requerido (máximo 100 caracteres)'),
   body('ruc').matches(/^\d{11,14}$/).withMessage('El RUC debe tener entre 11 y 14 dígitos'),
-  body('razon_social').optional({ nullable: true }).isLength({ max: 150 }),
+  body('razon_social').notEmpty().isLength({ max: 150 }).withMessage('La razón social es requerida (máximo 150 caracteres)'),
   body('razon_comercial').optional({ nullable: true }).isLength({ max: 150 }),
   body('email_contacto').optional({ nullable: true }).isEmail().withMessage('El email de contacto no es válido'),
   body('segmentacion_id').isUUID().withMessage('La segmentación seleccionada no es válida'),

@@ -128,7 +128,7 @@ export default function ProyectoCrear() {
                   <div className="flex flex-1 gap-2 min-w-0">
                     <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
                       <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
-                      <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+                      <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.razon_comercial || c.razon_social}</SelectItem>)}</SelectContent>
                     </Select>
                     <BtnNuevo onClick={irACrearCliente} />
                   </div>

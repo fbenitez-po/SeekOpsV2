@@ -51,7 +51,7 @@ export default function ClientesLista() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-left font-medium">Nombre</th>
+                    <th className="px-4 py-3 text-left font-medium">Razón social</th>
                     <th className="px-4 py-3 text-left font-medium">RUC</th>
                     <th className="px-4 py-3 text-left font-medium">Segmentación</th>
                     <th className="px-4 py-3 text-left font-medium">Proyectos</th>
@@ -62,7 +62,7 @@ export default function ClientesLista() {
                 <tbody>
                   {clientes.map((c) => (
                     <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium">{c.nombre}</td>
+                      <td className="px-4 py-3 font-medium">{c.razon_comercial || c.razon_social || '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{c.ruc}</td>
                       <td className="px-4 py-3 text-muted-foreground">{c.segmentacion?.nombre || '—'}</td>
                       <td className="px-4 py-3">{c.proyectos_count}</td>

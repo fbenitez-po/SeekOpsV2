@@ -66,7 +66,7 @@ export default function ProyectosLista() {
                         <p className="font-medium">{p.nombre}</p>
                         <p className="text-xs text-muted-foreground">{p.codigo}</p>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.cliente?.nombre}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.cliente?.nombre || '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.gestor?.nombres} {p.gestor?.apellidos}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.usuarios_count} integrantes</td>
                       <td className="px-4 py-3">

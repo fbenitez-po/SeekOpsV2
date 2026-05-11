@@ -15,7 +15,7 @@ export default function ClienteCrear() {
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
   const [form, setForm] = useState({
-    nombre: '', razon_social: '', razon_comercial: '', ruc: '',
+    razon_social: '', razon_comercial: '', ruc: '',
     nombre_contacto: '', email_contacto: '', telefono: '', direccion: '',
     segmentacion_id: '', sector_id: '', activo: true,
   });
@@ -46,20 +46,16 @@ export default function ClienteCrear() {
             <CardHeader><CardTitle className="text-base">Información comercial</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nombre *</Label>
-                <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} />
-              </div>
-              <div className="space-y-2">
-                <Label>RUC *</Label>
-                <Input value={form.ruc} onChange={set('ruc')} required pattern="\d{11,14}" placeholder="20123456789" />
-              </div>
-              <div className="space-y-2">
-                <Label>Razón social</Label>
-                <Input value={form.razon_social} onChange={set('razon_social')} maxLength={150} />
+                <Label>Razón social *</Label>
+                <Input value={form.razon_social} onChange={set('razon_social')} required maxLength={150} />
               </div>
               <div className="space-y-2">
                 <Label>Razón comercial</Label>
                 <Input value={form.razon_comercial} onChange={set('razon_comercial')} maxLength={150} />
+              </div>
+              <div className="space-y-2">
+                <Label>RUC *</Label>
+                <Input value={form.ruc} onChange={set('ruc')} required pattern="\d{11,14}" placeholder="20123456789" />
               </div>
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
@@ -79,14 +75,14 @@ export default function ClienteCrear() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Contacto</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Contacto comercial</CardTitle></CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nombre de contacto</Label>
+                <Label>Nombre de contacto comercial</Label>
                 <Input value={form.nombre_contacto} onChange={set('nombre_contacto')} maxLength={100} />
               </div>
               <div className="space-y-2">
-                <Label>Email de contacto</Label>
+                <Label>Email de contacto comercial</Label>
                 <Input type="email" value={form.email_contacto} onChange={set('email_contacto')} />
               </div>
               <div className="space-y-2">

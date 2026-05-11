@@ -4,7 +4,6 @@ const data = require('../data/clientData');
 function formatearCliente(c) {
   return {
     id: c.id,
-    nombre: c.nombre,
     razon_social: c.razon_social,
     razon_comercial: c.razon_comercial,
     ruc: c.ruc,

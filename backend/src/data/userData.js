@@ -80,7 +80,7 @@ async function obtenerAreasDeUsuario(usuarioId) {
 
 async function obtenerProyectosDeUsuario(usuarioId) {
   return consultar(
-    `SELECT p.id, p.nombre, p.code as codigo, c.nombre as cliente, pu.rol, p.activo
+    `SELECT p.id, p.nombre, p.code as codigo, COALESCE(c.razon_comercial, c.razon_social) as cliente, pu.rol, p.activo
      FROM projects p
      JOIN project_users pu ON pu.project_id = p.id
      JOIN clients c ON c.id = p.client_id

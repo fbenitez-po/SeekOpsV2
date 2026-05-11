@@ -11,7 +11,7 @@ async function listarClientes(filtros) {
   }
   if (filtros.search) {
     params.push(`%${filtros.search}%`);
-    condiciones.push(`(c.nombre ILIKE $${idx} OR c.ruc ILIKE $${idx++})`);
+    condiciones.push(`(c.razon_social ILIKE $${idx} OR c.razon_comercial ILIKE $${idx} OR c.ruc ILIKE $${idx++})`);
   }
   if (filtros.segmentacion_id) {
     params.push(filtros.segmentacion_id);
@@ -23,7 +23,7 @@ async function listarClientes(filtros) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT c.id, c.nombre, c.razon_social, c.razon_comercial, c.ruc,
+    SELECT c.id, c.razon_social, c.razon_comercial, c.ruc,
            c.nombre_contacto, c.email_contacto, c.telefono, c.direccion, c.activo, c.created_at,
            cu.id as cat_id, cu.name as cat_nombre,
            s.id as seg_id, s.nombre as seg_nombre,
@@ -34,7 +34,7 @@ async function listarClientes(filtros) {
     LEFT JOIN client_segmentations s ON s.id = c.segmentation_id
     LEFT JOIN client_sectors sec ON sec.id = c.sector_id
     ${where}
-    ORDER BY c.nombre
+    ORDER BY c.razon_social
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
 
@@ -48,7 +48,7 @@ async function listarClientes(filtros) {
 
 async function buscarClientePorId(id) {
   return consultarUno(
-    `SELECT c.id, c.nombre, c.razon_social, c.razon_comercial, c.ruc,
+    `SELECT c.id, c.razon_social, c.razon_comercial, c.ruc,
             c.nombre_contacto, c.email_contacto, c.telefono, c.direccion, c.activo,
             c.created_at, c.updated_at,
             cu.id as cat_id, cu.name as cat_nombre,
@@ -79,13 +79,13 @@ async function rucExiste(ruc, excluirId = null) {
 
 async function crearCliente(datos) {
   const { rows: [cliente] } = await pool.query(
-    `INSERT INTO clients (nombre, razon_social, razon_comercial, ruc, nombre_contacto,
+    `INSERT INTO clients (razon_social, razon_comercial, ruc, nombre_contacto,
                           email_contacto, telefono, direccion,
                           segmentation_id, sector_id, activo)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     RETURNING id, nombre, ruc, activo, created_at`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     RETURNING id, razon_social, ruc, activo, created_at`,
     [
-      datos.nombre, datos.razon_social || null, datos.razon_comercial || null,
+      datos.razon_social, datos.razon_comercial || null,
       datos.ruc, datos.nombre_contacto || null, datos.email_contacto || null,
       datos.telefono || null, datos.direccion || null,
       datos.segmentacion_id, datos.sector_id || null,
@@ -101,7 +101,6 @@ async function actualizarCliente(id, datos) {
   let idx = 1;
 
   const mapeados = {
-    nombre: datos.nombre,
     razon_social: datos.razon_social,
     razon_comercial: datos.razon_comercial,
     ruc: datos.ruc,
@@ -126,7 +125,7 @@ async function actualizarCliente(id, datos) {
   params.push(id);
 
   const { rows: [cliente] } = await pool.query(
-    `UPDATE clients SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, nombre, updated_at`,
+    `UPDATE clients SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, razon_social, updated_at`,
     params
   );
   return cliente;
