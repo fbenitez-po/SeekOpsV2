@@ -38,8 +38,10 @@ function SelectorGrupos({ grupos, seleccionados, onChange }) {
     if (seleccionados.includes(codigo)) {
       if (seleccionados.length === 1) return;
       onChange(seleccionados.filter((c) => c !== codigo));
+    } else if (codigo === 'ADMIN') {
+      onChange(['ADMIN']);
     } else {
-      onChange([...seleccionados, codigo]);
+      onChange([...seleccionados.filter((c) => c !== 'ADMIN'), codigo]);
     }
   }
 
@@ -180,7 +182,11 @@ export default function UsuarioCrear() {
                     seleccionados={form.grupos}
                     onChange={(v) => setForm((f) => ({ ...f, grupos: v }))}
                   />
-                  <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
+                  {form.grupos.includes('ADMIN') ? (
+                    <p className="text-xs" style={{ color: '#92400e' }}>Admin no puede combinarse con Gestor ni Seeker.</p>
+                  ) : (
+                    <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
+                  )}
                 </div>
               </div>
             </CardContent>
