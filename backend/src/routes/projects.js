@@ -27,8 +27,10 @@ router.post(
     body('categorias_proyecto_ids').optional({ nullable: true }).isArray().withMessage('Las categorías deben ser una lista válida'),
     body('categorias_proyecto_ids.*').isUUID().withMessage('Cada categoría debe ser un valor válido'),
     body('area_id').optional({ nullable: true }).isUUID().withMessage('El área seleccionada no es válida'),
-    body('fecha_fin').optional({ nullable: true }).isDate().withMessage('La fecha de fin no es válida'),
     body('fecha_inicio').optional({ nullable: true }).isDate().withMessage('La fecha de inicio no es válida'),
+    body('fecha_fin').optional({ nullable: true }).isDate().withMessage('La fecha de fin no es válida'),
+    body('fecha_inicio_real').optional({ nullable: true }).isDate().withMessage('La fecha de inicio real no es válida'),
+    body('fecha_fin_real').optional({ nullable: true }).isDate().withMessage('La fecha de fin real no es válida'),
   ],
   validate,
   async (req, res, next) => {

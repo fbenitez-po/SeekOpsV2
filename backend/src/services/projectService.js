@@ -6,7 +6,6 @@ function formatearProyecto(p) {
     id: p.id,
     codigo: p.codigo,
     nombre: p.nombre,
-    descripcion: p.descripcion,
     cliente: p.cliente_id ? { id: p.cliente_id, nombre: p.cliente_nombre } : null,
     gestor: p.gestor_id ? { id: p.gestor_id, nombres: p.gestor_nombres, apellidos: p.gestor_apellidos } : null,
     segmentacion: p.seg_id ? { id: p.seg_id, nombre: p.seg_nombre } : null,
@@ -15,6 +14,8 @@ function formatearProyecto(p) {
     area: p.area_id ? { id: p.area_id, nombre: p.area_nombre } : null,
     fecha_inicio: p.fecha_inicio,
     fecha_fin: p.fecha_fin,
+    fecha_inicio_real: p.fecha_inicio_real,
+    fecha_fin_real: p.fecha_fin_real,
     activo: p.activo,
   };
 }

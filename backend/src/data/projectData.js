@@ -38,8 +38,8 @@ async function listarProyectos(filtros, usuarioId, roles) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT p.id, p.code as codigo, p.nombre, p.descripcion, p.activo,
-           p.fecha_inicio, p.fecha_fin,
+    SELECT p.id, p.code as codigo, p.nombre, p.activo,
+           p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real,
            c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre,
            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
            s.id as seg_id, s.nombre as seg_nombre,
@@ -73,8 +73,8 @@ async function listarProyectos(filtros, usuarioId, roles) {
 
 async function buscarProyectoPorId(id) {
   return consultarUno(
-    `SELECT p.id, p.code as codigo, p.nombre, p.descripcion, p.activo,
-            p.fecha_inicio, p.fecha_fin, p.created_at, p.updated_at,
+    `SELECT p.id, p.code as codigo, p.nombre, p.activo,
+            p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real, p.created_at, p.updated_at,
             c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre, c.ruc,
             g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
             s.id as seg_id, s.nombre as seg_nombre,
@@ -125,17 +125,19 @@ async function crearProyecto(datos) {
     await client.query('BEGIN');
 
     const { rows: [proyecto] } = await client.query(
-      `INSERT INTO projects (code, nombre, client_id, descripcion, project_segmentation_id,
+      `INSERT INTO projects (code, nombre, client_id, project_segmentation_id,
                              productivity_layer_id, service_type_id,
-                             gestor_id, area_id, fecha_inicio, fecha_fin, activo)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                             gestor_id, area_id, fecha_inicio, fecha_fin,
+                             fecha_inicio_real, fecha_fin_real, activo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING id, code as codigo, nombre, activo, created_at`,
       [
-        datos.codigo, datos.nombre, datos.cliente_id, datos.descripcion || null,
+        datos.codigo, datos.nombre, datos.cliente_id,
         datos.segmentacion_id || null,
         datos.capa_productividad_id || null, datos.tipo_servicio_id || null,
         datos.gestor_id, datos.area_id || null,
         datos.fecha_inicio || null, datos.fecha_fin || null,
+        datos.fecha_inicio_real || null, datos.fecha_fin_real || null,
         datos.activo !== false,
       ]
     );
@@ -168,7 +170,6 @@ async function actualizarProyecto(id, datos) {
     code: datos.codigo,
     nombre: datos.nombre,
     client_id: datos.cliente_id,
-    descripcion: datos.descripcion,
     project_segmentation_id: datos.segmentacion_id,
     productivity_layer_id: datos.capa_productividad_id,
     service_type_id: datos.tipo_servicio_id,
@@ -176,6 +177,8 @@ async function actualizarProyecto(id, datos) {
     area_id: datos.area_id !== undefined ? (datos.area_id || null) : undefined,
     fecha_inicio: datos.fecha_inicio,
     fecha_fin: datos.fecha_fin,
+    fecha_inicio_real: datos.fecha_inicio_real,
+    fecha_fin_real: datos.fecha_fin_real,
     activo: datos.activo,
   };
 

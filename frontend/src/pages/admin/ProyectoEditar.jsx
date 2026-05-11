@@ -7,7 +7,6 @@ import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
@@ -56,7 +55,6 @@ export default function ProyectoEditar() {
         codigo: proyecto.codigo || '',
         nombre: proyecto.nombre || '',
         cliente_id: proyecto.cliente?.id || '',
-        descripcion: proyecto.descripcion || '',
         segmentacion_id: proyecto.segmentacion?.id || '',
         categorias_proyecto_ids: (proyecto.categorias_ingreso || []).map((c) => c.id),
         tipo_servicio_id: proyecto.tipo_servicio?.id || '',
@@ -64,6 +62,8 @@ export default function ProyectoEditar() {
         gestor_id: proyecto.gestor?.id || '',
         fecha_inicio: proyecto.fecha_inicio || '',
         fecha_fin: proyecto.fecha_fin || '',
+        fecha_inicio_real: proyecto.fecha_inicio_real || '',
+        fecha_fin_real: proyecto.fecha_fin_real || '',
         activo: proyecto.activo,
         tiene_area: !!proyecto.area,
         area_id: proyecto.area?.id || '',
@@ -100,7 +100,6 @@ export default function ProyectoEditar() {
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2"><Label>Código *</Label><Input value={form.codigo} onChange={set('codigo')} required /></div>
               <div className="space-y-2"><Label>Nombre *</Label><Input value={form.nombre} onChange={set('nombre')} required /></div>
-              <div className="space-y-2 md:col-span-2"><Label>Descripción</Label><Textarea value={form.descripcion} onChange={set('descripcion')} rows={2} /></div>
               <div className="space-y-2">
                 <Label>Cliente *</Label>
                 <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
@@ -155,6 +154,8 @@ export default function ProyectoEditar() {
               </div>
               <div className="space-y-2"><Label>Fecha inicio</Label><Input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')} /></div>
               <div className="space-y-2"><Label>Fecha fin</Label><Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} /></div>
+              <div className="space-y-2"><Label>Inicio real</Label><Input type="date" value={form.fecha_inicio_real} onChange={set('fecha_inicio_real')} /></div>
+              <div className="space-y-2"><Label>Fin real</Label><Input type="date" value={form.fecha_fin_real} onChange={set('fecha_fin_real')} /></div>
             </CardContent>
           </Card>
 

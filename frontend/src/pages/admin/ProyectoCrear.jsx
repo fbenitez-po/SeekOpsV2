@@ -36,9 +36,9 @@ function MultiCheckbox({ opciones = [], seleccionados, onChange }) {
 export default function ProyectoCrear() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    codigo: '', nombre: '', cliente_id: '', descripcion: '',
+    codigo: '', nombre: '', cliente_id: '',
     segmentacion_id: '', categorias_proyecto_ids: [], tipo_servicio_id: '', capa_productividad_id: '',
-    gestor_id: '', fecha_inicio: '', fecha_fin: '', activo: true,
+    gestor_id: '', fecha_inicio: '', fecha_fin: '', fecha_inicio_real: '', fecha_fin_real: '', activo: true,
     tiene_area: false, area_id: '',
   });
   const [error, setError] = useState('');
@@ -113,10 +113,7 @@ export default function ProyectoCrear() {
                 <Label className="w-28 shrink-0 text-[#64748b]">Nombre *</Label>
                 <Input value={form.nombre} onChange={set('nombre')} required maxLength={100} className="flex-1 min-w-0" />
               </div>
-              <div className="flex items-center gap-3">
-                <Label className="w-28 shrink-0 text-[#64748b]">Descripción</Label>
-                <Input value={form.descripcion} onChange={set('descripcion')} maxLength={100} className="flex-1 min-w-0" />
-              </div>
+              <div />
               <div className="flex items-center gap-3">
                 <Label className="w-28 shrink-0 text-[#64748b]">Cliente *</Label>
                 {clientes?.length === 0 ? (
@@ -185,6 +182,14 @@ export default function ProyectoCrear() {
               <div className="flex items-center gap-3">
                 <Label className="w-36 shrink-0 text-[#64748b]">Fecha fin</Label>
                 <Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} className="flex-1" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Inicio real</Label>
+                <Input type="date" value={form.fecha_inicio_real} onChange={set('fecha_inicio_real')} className="flex-1" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="w-36 shrink-0 text-[#64748b]">Fin real</Label>
+                <Input type="date" value={form.fecha_fin_real} onChange={set('fecha_fin_real')} className="flex-1" />
               </div>
               <div className="col-span-2 flex items-start gap-3">
                 <Label className="w-36 shrink-0 pt-2 text-[#64748b]">Categoría de ingreso</Label>

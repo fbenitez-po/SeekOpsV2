@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, ToggleLeft, ToggleRight, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, ToggleLeft, ToggleRight, Users, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { projectApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -26,6 +27,27 @@ export default function ProyectosLista() {
 
   const proyectos = data?.data || [];
 
+  const exportarExcel = () => {
+    const filas = proyectos.map((p) => ({
+      'Código': p.codigo || '',
+      'Nombre': p.nombre || '',
+      'Cliente': p.cliente?.nombre || '',
+      'Gestor': `${p.gestor?.nombres || ''} ${p.gestor?.apellidos || ''}`.trim(),
+      'Segmentación': p.segmentacion?.nombre || '',
+      'Tipo de servicio': p.tipo_servicio?.nombre || '',
+      'Equipo (integrantes)': p.usuarios_count ?? 0,
+      'Fecha inicio': p.fecha_inicio || '',
+      'Fecha fin': p.fecha_fin || '',
+      'Fecha inicio real': p.fecha_inicio_real || '',
+      'Fecha fin real': p.fecha_fin_real || '',
+      'Estado': p.activo ? 'Activo' : 'Inactivo',
+    }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Proyectos');
+    XLSX.writeFile(wb, 'proyectos.xlsx');
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -35,9 +57,14 @@ export default function ProyectosLista() {
           </button>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Proyectos</h1>
-            <Button onClick={() => navigate('/admin/proyectos/crear')} className="gap-2">
-              <Plus className="h-4 w-4" /> Nuevo proyecto
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={exportarExcel} className="gap-2" disabled={proyectos.length === 0}>
+                <Download className="h-4 w-4" /> Exportar Excel
+              </Button>
+              <Button onClick={() => navigate('/admin/proyectos/crear')} className="gap-2">
+                <Plus className="h-4 w-4" /> Nuevo proyecto
+              </Button>
+            </div>
           </div>
         </div>
 
