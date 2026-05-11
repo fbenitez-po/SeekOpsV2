@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, ToggleLeft, ToggleRight, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { clientApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -26,6 +27,24 @@ export default function ClientesLista() {
 
   const clientes = data?.data || [];
 
+  const exportarExcel = () => {
+    const filas = clientes.map((c) => ({
+      'Razón social': c.razon_social || '',
+      'Razón comercial': c.razon_comercial || '',
+      'RUC': c.ruc || '',
+      'Segmentación': c.segmentacion?.nombre || '',
+      'Nombre contacto comercial': c.nombre_contacto || '',
+      'Email contacto comercial': c.email_contacto || '',
+      'Teléfono': c.telefono || '',
+      'Dirección': c.direccion || '',
+      'Estado': c.activo ? 'Activo' : 'Inactivo',
+    }));
+    const ws = XLSX.utils.json_to_sheet(filas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+    XLSX.writeFile(wb, 'clientes.xlsx');
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -35,13 +54,18 @@ export default function ClientesLista() {
           </button>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Clientes</h1>
-            <Button onClick={() => navigate('/admin/clientes/crear')} className="gap-2">
-              <Plus className="h-4 w-4" /> Nuevo cliente
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={exportarExcel} className="gap-2" disabled={clientes.length === 0}>
+                <Download className="h-4 w-4" /> Exportar Excel
+              </Button>
+              <Button onClick={() => navigate('/admin/clientes/crear')} className="gap-2">
+                <Plus className="h-4 w-4" /> Nuevo cliente
+              </Button>
+            </div>
           </div>
         </div>
 
-        <Input placeholder="Buscar por nombre o RUC..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+        <Input placeholder="Buscar por razón social o RUC..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
 
         <Card>
           <CardContent className="p-0">
