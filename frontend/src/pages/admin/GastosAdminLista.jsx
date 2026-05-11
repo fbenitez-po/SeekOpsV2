@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, Plus, Pencil, Trash2, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { gastosAdminApi, periodosApi } from '../../services/api';
@@ -13,8 +13,9 @@ const periodoLabel = (mes, anio) => `${String(mes).padStart(2, '0')}-${anio}`;
 export default function GastosAdminLista() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
 
-  const [filtroPeriodoId, setFiltroPeriodoId] = useState('');
+  const [filtroPeriodoId, setFiltroPeriodoId] = useState(searchParams.get('periodo_id') ?? '');
 
   const { data: gastos = [], isLoading } = useQuery({
     queryKey: ['gastos-admin', filtroPeriodoId],
@@ -31,12 +32,7 @@ export default function GastosAdminLista() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gastos-admin'] }),
   });
 
-  const periodosDisponibles = [...new Map(
-    gastos.map((g) => {
-      const periodo = periodosData.find((p) => p.mes === g.mes && p.anio === g.anio);
-      return [`${g.mes}-${g.anio}`, { mes: g.mes, anio: g.anio, periodo_id: periodo?.id }];
-    })
-  ).values()];
+  const periodosDisponibles = [...periodosData].sort((a, b) => b.anio - a.anio || b.mes - a.mes);
 
   function exportar() {
     const filas = gastos.map((g) => ({
@@ -79,8 +75,8 @@ export default function GastosAdminLista() {
             className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">Todos los períodos</option>
-            {periodosDisponibles.map(({ mes, anio, periodo_id }) => (
-              <option key={`${mes}-${anio}`} value={periodo_id || ''}>{periodoLabel(mes, anio)}</option>
+            {periodosDisponibles.map((p) => (
+              <option key={p.id} value={String(p.id)}>{periodoLabel(p.mes, p.anio)}</option>
             ))}
           </select>
           {filtroPeriodoId && (

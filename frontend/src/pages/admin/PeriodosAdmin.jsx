@@ -79,7 +79,7 @@ export default function PeriodosAdmin() {
                 </thead>
                 <tbody>
                   {periodosFiltrados.map((p) => (
-                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/admin/periodos/${p.id}`)}>
                       <td className="px-4 py-3 font-medium">{MESES[p.mes - 1]}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.anio}</td>
                       <td className="px-4 py-3">
@@ -94,7 +94,7 @@ export default function PeriodosAdmin() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => mutToggle.mutate(p.id)}
+                            onClick={(e) => { e.stopPropagation(); mutToggle.mutate(p.id); }}
                             disabled={mutToggle.isPending}
                             title={p.esta_cerrado ? 'Abrir período' : 'Cerrar período'}
                           >

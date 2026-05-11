@@ -30,6 +30,7 @@ import ProyectoEditarPage from './pages/admin/ProyectoEditar';
 import ProyectoAsignarPage from './pages/admin/ProyectoAsignar';
 import TodasLasHorasPage from './pages/admin/TodasLasHoras';
 import PeriodosAdminPage from './pages/admin/PeriodosAdmin';
+import PeriodoDashboardPage from './pages/admin/PeriodoDashboard';
 import IngresosAdminPage from './pages/admin/IngresosAdmin';
 import IngresosCrearPage from './pages/admin/IngresosCrear';
 import GastosAdminListaPage from './pages/admin/GastosAdminLista';
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="/admin/proyectos/:id/usuarios" element={<RutaProtegida roles={['ADMIN']}><ProyectoAsignarPage /></RutaProtegida>} />
         <Route path="/admin/horas" element={<RutaProtegida roles={['ADMIN']}><TodasLasHorasPage /></RutaProtegida>} />
         <Route path="/admin/periodos" element={<RutaProtegida roles={['ADMIN']}><PeriodosAdminPage /></RutaProtegida>} />
+        <Route path="/admin/periodos/:id" element={<RutaProtegida roles={['ADMIN']}><PeriodoDashboardPage /></RutaProtegida>} />
         <Route path="/admin/ingresos" element={<RutaProtegida roles={['ADMIN']}><IngresosAdminPage /></RutaProtegida>} />
         <Route path="/admin/ingresos/crear" element={<RutaProtegida roles={['ADMIN']}><IngresosCrearPage /></RutaProtegida>} />
         <Route path="/admin/gastos-admin" element={<RutaProtegida roles={['ADMIN']}><GastosAdminListaPage /></RutaProtegida>} />

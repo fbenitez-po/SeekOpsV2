@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Pencil, Download, Upload, X, Plus, Check } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { ingresosApi, periodosApi, projectApi } from '../../services/api';
@@ -15,8 +15,9 @@ export default function IngresosAdmin() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileRef = useRef(null);
+  const [searchParams] = useSearchParams();
 
-  const [filtroPeriodoId, setFiltroPeriodoId] = useState('');
+  const [filtroPeriodoId, setFiltroPeriodoId] = useState(searchParams.get('periodo_id') ?? '');
   const [filtroProyectoId, setFiltroProyectoId] = useState('');
   const [editandoId, setEditandoId] = useState(null);
   const [montoEdicion, setMontoEdicion] = useState('');
@@ -58,12 +59,7 @@ export default function IngresosAdmin() {
     onError: (err) => { setImportError(err.response?.data?.error || 'Error al importar'); setImportOk(null); },
   });
 
-  const periodosDisponibles = [...new Map(
-    ingresosRaw.map((i) => {
-      const periodo = periodosData.find((p) => p.mes === i.mes && p.anio === i.anio);
-      return [`${i.mes}-${i.anio}`, { mes: i.mes, anio: i.anio, periodo_id: periodo?.id }];
-    })
-  ).values()];
+  const periodosDisponibles = [...periodosData].sort((a, b) => b.anio - a.anio || b.mes - a.mes);
 
   const proyectosDisponibles = [...new Map(
     ingresosRaw.map((i) => [i.proyecto_id, { id: i.proyecto_id, code: i.proyecto_code, nombre: i.proyecto_nombre }])
@@ -163,8 +159,8 @@ export default function IngresosAdmin() {
             className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">Todos los períodos</option>
-            {periodosDisponibles.map(({ mes, anio, periodo_id }) => (
-              <option key={`${mes}-${anio}`} value={periodo_id || ''}>{periodoLabel(mes, anio)}</option>
+            {periodosDisponibles.map((p) => (
+              <option key={p.id} value={String(p.id)}>{periodoLabel(p.mes, p.anio)}</option>
             ))}
           </select>
 
