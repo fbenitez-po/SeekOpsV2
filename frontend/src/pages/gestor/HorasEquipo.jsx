@@ -67,7 +67,7 @@ function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
 
         <div className="space-y-2">
           <Label>Comentario de observación *</Label>
-          <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Indicá qué observás sobre estas horas..." />
+          <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Indica qué observas sobre estas horas..." />
         </div>
 
         <div className="flex gap-3">
@@ -92,7 +92,7 @@ function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
 
         <div className="space-y-2">
           <Label>Razón del rechazo *</Label>
-          <Textarea value={razon} onChange={(e) => setRazon(e.target.value)} rows={3} placeholder="Explicá por qué se rechazan estas horas..." />
+          <Textarea value={razon} onChange={(e) => setRazon(e.target.value)} rows={3} placeholder="Explica por qué se rechazan estas horas..." />
         </div>
 
         <div className="flex gap-3">
@@ -170,7 +170,7 @@ export default function HorasEquipo() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Mis equipos</h1>
-          <p className="text-muted-foreground">Aprobá o rechazá las horas de tu equipo</p>
+          <p className="text-muted-foreground">Aprueba o rechaza las horas de tu equipo</p>
         </div>
 
         <Card>

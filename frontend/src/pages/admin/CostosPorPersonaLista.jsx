@@ -137,7 +137,7 @@ export default function CostosPorPersonaLista() {
     setImportResult(null);
 
     if (!filtroPeriodoId) {
-      setImportError('Seleccioná un período antes de importar.');
+      setImportError('Selecciona un período antes de importar.');
       return;
     }
 
@@ -177,7 +177,7 @@ export default function CostosPorPersonaLista() {
         if (errores.length) { setImportError(errores.join('\n')); return; }
         mutImportar.mutate(filasMapeadas);
       } catch {
-        setImportError('No se pudo leer el archivo. Verificá que sea un .xlsx válido.');
+        setImportError('No se pudo leer el archivo. Verifica que sea un .xlsx válido.');
       }
     };
     reader.readAsArrayBuffer(archivo);

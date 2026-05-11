@@ -109,7 +109,7 @@ export default function CargarHoras() {
       comentario: l.comentario,
     }));
     if (payload.length === 0) {
-      setError('Seleccioná al menos un proyecto para cargar horas.');
+      setError('Selecciona al menos un proyecto para cargar horas.');
       return;
     }
     mutation.mutate({ semana, lineas: payload });
@@ -130,7 +130,7 @@ export default function CargarHoras() {
             Volver al inicio
           </button>
           <h1 className="text-2xl font-bold">Cargar horas</h1>
-          <p className="text-muted-foreground">Registrá las horas trabajadas para la semana seleccionada</p>
+          <p className="text-muted-foreground">Registra las horas trabajadas para la semana seleccionada</p>
         </div>
 
         <form onSubmit={manejarSubmit} className="max-w-2xl">
@@ -165,7 +165,7 @@ export default function CargarHoras() {
 
             {/* Chips de proyectos */}
             <div className="px-3 pt-3 pb-2.5">
-              <p className="text-xs text-slate-400 mb-2">Seleccioná el o los proyectos en los que trabajaste esta semana</p>
+              <p className="text-xs text-slate-400 mb-2">Selecciona el o los proyectos en los que trabajaste esta semana</p>
               <div className="flex flex-wrap gap-2">
               {listaProyectos.map((proyecto) => {
                 const esArea = Boolean(proyecto.area);
@@ -239,7 +239,7 @@ export default function CargarHoras() {
                           onValueChange={(v) => actualizarLinea(linea._key, 'categoria_ingreso_id', v)}
                         >
                           <SelectTrigger className="bg-white h-7 text-xs flex-1">
-                            <SelectValue placeholder="Seleccioná categoría" />
+                            <SelectValue placeholder="Selecciona categoría" />
                           </SelectTrigger>
                           <SelectContent>
                             {(categorias || []).map((c) => (
@@ -317,7 +317,7 @@ export default function CargarHoras() {
           <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl border border-slate-200">
             <h3 className="text-base font-semibold text-slate-900 mb-2">Semana no disponible</h3>
             <p className="text-sm text-slate-600 mb-5">
-              Solo podés cargar horas de semanas ya cerradas. La semana en curso y las futuras no están disponibles para carga.
+              Solo puedes cargar horas de semanas ya cerradas. La semana en curso y las futuras no están disponibles para carga.
             </p>
             <Button className="w-full" onClick={() => setMostrarAlertaSemana(false)}>Entendido</Button>
           </div>
@@ -330,7 +330,7 @@ export default function CargarHoras() {
           <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl border border-slate-200">
             <h3 className="text-base font-semibold text-slate-900 mb-2">¿No ves tu proyecto?</h3>
             <p className="text-sm text-slate-600 mb-5">
-              Solo aparecen los proyectos a los que fuiste asignado. Si creés que falta alguno, contactá a tu supervisor para que gestione el acceso.
+              Solo aparecen los proyectos a los que fuiste asignado. Si crees que falta alguno, contacta a tu supervisor para que gestione el acceso.
             </p>
             <Button className="w-full" onClick={() => setMostrarModalProyecto(false)}>Entendido</Button>
           </div>

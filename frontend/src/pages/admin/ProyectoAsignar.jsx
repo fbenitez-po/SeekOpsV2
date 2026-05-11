@@ -62,7 +62,7 @@ export default function ProyectoAsignar() {
               <div className="space-y-2">
                 <Label>Usuario</Label>
                 <Select value={usuarioId} onValueChange={setUsuarioId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná usuario" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecciona un usuario" /></SelectTrigger>
                   <SelectContent>
                     {usuariosDisponibles.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombres} {u.apellidos}</SelectItem>

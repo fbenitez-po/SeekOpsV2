@@ -60,14 +60,14 @@ export default function ClienteCrear() {
               <div className="space-y-2">
                 <Label>Segmentación *</Label>
                 <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná segmentación" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecciona segmentación" /></SelectTrigger>
                   <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Sector</Label>
                 <Select value={form.sector_id} onValueChange={set('sector_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná sector" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecciona sector" /></SelectTrigger>
                   <SelectContent>{(sectores || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>

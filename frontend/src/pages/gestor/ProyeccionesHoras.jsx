@@ -137,7 +137,7 @@ export default function ProyeccionesHoras() {
         seekers: prev.seekers.map((s) => (s.id === incompleto.id ? { ...s, expandido: true } : s)),
       }));
       document.getElementById(`seeker-card-${incompleto.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setError('Completá el seeker anterior antes de agregar otro.');
+      setError('Completa el seeker anterior antes de agregar otro.');
       return;
     }
     setForm((prev) => ({
@@ -205,7 +205,7 @@ export default function ProyeccionesHoras() {
           <div>
             <h1 className="text-2xl font-bold">Proyecciones de horas</h1>
             <p className="text-muted-foreground">
-              Definí cuántas horas tendrá asignado cada seeker por período
+              Define cuántas horas tendrá asignado cada seeker por período
             </p>
           </div>
           <Button onClick={abrirCrear} className="gap-2">
@@ -246,7 +246,7 @@ export default function ProyeccionesHoras() {
                       required
                       disabled={!!editando}
                     >
-                      <option value="">Seleccioná un proyecto</option>
+                      <option value="">Selecciona un proyecto</option>
                       {(dataProyectos || []).map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.codigo} — {p.nombre}
@@ -309,7 +309,7 @@ export default function ProyeccionesHoras() {
                                   disabled={!!editando || !form.project_id}
                                 >
                                   <option value="">
-                                    {form.project_id ? 'Seleccioná un seeker' : 'Primero elegí un proyecto'}
+                                    {form.project_id ? 'Selecciona un seeker' : 'Primero elige un proyecto'}
                                   </option>
                                   {opciones.map((u) => (
                                     <option key={u.id} value={u.id}>
@@ -478,7 +478,7 @@ export default function ProyeccionesHoras() {
               <p className="p-6 text-sm text-muted-foreground">Cargando...</p>
             ) : proyecciones.length === 0 ? (
               <p className="p-6 text-sm text-muted-foreground">
-                No hay proyecciones registradas. Creá la primera usando el botón de arriba.
+                No hay proyecciones registradas. Crea la primera usando el botón de arriba.
               </p>
             ) : (
               <div className="overflow-x-auto">

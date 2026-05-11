@@ -125,7 +125,7 @@ export default function ProyectoCrear() {
                 ) : (
                   <div className="flex flex-1 gap-2 min-w-0">
                     <Select value={form.cliente_id} onValueChange={set('cliente_id')}>
-                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                       <SelectContent>{(clientes || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.razon_comercial || c.razon_social}</SelectItem>)}</SelectContent>
                     </Select>
                     <BtnNuevo onClick={irACrearCliente} />
@@ -142,7 +142,7 @@ export default function ProyectoCrear() {
                 ) : (
                   <div className="flex flex-1 gap-2 min-w-0">
                     <Select value={form.gestor_id} onValueChange={set('gestor_id')}>
-                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                       <SelectContent>{(gestores || []).map((g) => <SelectItem key={g.id} value={g.id}>{g.nombres} {g.apellidos}</SelectItem>)}</SelectContent>
                     </Select>
                     <BtnNuevo onClick={irACrearGestor} />
@@ -152,7 +152,7 @@ export default function ProyectoCrear() {
               <div className="flex items-center gap-3">
                 <Label className="w-28 shrink-0 text-[#64748b]">Segmentación *</Label>
                 <Select value={form.segmentacion_id} onValueChange={set('segmentacion_id')}>
-                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                   <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -165,14 +165,14 @@ export default function ProyectoCrear() {
               <div className="flex items-center gap-3">
                 <Label className="w-36 shrink-0 text-[#64748b]">Tipo de servicio</Label>
                 <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
-                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                   <SelectContent>{(tiposServicio || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-3">
                 <Label className="w-36 shrink-0 text-[#64748b]">Capa productividad</Label>
                 <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
-                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                   <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -220,7 +220,7 @@ export default function ProyectoCrear() {
                   <div className="flex items-center gap-3 max-w-xs">
                     <Label className="shrink-0 text-[#64748b]">Área *</Label>
                     <Select value={form.area_id} onValueChange={set('area_id')}>
-                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                       <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>

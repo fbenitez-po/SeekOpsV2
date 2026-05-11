@@ -27,7 +27,7 @@ export default function RecuperarContrasena() {
       <div className="flex min-h-screen items-center justify-center bg-muted/40">
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
-            <CardTitle>Revisá tu email</CardTitle>
+            <CardTitle>Revisa tu email</CardTitle>
             <CardDescription>
               Si el email existe en el sistema, recibirás instrucciones para recuperar tu contraseña.
             </CardDescription>
@@ -47,7 +47,7 @@ export default function RecuperarContrasena() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Recuperar contraseña</CardTitle>
-          <CardDescription>Ingresá tu email y te enviaremos un link para resetearla.</CardDescription>
+          <CardDescription>Ingresa tu email y te enviaremos un enlace para restablecerla.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={manejarSubmit} className="space-y-4">

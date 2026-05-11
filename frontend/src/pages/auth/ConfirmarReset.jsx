@@ -39,7 +39,7 @@ export default function ConfirmarReset() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Nueva contraseña</CardTitle>
-          <CardDescription>Ingresá tu nueva contraseña para continuar.</CardDescription>
+          <CardDescription>Ingresa tu nueva contraseña para continuar.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={manejarSubmit} className="space-y-4">

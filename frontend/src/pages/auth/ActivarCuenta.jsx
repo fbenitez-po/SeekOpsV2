@@ -38,9 +38,9 @@ export default function ActivarCuenta() {
     } catch (err) {
       const msg = err.response?.data?.error || '';
       if (msg.includes('expiró') || msg.includes('inválido')) {
-        setError('El link de activación expiró o es inválido. Pedí al administrador que reenvíe la invitación.');
+        setError('El enlace de activación expiró o es inválido. Pide al administrador que reenvíe la invitación.');
       } else {
-        setError(msg || 'Ocurrió un error. Intentá de nuevo.');
+        setError(msg || 'Ocurrió un error. Inténtalo de nuevo.');
       }
     } finally {
       setCargando(false);
@@ -66,7 +66,7 @@ export default function ActivarCuenta() {
             <div>
               <h2 className="text-lg font-semibold" style={{ color: '#0f172a' }}>¡Cuenta activada!</h2>
               <p className="mt-1 text-sm" style={{ color: '#64748b' }}>
-                Tu contraseña fue configurada correctamente. Ya podés ingresar a Seekops.
+                Tu contraseña fue configurada correctamente. Ya puedes ingresar a Seekops.
               </p>
             </div>
             <Button
@@ -99,7 +99,7 @@ export default function ActivarCuenta() {
             Activar cuenta
           </CardTitle>
           <CardDescription className="text-center" style={{ color: '#64748b' }}>
-            Establecé tu contraseña para comenzar a usar Seekops.
+            Establece tu contraseña para comenzar a usar Seekops.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -123,7 +123,7 @@ export default function ActivarCuenta() {
               <Input
                 id="confirmar"
                 type="password"
-                placeholder="Repetí la contraseña"
+                placeholder="Repite la contraseña"
                 value={confirmar}
                 onChange={(e) => setConfirmar(e.target.value)}
                 required

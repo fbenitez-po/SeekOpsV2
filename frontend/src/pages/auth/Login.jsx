@@ -42,7 +42,7 @@ export default function Login() {
             Seekops
           </h1>
           <p className="mt-1 text-sm" style={{ color: '#64748b' }}>
-            Ingresá tus credenciales
+            Ingresa tus credenciales
           </p>
         </div>
 

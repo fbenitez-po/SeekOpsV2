@@ -230,7 +230,7 @@ export default function HomeGestor() {
                 </CardHeader>
                 <CardContent>
                   {misPendientes.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No tenés horas pendientes</p>
+                    <p className="text-sm text-muted-foreground">No tienes horas pendientes</p>
                   ) : (
                     <div className="space-y-2">
                       {misPendientes.slice(0, 2).map((e) => (
@@ -255,7 +255,7 @@ export default function HomeGestor() {
                 </CardHeader>
                 <CardContent>
                   {misAprobadas.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No tenés horas aprobadas con observación</p>
+                    <p className="text-sm text-muted-foreground">No tienes horas aprobadas con observación</p>
                   ) : (
                     <div className="space-y-2">
                       {misAprobadas.slice(0, 2).map((e) => (

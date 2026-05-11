@@ -138,7 +138,7 @@ export default function HomeSeeker() {
               {cargandoPendientes ? (
                 <p className="text-sm text-muted-foreground">Cargando...</p>
               ) : pendientes?.data?.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tenés horas pendientes</p>
+                <p className="text-sm text-muted-foreground">No tienes horas pendientes</p>
               ) : (
                 <div className="space-y-2">
                   {pendientes?.data?.slice(0, 2).map((e) => (
@@ -165,7 +165,7 @@ export default function HomeSeeker() {
             </CardHeader>
             <CardContent>
               {!aprobadas || aprobadas?.data?.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tenés horas aprobadas con observación</p>
+                <p className="text-sm text-muted-foreground">No tienes horas aprobadas con observación</p>
               ) : (
                 <div className="space-y-2">
                   {aprobadas?.data?.slice(0, 2).map((e) => (

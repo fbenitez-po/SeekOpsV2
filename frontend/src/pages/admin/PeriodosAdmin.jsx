@@ -36,7 +36,7 @@ export default function PeriodosAdmin() {
             <ArrowLeft className="h-4 w-4" /> Volver al inicio
           </button>
           <h1 className="text-2xl font-bold">Períodos</h1>
-          <p className="text-sm text-muted-foreground mt-1">Administrá el estado de apertura y cierre de cada período mensual.</p>
+          <p className="text-sm text-muted-foreground mt-1">Administra el estado de apertura y cierre de cada período mensual.</p>
         </div>
 
         {aniosDisponibles.length > 1 && (

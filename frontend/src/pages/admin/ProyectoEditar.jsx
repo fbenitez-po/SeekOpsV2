@@ -148,7 +148,7 @@ export default function ProyectoEditar() {
               <div className="space-y-2">
                 <Label>Capa de productividad</Label>
                 <Select value={form.capa_productividad_id} onValueChange={set('capa_productividad_id')}>
-                  <SelectTrigger><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
                   <SelectContent>{(capasProductividad || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -176,7 +176,7 @@ export default function ProyectoEditar() {
                 <div className="space-y-2">
                   <Label>Área *</Label>
                   <Select value={form.area_id} onValueChange={set('area_id')}>
-                    <SelectTrigger><SelectValue placeholder="Seleccioná el área" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger>
                     <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>

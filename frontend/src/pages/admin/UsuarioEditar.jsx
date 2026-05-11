@@ -199,7 +199,7 @@ export default function UsuarioEditar() {
                 <Input type="date" value={form.fecha_ingreso} onChange={set('fecha_ingreso')} required max={new Date().toISOString().split('T')[0]} />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, podés seleccionar varias)</span></Label>
+                <Label>Áreas * <span className="text-xs font-normal" style={{ color: '#94a3b8' }}>(al menos una, puedes seleccionar varias)</span></Label>
                 <SelectorMultiple
                   opciones={areas}
                   seleccionados={form.areas}
@@ -207,7 +207,7 @@ export default function UsuarioEditar() {
                   minimo={1}
                 />
                 {form.areas.length === 0 && (
-                  <p className="text-xs" style={{ color: '#dc2626' }}>Seleccioná al menos un área.</p>
+                  <p className="text-xs" style={{ color: '#dc2626' }}>Selecciona al menos un área.</p>
                 )}
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -220,7 +220,7 @@ export default function UsuarioEditar() {
                 {form.grupos.includes('ADMIN') ? (
                   <p className="text-xs" style={{ color: '#92400e' }}>Admin no puede combinarse con Gestor ni Seeker.</p>
                 ) : (
-                  <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
+                  <p className="text-xs" style={{ color: '#94a3b8' }}>Puedes asignar más de un rol al usuario.</p>
                 )}
               </div>
             </CardContent>

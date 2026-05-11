@@ -150,7 +150,7 @@ export default function UsuarioCrear() {
               <div className="flex items-center gap-3">
                 <Label className="w-36 shrink-0 text-[#64748b]">Equipo *</Label>
                 <Select value={form.equipo_id} onValueChange={set('equipo_id')}>
-                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Seleccioná" /></SelectTrigger>
+                  <SelectTrigger className="flex-1 min-w-0"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                   <SelectContent>{(equipos || []).map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -170,7 +170,7 @@ export default function UsuarioCrear() {
                     onChange={(v) => setForm((f) => ({ ...f, areas: v }))}
                   />
                   {form.areas.length === 0 && (
-                    <p className="text-xs" style={{ color: '#dc2626' }}>Seleccioná al menos un área.</p>
+                    <p className="text-xs" style={{ color: '#dc2626' }}>Selecciona al menos un área.</p>
                   )}
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function UsuarioCrear() {
                   {form.grupos.includes('ADMIN') ? (
                     <p className="text-xs" style={{ color: '#92400e' }}>Admin no puede combinarse con Gestor ni Seeker.</p>
                   ) : (
-                    <p className="text-xs" style={{ color: '#94a3b8' }}>Podés asignar más de un rol al usuario.</p>
+                    <p className="text-xs" style={{ color: '#94a3b8' }}>Puedes asignar más de un rol al usuario.</p>
                   )}
                 </div>
               </div>

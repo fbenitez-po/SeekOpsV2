@@ -168,6 +168,23 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
 ---
 
+## Convenciones de copy (textos de UI)
+
+- **Variedad de español:** Español latinoamericano, variante Perú.
+- **Tratamiento al usuario:** Tuteo (`tú`). **No usar voseo rioplatense** (sin "Ingresá", "Seleccioná", "tenés", "podés", etc.).
+- **Forma correcta para imperativos:**
+  - ✅ `Ingresa`, `Registra`, `Selecciona`, `Establece`, `Completa`, `Define`, `Crea`, `Aprueba`, `Rechaza`
+  - ❌ `Ingresá`, `Registrá`, `Seleccioná`, `Establecé`, `Completá`, `Definí`, `Creá`, `Aprobá`, `Rechazá`
+- **Conjugaciones de segunda persona:**
+  - ✅ `tienes`, `puedes`, `crees`, `puedes`
+  - ❌ `tenés`, `podés`, `creés`
+- **Vocabulario preferido:**
+  - `enlace` en lugar de `link` para contextos formales
+  - `restablecer` en lugar de `resetear`
+  - `Inténtalo de nuevo` en lugar de `Intentá de nuevo`
+
+---
+
 ## Decisiones de producto
 
 - **Período retroactivo:** Sin límite — seekers pueden cargar horas de cualquier semana
