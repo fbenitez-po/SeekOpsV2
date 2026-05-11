@@ -96,9 +96,9 @@ async function crear(usuarioId, roles, body) {
     throw new ErrorApp('Debe incluir al menos una línea', 400);
   }
 
-  const proyectosEnCarga = lineas.map((l) => l.proyecto_id);
-  if (new Set(proyectosEnCarga).size !== proyectosEnCarga.length) {
-    throw new ErrorApp('No se puede repetir el mismo proyecto en una carga', 400);
+  const combosEnCarga = lineas.map((l) => `${l.proyecto_id}:${l.categoria_ingreso_id || 'null'}`);
+  if (new Set(combosEnCarga).size !== combosEnCarga.length) {
+    throw new ErrorApp('No se puede repetir la misma combinación de proyecto y categoría en una carga', 400);
   }
 
   const entradaExistente = await data.verificarEntradaExistente(usuarioId, semana);

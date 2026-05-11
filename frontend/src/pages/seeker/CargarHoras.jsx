@@ -22,12 +22,24 @@ function obtenerDomingo(offset = 0) {
   return base;
 }
 
+function nuevaLinea(proyectoId) {
+  return {
+    _key: `${Date.now()}-${Math.random()}`,
+    proyecto_id: proyectoId,
+    horas: '',
+    horas_extra: '',
+    mostrarExtras: false,
+    comentario: '',
+    categoria_ingreso_id: null,
+  };
+}
+
 export default function CargarHoras() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [offsetSemana, setOffsetSemana] = useState(-1);
-  // { [proyecto_id]: { horas, horas_extra, comentario, categoria_ingreso_id } }
-  const [seleccionados, setSeleccionados] = useState({});
+  // Array de líneas: [{ _key, proyecto_id, horas, horas_extra, mostrarExtras, comentario, categoria_ingreso_id }]
+  const [lineas, setLineas] = useState([]);
   const [error, setError] = useState('');
   const [mostrarAlertaSemana, setMostrarAlertaSemana] = useState(false);
   const [mostrarModalProyecto, setMostrarModalProyecto] = useState(false);
@@ -56,20 +68,29 @@ export default function CargarHoras() {
     onError: (err) => setError(err.response?.data?.error || 'Error al guardar'),
   });
 
-  function toggleProyecto(id) {
+  function manejarClicProyecto(proyecto) {
     setError('');
-    setSeleccionados((prev) => {
-      if (prev[id]) {
-        const siguiente = { ...prev };
-        delete siguiente[id];
-        return siguiente;
+    const esArea = Boolean(proyecto.area);
+
+    setLineas((prev) => {
+      if (!esArea) {
+        // Toggle para proyectos no-área: agrega o quita la única línea
+        if (prev.some((l) => l.proyecto_id === proyecto.id)) {
+          return prev.filter((l) => l.proyecto_id !== proyecto.id);
+        }
+        return [...prev, nuevaLinea(proyecto.id)];
       }
-      return { ...prev, [id]: { horas: '', horas_extra: '', mostrarExtras: false, comentario: '', categoria_ingreso_id: null } };
+      // Para proyectos de área: siempre agrega una nueva línea
+      return [...prev, nuevaLinea(proyecto.id)];
     });
   }
 
-  function actualizarCampo(id, campo, valor) {
-    setSeleccionados((prev) => ({ ...prev, [id]: { ...prev[id], [campo]: valor } }));
+  function eliminarLinea(key) {
+    setLineas((prev) => prev.filter((l) => l._key !== key));
+  }
+
+  function actualizarLinea(key, campo, valor) {
+    setLineas((prev) => prev.map((l) => (l._key === key ? { ...l, [campo]: valor } : l)));
   }
 
   function avanzarSemana() {
@@ -80,18 +101,18 @@ export default function CargarHoras() {
   function manejarSubmit(e) {
     e.preventDefault();
     setError('');
-    const lineas = Object.entries(seleccionados).map(([proyecto_id, d]) => ({
-      proyecto_id,
-      categoria_ingreso_id: d.categoria_ingreso_id || null,
-      horas: parseFloat(d.horas) || 0,
-      horas_extra: parseFloat(d.horas_extra) || 0,
-      comentario: d.comentario,
+    const payload = lineas.map((l) => ({
+      proyecto_id: l.proyecto_id,
+      categoria_ingreso_id: l.categoria_ingreso_id || null,
+      horas: parseFloat(l.horas) || 0,
+      horas_extra: parseFloat(l.horas_extra) || 0,
+      comentario: l.comentario,
     }));
-    if (lineas.length === 0) {
+    if (payload.length === 0) {
       setError('Seleccioná al menos un proyecto para cargar horas.');
       return;
     }
-    mutation.mutate({ semana, lineas });
+    mutation.mutate({ semana, lineas: payload });
   }
 
   const listaProyectos = proyectos || [];
@@ -147,12 +168,14 @@ export default function CargarHoras() {
               <p className="text-xs text-slate-400 mb-2">Seleccioná el o los proyectos en los que trabajaste esta semana</p>
               <div className="flex flex-wrap gap-2">
               {listaProyectos.map((proyecto) => {
-                const activo = Boolean(seleccionados[proyecto.id]);
+                const esArea = Boolean(proyecto.area);
+                const cantLineas = lineas.filter((l) => l.proyecto_id === proyecto.id).length;
+                const activo = cantLineas > 0;
                 return (
                   <button
                     key={proyecto.id}
                     type="button"
-                    onClick={() => toggleProyecto(proyecto.id)}
+                    onClick={() => manejarClicProyecto(proyecto)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
                       activo
                         ? 'bg-slate-900 text-white border-slate-900'
@@ -160,7 +183,11 @@ export default function CargarHoras() {
                     }`}
                   >
                     {proyecto.nombre}
-                    {activo && <X className="h-3.5 w-3.5 opacity-70" />}
+                    {/* No-área seleccionado: X para deseleccionar. Área: muestra cantidad si hay más de una */}
+                    {activo && !esArea && <X className="h-3.5 w-3.5 opacity-70" />}
+                    {activo && esArea && cantLineas > 1 && (
+                      <span className="text-xs opacity-70">×{cantLineas}</span>
+                    )}
                   </button>
                 );
               })}
@@ -174,93 +201,99 @@ export default function CargarHoras() {
               </div>
             </div>
 
-            {/* Formularios de proyectos seleccionados */}
-            {listaProyectos
-              .filter((p) => seleccionados[p.id])
-              .map((proyecto) => {
-                const d = seleccionados[proyecto.id];
-                const esArea = Boolean(proyecto.area);
+            {/* Formularios de líneas seleccionadas */}
+            {lineas.map((linea) => {
+              const proyecto = listaProyectos.find((p) => p.id === linea.proyecto_id);
+              if (!proyecto) return null;
+              const esArea = Boolean(proyecto.area);
+              const cantLineasProyecto = lineas.filter((l) => l.proyecto_id === proyecto.id).length;
 
-                return (
-                  <div key={proyecto.id}>
-                    <div className="px-3 py-2 flex items-center justify-between bg-slate-50">
-                      <p className="text-sm text-slate-900">
-                        <span className="font-mono text-xs text-slate-400 mr-2">{proyecto.codigo}</span>
-                        <span className="font-medium">{proyecto.nombre}</span>
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => toggleProyecto(proyecto.id)}
-                        className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors ml-2 shrink-0"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="px-3 pb-3 pt-2 space-y-2">
-                      {esArea && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-500 shrink-0">Categoría</span>
-                          <Select
-                            value={d.categoria_ingreso_id || ''}
-                            onValueChange={(v) => actualizarCampo(proyecto.id, 'categoria_ingreso_id', v)}
-                          >
-                            <SelectTrigger className="bg-white h-7 text-xs flex-1">
-                              <SelectValue placeholder="Seleccioná categoría" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(categorias || []).map((c) => (
-                                <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+              return (
+                <div key={linea._key}>
+                  <div className="px-3 py-2 flex items-center justify-between bg-slate-50">
+                    <p className="text-sm text-slate-900">
+                      <span className="font-mono text-xs text-slate-400 mr-2">{proyecto.codigo}</span>
+                      <span className="font-medium">{proyecto.nombre}</span>
+                      {/* Si hay múltiples líneas del mismo proyecto, muestra la categoría seleccionada como indicador */}
+                      {esArea && cantLineasProyecto > 1 && linea.categoria_ingreso_id && (
+                        <span className="ml-2 text-xs text-slate-500">
+                          ({(categorias || []).find((c) => c.id === linea.categoria_ingreso_id)?.nombre || 'sin categoría'})
+                        </span>
                       )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => eliminarLinea(linea._key)}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors ml-2 shrink-0"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
 
-                      <div className="flex items-center gap-4">
+                  <div className="px-3 pb-3 pt-2 space-y-2">
+                    {esArea && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 shrink-0">Categoría</span>
+                        <Select
+                          value={linea.categoria_ingreso_id || ''}
+                          onValueChange={(v) => actualizarLinea(linea._key, 'categoria_ingreso_id', v)}
+                        >
+                          <SelectTrigger className="bg-white h-7 text-xs flex-1">
+                            <SelectValue placeholder="Seleccioná categoría" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(categorias || []).map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 shrink-0">Horas</span>
+                        <Input
+                          type="number" min="0" max={horasEsperadas} step="0.5"
+                          value={linea.horas}
+                          onChange={(e) => actualizarLinea(linea._key, 'horas', e.target.value)}
+                          required placeholder="0" className="bg-white h-7 text-sm w-16 text-center px-1"
+                        />
+                      </div>
+                      {linea.mostrarExtras ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-500 shrink-0">Horas</span>
+                          <span className="text-xs text-slate-500 shrink-0">Extras</span>
                           <Input
-                            type="number" min="0" max={horasEsperadas} step="0.5"
-                            value={d.horas}
-                            onChange={(e) => actualizarCampo(proyecto.id, 'horas', e.target.value)}
-                            required placeholder="0" className="bg-white h-7 text-sm w-16 text-center px-1"
+                            type="number" min="0" max="8" step="0.5"
+                            value={linea.horas_extra}
+                            onChange={(e) => actualizarLinea(linea._key, 'horas_extra', e.target.value)}
+                            placeholder="0" className="bg-white h-7 text-sm w-16 text-center px-1"
                           />
                         </div>
-                        {d.mostrarExtras ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500 shrink-0">Extras</span>
-                            <Input
-                              type="number" min="0" max="8" step="0.5"
-                              value={d.horas_extra}
-                              onChange={(e) => actualizarCampo(proyecto.id, 'horas_extra', e.target.value)}
-                              placeholder="0" className="bg-white h-7 text-sm w-16 text-center px-1"
-                            />
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => actualizarCampo(proyecto.id, 'mostrarExtras', true)}
-                            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-                          >
-                            + Horas extras
-                          </button>
-                        )}
-                      </div>
-
-                      <Textarea
-                        value={d.comentario}
-                        onChange={(e) => actualizarCampo(proyecto.id, 'comentario', e.target.value)}
-                        maxLength={500} placeholder="Comentario de las tareas realizadas..."
-                        rows={1} className="bg-white text-xs resize-none" required
-                      />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => actualizarLinea(linea._key, 'mostrarExtras', true)}
+                          className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          + Horas extras
+                        </button>
+                      )}
                     </div>
-                  </div>
-                );
-              })}
 
-            {/* Botones — solo si hay al menos un proyecto seleccionado */}
-            {Object.keys(seleccionados).length > 0 && (
+                    <Textarea
+                      value={linea.comentario}
+                      onChange={(e) => actualizarLinea(linea._key, 'comentario', e.target.value)}
+                      maxLength={500} placeholder="Comentario de las tareas realizadas..."
+                      rows={1} className="bg-white text-xs resize-none" required
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Botones — solo si hay al menos una línea */}
+            {lineas.length > 0 && (
               <div className="px-3 py-2.5 flex gap-3">
                 <Button type="button" variant="outline" className="flex-1 h-8 text-sm" onClick={() => navigate('/seeker')}>
                   Cancelar
