@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays, TrendingUp, Receipt } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays, TrendingUp, Receipt, ShoppingCart, UserRound } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
@@ -25,6 +25,8 @@ const navAdmin = [
   { label: 'Proyectos', href: '/admin/proyectos', icon: FolderOpen },
   { label: 'Períodos', href: '/admin/periodos', icon: CalendarDays },
   { label: 'Ingresos', href: '/admin/ingresos', icon: TrendingUp },
+  { label: 'Costos de Venta', href: '/admin/costos-venta', icon: ShoppingCart },
+  { label: 'Costo por Persona', href: '/admin/costos-por-persona', icon: UserRound },
   { label: 'Gastos Admin.', href: '/admin/gastos-admin', icon: Receipt },
 ];
 

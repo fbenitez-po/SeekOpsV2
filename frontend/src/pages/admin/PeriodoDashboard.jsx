@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, TrendingUp, Receipt, Lock, LockOpen, ChevronRight } from 'lucide-react';
-import { periodosApi, ingresosApi, gastosAdminApi } from '../../services/api';
+import { ArrowLeft, TrendingUp, Receipt, ShoppingCart, Lock, LockOpen, ChevronRight, UserRound } from 'lucide-react';
+import { periodosApi, ingresosApi, gastosAdminApi, costosVentaApi, costosPorPersonaApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -54,6 +54,16 @@ export default function PeriodoDashboard() {
     queryFn: () => gastosAdminApi.listar({ periodo_id: id }).then((r) => r.data),
   });
 
+  const { data: costosVenta = [] } = useQuery({
+    queryKey: ['costos-venta', id],
+    queryFn: () => costosVentaApi.listar({ periodo_id: id }).then((r) => r.data),
+  });
+
+  const { data: costosPorPersona = [] } = useQuery({
+    queryKey: ['costos-por-persona', id],
+    queryFn: () => costosPorPersonaApi.listar({ periodo_id: id }).then((r) => r.data),
+  });
+
   const mutToggle = useMutation({
     mutationFn: () => periodosApi.toggle(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['periodos'] }),
@@ -61,6 +71,8 @@ export default function PeriodoDashboard() {
 
   const totalIngresos = ingresos.reduce((acc, i) => acc + Number(i.monto ?? 0), 0);
   const totalGastos = gastos.reduce((acc, g) => acc + Number(g.monto ?? 0), 0);
+  const totalCostosVenta = costosVenta.reduce((acc, c) => acc + Number(c.monto ?? 0), 0);
+  const totalCostosPorPersona = costosPorPersona.reduce((acc, c) => acc + Number(c.remuneracion ?? 0), 0);
 
   const periodosOrdenados = [...periodos].sort((a, b) => b.anio - a.anio || b.mes - a.mes);
 
@@ -127,7 +139,7 @@ export default function PeriodoDashboard() {
         </div>
 
         {/* Cards de totales */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <TarjetaTotal
             titulo="Total ingresos"
             monto={totalIngresos}
@@ -136,11 +148,25 @@ export default function PeriodoDashboard() {
             onClick={() => navigate(`/admin/ingresos?periodo_id=${id}`)}
           />
           <TarjetaTotal
+            titulo="Total costos de venta"
+            monto={totalCostosVenta}
+            icono={ShoppingCart}
+            color="bg-blue-500"
+            onClick={() => navigate(`/admin/costos-venta?periodo_id=${id}`)}
+          />
+          <TarjetaTotal
             titulo="Total gastos administrativos"
             monto={totalGastos}
             icono={Receipt}
             color="bg-orange-500"
             onClick={() => navigate(`/admin/gastos-admin?periodo_id=${id}`)}
+          />
+          <TarjetaTotal
+            titulo="Total costo por persona"
+            monto={totalCostosPorPersona}
+            icono={UserRound}
+            color="bg-purple-500"
+            onClick={() => navigate(`/admin/costos-por-persona?periodo_id=${id}`)}
           />
         </div>
       </div>

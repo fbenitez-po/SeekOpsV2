@@ -36,6 +36,12 @@ import IngresosCrearPage from './pages/admin/IngresosCrear';
 import GastosAdminListaPage from './pages/admin/GastosAdminLista';
 import GastosAdminCrearPage from './pages/admin/GastosAdminCrear';
 import GastosAdminEditarPage from './pages/admin/GastosAdminEditar';
+import CostosVentaListaPage from './pages/admin/CostosVentaLista';
+import CostosVentaCrearPage from './pages/admin/CostosVentaCrear';
+import CostosVentaEditarPage from './pages/admin/CostosVentaEditar';
+import CostosPorPersonaListaPage from './pages/admin/CostosPorPersonaLista';
+import CostosPorPersonaCrearPage from './pages/admin/CostosPorPersonaCrear';
+import CostosPorPersonaEditarPage from './pages/admin/CostosPorPersonaEditar';
 
 function RutaProtegida({ children, roles }) {
   const usuario = useAuthStore((s) => s.usuario);
@@ -100,6 +106,12 @@ export default function App() {
         <Route path="/admin/gastos-admin" element={<RutaProtegida roles={['ADMIN']}><GastosAdminListaPage /></RutaProtegida>} />
         <Route path="/admin/gastos-admin/crear" element={<RutaProtegida roles={['ADMIN']}><GastosAdminCrearPage /></RutaProtegida>} />
         <Route path="/admin/gastos-admin/:id/editar" element={<RutaProtegida roles={['ADMIN']}><GastosAdminEditarPage /></RutaProtegida>} />
+        <Route path="/admin/costos-venta" element={<RutaProtegida roles={['ADMIN']}><CostosVentaListaPage /></RutaProtegida>} />
+        <Route path="/admin/costos-venta/crear" element={<RutaProtegida roles={['ADMIN']}><CostosVentaCrearPage /></RutaProtegida>} />
+        <Route path="/admin/costos-venta/:id/editar" element={<RutaProtegida roles={['ADMIN']}><CostosVentaEditarPage /></RutaProtegida>} />
+        <Route path="/admin/costos-por-persona" element={<RutaProtegida roles={['ADMIN']}><CostosPorPersonaListaPage /></RutaProtegida>} />
+        <Route path="/admin/costos-por-persona/crear" element={<RutaProtegida roles={['ADMIN']}><CostosPorPersonaCrearPage /></RutaProtegida>} />
+        <Route path="/admin/costos-por-persona/:id/editar" element={<RutaProtegida roles={['ADMIN']}><CostosPorPersonaEditarPage /></RutaProtegida>} />
       </Routes>
     </BrowserRouter>
   );

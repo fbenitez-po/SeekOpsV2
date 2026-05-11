@@ -108,6 +108,25 @@ export const ingresosApi = {
   importar: (filas) => api.post('/ingresos/importar', filas),
 };
 
+// Costos de Venta
+export const costosVentaApi = {
+  listar: (params) => api.get('/costos-venta', { params }),
+  obtener: (id) => api.get(`/costos-venta/${id}`),
+  crear: (datos) => api.post('/costos-venta', datos),
+  actualizar: (id, datos) => api.put(`/costos-venta/${id}`, datos),
+  eliminar: (id) => api.delete(`/costos-venta/${id}`),
+};
+
+// Costos por Persona
+export const costosPorPersonaApi = {
+  listar: (params) => api.get('/costos-por-persona', { params }),
+  obtener: (id) => api.get(`/costos-por-persona/${id}`),
+  crear: (datos) => api.post('/costos-por-persona', datos),
+  actualizar: (id, datos) => api.put(`/costos-por-persona/${id}`, datos),
+  eliminar: (id) => api.delete(`/costos-por-persona/${id}`),
+  importar: (filas) => api.post('/costos-por-persona/importar', filas),
+};
+
 // Gastos Administrativos
 export const gastosAdminApi = {
   listar: (params) => api.get('/gastos-admin', { params }),
