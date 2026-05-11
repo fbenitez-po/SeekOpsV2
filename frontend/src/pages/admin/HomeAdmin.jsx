@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Users, Building2, FolderOpen, Clock, UserPlus, FolderPlus } from 'lucide-react';
-import { userApi, clientApi, projectApi, timeEntryApi } from '../../services/api';
+import { Users, Building2, FolderOpen, Clock, UserPlus, FolderPlus, CalendarDays, ArrowRight, DollarSign } from 'lucide-react';
+import { userApi, clientApi, projectApi, timeEntryApi, periodosApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 function TarjetaMetrica({ titulo, valor, icono: Icon, color, onClick }) {
   return (
@@ -45,6 +47,11 @@ export default function HomeAdmin() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 1 }).then((r) => r.data.pagination.total),
   });
 
+  const { data: ultimosPeriodos = [] } = useQuery({
+    queryKey: ['ultimos-periodos'],
+    queryFn: () => periodosApi.listar().then((r) => r.data.slice(0, 3)),
+  });
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -72,6 +79,59 @@ export default function HomeAdmin() {
           <TarjetaMetrica titulo="Proyectos activos" valor={proyectos} icono={FolderOpen} color="bg-purple-500" onClick={() => navigate('/admin/proyectos')} />
           <TarjetaMetrica titulo="Horas pendientes" valor={horasPendientes} icono={Clock} color="bg-orange-500" onClick={() => navigate('/admin/horas')} />
         </div>
+
+        {ultimosPeriodos.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="rounded-md p-1.5 bg-[#0f172a]">
+                <DollarSign className="h-3.5 w-3.5 text-white" />
+              </div>
+              <h2 className="text-sm font-semibold text-[#0f172a] uppercase tracking-wide">Finanzas</h2>
+            </div>
+            <Card>
+              {ultimosPeriodos.map((periodo, idx) => {
+                const abierto = !periodo.esta_cerrado;
+                return (
+                  <div
+                    key={periodo.id}
+                    className={`flex items-center justify-between px-5 py-4 cursor-pointer transition-colors hover:bg-slate-50 ${idx < ultimosPeriodos.length - 1 ? 'border-b border-[#e2e8f0]' : ''}`}
+                    onClick={() => navigate(`/admin/periodos/${periodo.id}`)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`rounded-md p-2 ${abierto ? 'bg-[#e5e7eb]' : 'bg-[#0f172a]'}`}>
+                        <CalendarDays className={`h-4 w-4 ${abierto ? 'text-[#6b7280]' : 'text-white'}`} />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${abierto ? 'text-[#374151]' : 'text-[#0f172a]'}`}>
+                          {MESES[periodo.mes - 1]} {periodo.anio}
+                        </p>
+                        {abierto && <p className="text-xs text-muted-foreground">Período en curso</p>}
+                      </div>
+                      {abierto ? (
+                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#d1fae5] text-[#065f46]">
+                          Abierto
+                        </span>
+                      ) : (
+                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#e5e7eb] text-[#374151]">
+                          Cerrado
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="border-t border-[#e2e8f0]">
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin/periodos')}
+                  className="w-full flex items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Ver más <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </Layout>
   );
