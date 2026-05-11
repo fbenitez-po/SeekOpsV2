@@ -12,6 +12,7 @@ const configRoutes = require('./routes/config');
 const projectionRoutes = require('./routes/projections');
 const periodosRoutes = require('./routes/periodos');
 const ingresosRoutes = require('./routes/ingresos');
+const gastosAdminRoutes = require('./routes/gastosAdmin');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/config', configRoutes);
 app.use('/projections', projectionRoutes);
 app.use('/periodos', periodosRoutes);
 app.use('/ingresos', ingresosRoutes);
+app.use('/gastos-admin', gastosAdminRoutes);
 
 app.get('/health', (_req, res) => res.json({ estado: 'ok' }));
 

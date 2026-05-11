@@ -32,6 +32,9 @@ import TodasLasHorasPage from './pages/admin/TodasLasHoras';
 import PeriodosAdminPage from './pages/admin/PeriodosAdmin';
 import IngresosAdminPage from './pages/admin/IngresosAdmin';
 import IngresosCrearPage from './pages/admin/IngresosCrear';
+import GastosAdminListaPage from './pages/admin/GastosAdminLista';
+import GastosAdminCrearPage from './pages/admin/GastosAdminCrear';
+import GastosAdminEditarPage from './pages/admin/GastosAdminEditar';
 
 function RutaProtegida({ children, roles }) {
   const usuario = useAuthStore((s) => s.usuario);
@@ -92,6 +95,9 @@ export default function App() {
         <Route path="/admin/periodos" element={<RutaProtegida roles={['ADMIN']}><PeriodosAdminPage /></RutaProtegida>} />
         <Route path="/admin/ingresos" element={<RutaProtegida roles={['ADMIN']}><IngresosAdminPage /></RutaProtegida>} />
         <Route path="/admin/ingresos/crear" element={<RutaProtegida roles={['ADMIN']}><IngresosCrearPage /></RutaProtegida>} />
+        <Route path="/admin/gastos-admin" element={<RutaProtegida roles={['ADMIN']}><GastosAdminListaPage /></RutaProtegida>} />
+        <Route path="/admin/gastos-admin/crear" element={<RutaProtegida roles={['ADMIN']}><GastosAdminCrearPage /></RutaProtegida>} />
+        <Route path="/admin/gastos-admin/:id/editar" element={<RutaProtegida roles={['ADMIN']}><GastosAdminEditarPage /></RutaProtegida>} />
       </Routes>
     </BrowserRouter>
   );

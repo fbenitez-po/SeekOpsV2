@@ -108,6 +108,15 @@ export const ingresosApi = {
   importar: (filas) => api.post('/ingresos/importar', filas),
 };
 
+// Gastos Administrativos
+export const gastosAdminApi = {
+  listar: (params) => api.get('/gastos-admin', { params }),
+  obtener: (id) => api.get(`/gastos-admin/${id}`),
+  crear: (datos) => api.post('/gastos-admin', datos),
+  actualizar: (id, datos) => api.put(`/gastos-admin/${id}`, datos),
+  eliminar: (id) => api.delete(`/gastos-admin/${id}`),
+};
+
 // Config
 export const configApi = {
   equipos: () => api.get('/config/equipos'),
