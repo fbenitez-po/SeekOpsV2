@@ -84,48 +84,39 @@ export default function PeriodoDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <button
-            type="button"
-            onClick={() => navigate('/admin/periodos')}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
-          >
-            <ArrowLeft className="h-4 w-4" /> Volver a Períodos
-          </button>
+          <div className="flex items-center justify-between gap-4">
+            {/* Título + badge */}
+            <div>
+              <h1 className="text-2xl font-bold">
+                {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
+              </h1>
+              <div className="mt-1">
+                {periodo?.esta_cerrado ? (
+                  <Badge variant="secondary">Cerrado</Badge>
+                ) : (
+                  <Badge variant="success">Abierto</Badge>
+                )}
+              </div>
+            </div>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {/* Navegación entre meses */}
+            {/* Controles: flechas + selector + acción */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => periodoAnterior && navigate(`/admin/periodos/${periodoAnterior.id}`)}
                 disabled={!periodoAnterior}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                  {periodo?.esta_cerrado ? (
-                    <Badge variant="secondary">Cerrado</Badge>
-                  ) : (
-                    <Badge variant="success">Abierto</Badge>
-                  )}
-                </div>
-              </div>
               <button
                 type="button"
                 onClick={() => periodoSiguiente && navigate(`/admin/periodos/${periodoSiguiente.id}`)}
                 disabled={!periodoSiguiente}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
-            </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
               {/* Selector de período */}
               <select
                 value={id}

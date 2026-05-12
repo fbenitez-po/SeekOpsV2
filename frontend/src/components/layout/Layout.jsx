@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, CalendarDays, TrendingUp, Receipt, ShoppingCart, UserRound, ChevronRight, DollarSign, Briefcase } from 'lucide-react';
+import { LogOut, Clock, Users, Building2, FolderOpen, LayoutDashboard, CheckSquare, CalendarRange, History, TrendingUp, Receipt, ShoppingCart, UserRound, ChevronRight, DollarSign, Briefcase } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
@@ -28,7 +28,6 @@ const navAdmin = [
 ];
 
 const navFinanzas = [
-  { label: 'Períodos', href: '/admin/periodos', icon: CalendarDays },
   { label: 'Ingresos', href: '/admin/ingresos', icon: TrendingUp },
   { label: 'Costos de Venta', href: '/admin/costos-venta', icon: ShoppingCart },
   { label: 'Costo por Persona', href: '/admin/costos-por-persona', icon: UserRound },
@@ -44,6 +43,7 @@ export default function Layout({ children }) {
 
   const enFinanzas =
     pathname.startsWith('/admin/finanzas') ||
+    pathname.startsWith('/admin/periodos') ||
     finanzasHrefs.some((h) => pathname.startsWith(h));
   const [finanzasAbierto, setFinanzasAbierto] = useState(enFinanzas);
 
