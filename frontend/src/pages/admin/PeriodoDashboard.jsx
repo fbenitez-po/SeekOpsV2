@@ -85,18 +85,16 @@ export default function PeriodoDashboard() {
         {/* Header */}
         <div>
           <div className="flex items-center justify-between gap-4">
-            {/* Título + badge */}
-            <div>
+            {/* Título + badge en línea */}
+            <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">
                 {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
               </h1>
-              <div className="mt-1">
-                {periodo?.esta_cerrado ? (
-                  <Badge variant="secondary">Cerrado</Badge>
-                ) : (
-                  <Badge variant="success">Abierto</Badge>
-                )}
-              </div>
+              {periodo?.esta_cerrado ? (
+                <Badge variant="secondary">Cerrado</Badge>
+              ) : (
+                <Badge variant="success">Abierto</Badge>
+              )}
             </div>
 
             {/* Controles: flechas + selector + acción */}
