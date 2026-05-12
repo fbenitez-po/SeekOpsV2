@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, TrendingUp, Receipt, ShoppingCart, Lock, LockOpen, ChevronRight, UserRound } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Receipt, ShoppingCart, Lock, LockOpen, ChevronRight, ChevronLeft, UserRound } from 'lucide-react';
 import { periodosApi, ingresosApi, gastosAdminApi, costosVentaApi, costosPorPersonaApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
@@ -75,6 +75,9 @@ export default function PeriodoDashboard() {
   const totalCostosPorPersona = costosPorPersona.reduce((acc, c) => acc + Number(c.remuneracion ?? 0), 0);
 
   const periodosOrdenados = [...periodos].sort((a, b) => b.anio - a.anio || b.mes - a.mes);
+  const indiceActual = periodosOrdenados.findIndex((p) => p.id === id);
+  const periodoAnterior = indiceActual < periodosOrdenados.length - 1 ? periodosOrdenados[indiceActual + 1] : null;
+  const periodoSiguiente = indiceActual > 0 ? periodosOrdenados[indiceActual - 1] : null;
 
   return (
     <Layout>
@@ -91,6 +94,15 @@ export default function PeriodoDashboard() {
 
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
+              {/* Navegación entre meses */}
+              <button
+                type="button"
+                onClick={() => periodoAnterior && navigate(`/admin/periodos/${periodoAnterior.id}`)}
+                disabled={!periodoAnterior}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
               <div>
                 <h1 className="text-2xl font-bold">
                   {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
@@ -103,6 +115,14 @@ export default function PeriodoDashboard() {
                   )}
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => periodoSiguiente && navigate(`/admin/periodos/${periodoSiguiente.id}`)}
+                disabled={!periodoSiguiente}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">

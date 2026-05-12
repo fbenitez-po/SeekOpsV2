@@ -42,7 +42,9 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const enFinanzas = finanzasHrefs.some((h) => pathname.startsWith(h));
+  const enFinanzas =
+    pathname.startsWith('/admin/finanzas') ||
+    finanzasHrefs.some((h) => pathname.startsWith(h));
   const [finanzasAbierto, setFinanzasAbierto] = useState(enFinanzas);
 
   const navItems = esAdmin() ? navAdmin : esGestor() ? navGestor : navSeeker;
@@ -86,20 +88,31 @@ export default function Layout({ children }) {
           {/* Grupo Finanzas — solo para admin */}
           {esAdmin() && (
             <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setFinanzasAbierto((v) => !v)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  enFinanzas ? 'text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'
-                )}
-              >
-                <DollarSign className="h-4 w-4 flex-shrink-0" />
-                <span className="flex-1 text-left">Finanzas</span>
-                <ChevronRight
-                  className={cn('h-3.5 w-3.5 transition-transform duration-200', finanzasAbierto && 'rotate-90')}
-                />
-              </button>
+              <div className="flex items-center rounded-md">
+                <Link
+                  to="/admin/finanzas"
+                  onClick={() => setFinanzasAbierto(true)}
+                  className={cn(
+                    'flex flex-1 items-center gap-3 rounded-l-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 hover:text-white',
+                    enFinanzas ? 'text-white' : 'text-white/60'
+                  )}
+                >
+                  <DollarSign className="h-4 w-4 flex-shrink-0" />
+                  <span>Finanzas</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setFinanzasAbierto((v) => !v)}
+                  className={cn(
+                    'flex items-center justify-center rounded-r-md px-2 py-2 transition-colors hover:bg-white/10 hover:text-white',
+                    enFinanzas ? 'text-white' : 'text-white/60'
+                  )}
+                >
+                  <ChevronRight
+                    className={cn('h-3.5 w-3.5 transition-transform duration-200', finanzasAbierto && 'rotate-90')}
+                  />
+                </button>
+              </div>
 
               {finanzasAbierto && (
                 <div className="mt-0.5 space-y-0.5 pl-3">
