@@ -85,20 +85,8 @@ export default function PeriodoDashboard() {
         {/* Header */}
         <div>
           <div className="flex items-center justify-between gap-4">
-            {/* Título + badge en línea */}
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">
-                {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
-              </h1>
-              {periodo?.esta_cerrado ? (
-                <Badge variant="secondary">Cerrado</Badge>
-              ) : (
-                <Badge variant="success">Abierto</Badge>
-              )}
-            </div>
-
-            {/* Controles: flechas + selector + acción */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            {/* ← Título [badge] → */}
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => periodoAnterior && navigate(`/admin/periodos/${periodoAnterior.id}`)}
@@ -107,6 +95,16 @@ export default function PeriodoDashboard() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
+              <div className="flex items-center gap-3 px-1">
+                <h1 className="text-2xl font-bold">
+                  {periodo ? `${MESES[periodo.mes - 1]} ${periodo.anio}` : '—'}
+                </h1>
+                {periodo?.esta_cerrado ? (
+                  <Badge variant="secondary">Cerrado</Badge>
+                ) : (
+                  <Badge variant="success">Abierto</Badge>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => periodoSiguiente && navigate(`/admin/periodos/${periodoSiguiente.id}`)}
@@ -115,6 +113,10 @@ export default function PeriodoDashboard() {
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
+            </div>
+
+            {/* Selector + acción */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               {/* Selector de período */}
               <select
                 value={id}
