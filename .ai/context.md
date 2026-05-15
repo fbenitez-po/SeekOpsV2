@@ -207,7 +207,7 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
 - **Epic 00 — General (5):** Login, Reset password, Home Seeker, Home Gestor, Home Admin
 - **Epic 01 — Seeker (4):** Registrar horas, Ver historial, Ajustar observadas, **Alerta semanas sin carga (US-004)**
-- **Epic 02 — Gestor (5):** Ver pendientes, Aprobar, Observar, Rechazar, Propias horas
+- **Epic 02 — Gestor (5):** Ver pendientes (US-201), Aprobar (US-005), Observar (US-006), Rechazar (US-007), Propias horas (US-008)
 - **Epic 03 — Admin (8):** Crear usuario, Crear cliente, Crear proyecto, Asignar usuarios, Editar usuario, Editar cliente, Editar proyecto, Administración de permisos/roles
 
 Ver: `.ai/stories/README.md`

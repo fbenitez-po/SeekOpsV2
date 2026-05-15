@@ -21,6 +21,20 @@ Este CLAUDE.md se va alimentando a lo largo del desarrollo. Cada vez que se toma
 
 Si al final de una sesión de trabajo hay decisiones tomadas que no están en `.ai/context.md`, el contexto está desactualizado. Actualizarlo es parte del trabajo, no un extra.
 
+## Regla crítica — consistencia de historias de usuario
+
+Cuando se toma una decisión funcional que afecta campos, flujos o comportamientos ya definidos en las historias, **las stories deben actualizarse en la misma sesión**, no después. Esto incluye:
+- Agregar o eliminar campos de una entidad (ej: se elimina `nombre` de clientes → actualizar US-010, US-014)
+- Cambiar el comportamiento de un flujo (ej: auto-aprobación del gestor → actualizar US-008)
+- Agregar una historia nueva → actualizar `README.md` del stories con el ID correcto y el conteo total
+- Renombrar o reasignar IDs para evitar conflictos entre epics
+
+**Checklist al tomar una decisión funcional:**
+1. ¿Afecta campos de alguna entidad? → actualizar las US que mencionan esos campos
+2. ¿Cambia un flujo o comportamiento? → actualizar criterios de aceptación de las US afectadas
+3. ¿Es una historia nueva? → asignar ID único, agregar al epic correspondiente y al README
+4. ¿Cambia el total de historias? → actualizar el conteo en README y en `context.md`
+
 ---
 
 ## Cómo trabajar en este proyecto

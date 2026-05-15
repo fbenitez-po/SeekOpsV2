@@ -2,7 +2,7 @@
 
 ---
 
-## US-004: Ver horas pendientes de aprobación del equipo
+## US-201: Ver horas pendientes de aprobación del equipo
 
 ### Historia de usuario
 
