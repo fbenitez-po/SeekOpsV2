@@ -75,7 +75,7 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   - Campos y comportamientos definidos por pantalla ✅
   - 25+ previews HTML interactivos actualizados ✅
   - Índice central de navegación ✅
-  - PostgreSQL schema completado (8 config tables, 11 core + junction tables) ✅
+  - PostgreSQL schema completado (10 config + 4 core + 4 M2M + 6 transaccional + 5 finanzas + 2 comercial = 27 tablas) ✅
   - Architectural consistency: Home → Funcionalidad pattern applied to all roles ✅
 - **Últimas actualizaciones (esta sesión):**
   - ✅ US-004 (nueva): Alerta de semanas sin carga en Home Seeker — muestra al ingresar las semanas desde `fecha_ingreso` hasta hoy que no tienen ninguna carga registrada. Permanente hasta que se carguen. Lógica en JS en el servicio para garantizar consistencia con el formato de semanas del frontend (`S15/26`).
@@ -97,8 +97,8 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   - ✅ 25+ previews HTML interactivos (shadcn/ui + Tailwind)
   
 - **Próximo paso:** 
-  1. ✅ Schema PostgreSQL completado (`.ai/db/schema.md`)
-  2. ✅ Migraciones SQL completadas (`.ai/db/migrations/`) — 3 migraciones listas para ejecutar
+  1. ✅ Schema PostgreSQL completado (`.ai/db/schema.md`) — 27 tablas, fuente de verdad: `setup_schema.sql` + `setup_seeds.sql`
+  2. ✅ Migraciones SQL completadas (`.ai/db/migrations/`) — 19 migraciones (001–019), consolidadas en `setup_schema.sql`
   3. ✅ Specification Summary completado (`.ai/SPECIFICATION-SUMMARY.md`)
   4. ✅ Contratos REST completados (`.ai/api/contracts-rol.md`) — 35+ endpoints con request/response/errores/validaciones
   5. ✅ Mocks JSON completados (`.ai/api/mocks/`) — 6 archivos: auth, time-entries, users, clients, projects, config
@@ -129,7 +129,11 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 - **Acceso a proyectos del Gestor:** Un Gestor tiene acceso a todos los proyectos donde figura como `gestor_id` en la tabla `projects`, independientemente de si tiene fila en `project_users`. Esta regla aplica en tres puntos del backend: listar proyectos disponibles, verificar acceso al guardar horas, y listar time entries del panel. Los tres puntos fueron corregidos en `projectData.js` y `timeEntryData.js` (2026-04-24).
 - **Áreas de usuario (M2M):** El campo `area_id` fue eliminado de `users`. Reemplazado por tabla `user_areas` (M2M). Un usuario debe tener al menos un área (validado en aplicación y route). El selector en UI es del mismo estilo toggle que los grupos. Migración: `004_user_areas_project_area.sql` (2026-04-30).
 - **Área de proyecto (opcional):** Los proyectos tienen un campo `area_id` nullable. En UI se controla con un checkbox "Este proyecto aplica a un área específica" que habilita un Select para elegir el área. Si el checkbox está desmarcado, se envía `null`. Misma migración `004`.
-- **Proyecciones de horas:** Nueva tabla `hour_projections` (migración `008_hour_projections.sql`, 2026-05-04). El gestor puede registrar rangos de horas proyectadas para un usuario en un proyecto (fecha_inicio, fecha_fin, horas_proyectadas). La detección de "cargas sin proyección" se hace vía query que convierte el campo `semana` ("S15/24") a fecha ISO week y verifica solapamiento. El gestor ve alertas en su Home (card amarilla) que linkea a `/gestor/proyecciones`. El endpoint de alertas está en `GET /projections/alertas` (solo Gestor/Admin). Sin proyecciones solapantes = alerta visible. Objetivo futuro: métricas proyectado vs. real.
+- **Proyecciones de horas:** Tabla `hour_projections` (migración 008). El gestor registra rangos de horas proyectadas para un usuario en un proyecto (fecha_inicio, fecha_fin, horas_proyectadas en NUMERIC 0.5). `categoria_id` es FK opcional a `client_categories`. Alertas en Home del Gestor. Endpoint: `GET /projections/alertas`.
+- **Módulo Finanzas:** Tablas `periodos`, `ingresos`, `gastos_admin`, `costos_venta`, `costos_por_persona` (migraciones 014–018). Los períodos son mensuales con estado abierto/cerrado. Los ingresos se registran por (proyecto, período). Los costos por persona incluyen remuneración, días hábiles y horas por día.
+- **Módulo Comercial:** Tablas `tipos_documento` y `registros_comerciales` (migración 019). Los registros comerciales vinculan propuestas/contratos a proyectos y responsables, con precio, moneda, tipo de documento y estado de facturación.
+- **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients` (migración 012). `razon_social` es el identificador principal (NOT NULL). `client_category_id` pasó a ser nullable (migración 011).
+- **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects` (migración 013). Se agregaron `fecha_inicio_real` y `fecha_fin_real` para calcular desviaciones.
 
 ---
 
