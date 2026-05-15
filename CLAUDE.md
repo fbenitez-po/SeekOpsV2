@@ -97,9 +97,7 @@ Ejemplo:
 
 ## Convenciones
 
-- **Idioma del código:** Español (variables, comentarios, funciones)
-- **Idioma de commits:** Español
-- **Estilo de nombres:** camelCase (JS/React), snake_case (SQL, env vars)
+Las convenciones de idioma, copy y estilo de nombres están en `.ai/context.md` → sección "Convenciones".
 
 ---
 

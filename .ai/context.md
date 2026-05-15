@@ -172,7 +172,26 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
 ---
 
-## Convenciones de copy (textos de UI)
+## Convenciones
+
+### Idioma por capa
+
+| Capa | Idioma | Ejemplos |
+|------|--------|---------|
+| Código (JS/TS): variables, funciones, clases, columnas SQL, rutas de API | **Inglés** | `userId`, `created_at`, `getProjects()`, `/api/time-entries` |
+| Comentarios de código | **Inglés** | `// fetch active projects for current user` |
+| Commits de git | **Español** | `feat: agregar endpoint de proyecciones` |
+| Textos de UI (labels, mensajes, placeholders, títulos, botones) | **Español latinoamericano — variante Perú** | `Ingresa tu contraseña`, `Selecciona un proyecto` |
+
+**Regla de oro:** si lo ve el usuario en pantalla → español peruano. Si lo lee el desarrollador en el código → inglés.
+
+### Estilo de nombres en código
+
+- **JS/TS:** camelCase (`userId`, `getProjects`)
+- **SQL:** snake_case (`user_id`, `created_at`)
+- **Variables de entorno:** SCREAMING_SNAKE_CASE (`DB_HOST`, `JWT_SECRET`)
+
+### Copy (textos de UI)
 
 - **Variedad de español:** Español latinoamericano, variante Perú.
 - **Tratamiento al usuario:** Tuteo (`tú`). **No usar voseo rioplatense** (sin "Ingresá", "Seleccioná", "tenés", "podés", etc.).
@@ -180,7 +199,7 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   - ✅ `Ingresa`, `Registra`, `Selecciona`, `Establece`, `Completa`, `Define`, `Crea`, `Aprueba`, `Rechaza`
   - ❌ `Ingresá`, `Registrá`, `Seleccioná`, `Establecé`, `Completá`, `Definí`, `Creá`, `Aprobá`, `Rechazá`
 - **Conjugaciones de segunda persona:**
-  - ✅ `tienes`, `puedes`, `crees`, `puedes`
+  - ✅ `tienes`, `puedes`, `crees`
   - ❌ `tenés`, `podés`, `creés`
 - **Vocabulario preferido:**
   - `enlace` en lugar de `link` para contextos formales
