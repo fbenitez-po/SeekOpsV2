@@ -35,6 +35,7 @@ Cuando se toma una decisión funcional que afecta campos, flujos o comportamient
 3. ¿Es una historia nueva? → asignar ID único, agregar al epic correspondiente y al README
 4. ¿Cambia el total de historias? → actualizar el conteo en README y en `context.md`
 
+
 ---
 
 ## Cómo trabajar en este proyecto
@@ -85,16 +86,6 @@ Ejemplo:
 
 ---
 
-## Stack del proyecto
-
-✅ **Confirmado:**
-- Frontend: React
-- Backend: Node.js + Express
-- Base de datos: PostgreSQL
-- Autenticación: JWT
-
----
-
 ## Convenciones
 
 Las convenciones de idioma, copy y estilo de nombres están en `.ai/context.md` → sección "Convenciones".
@@ -107,31 +98,7 @@ Las convenciones de idioma, copy y estilo de nombres están en `.ai/context.md` 
 
 Esta es una regla no negociable. El preview es el contrato visual firmado. No inventar estilos nuevos ni usar defaults de librerías sin verificar contra el preview.
 
-### Design system confirmado (extraído de los previews):
-
-| Token | Valor | Uso |
-|-------|-------|-----|
-| Primary | `#0f172a` (slate-900) | Botones, sidebar, links activos, logo |
-| Background | `#f8fafc` (slate-50) | Fondo de todas las páginas |
-| Card/Section | `#ffffff` | Fondo de cards y secciones |
-| Border | `#e2e8f0` (slate-200) | Bordes de cards, inputs, separadores |
-| Text principal | `#0f172a` / `#1e293b` | Títulos y texto importante |
-| Text secundario | `#64748b` (slate-500) | Labels, subtítulos, placeholders |
-| Destructive | `#dc2626` (red-600) | Errores, rechazos |
-| Success badge | `bg:#d1fae5 text:#065f46` | Estado APROBADO |
-| Warning badge | `bg:#fef3c7 text:#92400e` | Estado PENDIENTE |
-| Error badge | `bg:#fee2e2 text:#7f1d1d` | Estado RECHAZADO |
-| Muted badge | `bg:#e5e7eb text:#374151` | Estado neutral |
-| Font | Inter, 400/500/600/700 | Todo el sistema |
-| Border radius card | `0.75rem` | Cards y secciones |
-| Border radius input | `0.5rem` | Inputs y botones |
-| Input focus ring | `box-shadow: 0 0 0 3px rgba(15,23,42,0.08)` | Focus state |
-
-### Layout confirmado:
-- **Sidebar**: fondo `#0f172a`, texto blanco, ancho `224px` (w-56)
-- **Contenido**: fondo `#f8fafc`, max-width 6xl, padding `1.5rem`
-- **Cards/Sections**: fondo blanco, borde `#e2e8f0`, border-radius `0.75rem`, padding `1.5rem`
-- **Login**: gradiente `135deg, #f8fafc → #f1f5f9`, logo box navy con "S" blanca
+Los tokens exactos (colores, tipografía, layout, badges) están en `.ai/context.md` → sección "Design System".
 
 ### Checklist antes de entregar código de UI:
 - [ ] Primary color es `#0f172a`, no azul
@@ -139,7 +106,7 @@ Esta es una regla no negociable. El preview es el contrato visual firmado. No in
 - [ ] Cards tienen borde `#e2e8f0` y border-radius `0.75rem`
 - [ ] Botón primary: `bg #0f172a`, hover `#1e293b`
 - [ ] Sidebar dark navy con texto blanco
-- [ ] Badges de estado usan los colores exactos de arriba
+- [ ] Badges de estado usan los colores de context.md → Design System
 - [ ] Font Inter cargada vía Google Fonts
 
 ---
@@ -170,12 +137,6 @@ Esta es una regla no negociable. El preview es el contrato visual firmado. No in
 3. Actualizar `.ai/db/schema.md` con la tabla/columna afectada
 
 **Nunca** modificar `setup_schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
-
----
-
-## Decisiones tomadas
-
-> Esta sección crece a medida que avanza el proyecto. Cada decisión importante se anota acá con su justificación.
 
 ---
 

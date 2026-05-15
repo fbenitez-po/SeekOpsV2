@@ -135,3 +135,34 @@ Como Gestor, quiero registrar mis propias horas trabajadas en mi proyecto asigna
 ### Estado
 
 ✅ Lista para desarrollo
+
+---
+
+## US-209: Registrar proyecciones de horas para mi equipo
+
+### Historia de usuario
+
+Como Gestor, quiero registrar rangos de horas proyectadas para los seekers de mi equipo en cada proyecto, para anticipar desviaciones antes de que ocurran.
+
+### Criterios de aceptación
+
+- **Given** estoy en el home como Gestor **When** hago clic en "Proyecciones" en un proyecto **Then** veo el listado de proyecciones vigentes para ese proyecto con: seeker, fechas del rango, horas proyectadas y categoría (si aplica)
+
+- **Given** hago clic en "Nueva proyección" **When** completo el formulario con: seeker (dropdown de mi equipo), fecha inicio, fecha fin, horas proyectadas, categoría de ingreso (opcional) **Then** la proyección se guarda y aparece en el listado
+
+- **Given** las horas reales del seeker superan las proyectadas en el rango **When** accedo al Home del Gestor **Then** veo una alerta indicando el nombre del seeker, el proyecto y la desviación
+
+- **Given** edito una proyección existente **When** cambio las horas proyectadas y guardo **Then** la proyección se actualiza y la alerta de desviación se recalcula
+
+- **Given** el rango de fechas de una proyección ya pasó **When** veo el listado **Then** aparece marcada como "Finalizada" y sin alerta activa
+
+### Supuestos y riesgos
+
+- Las proyecciones son por seeker + proyecto + rango de fechas (no por semana individual)
+- Las horas proyectadas se expresan en incrementos de 0.5 horas
+- `categoria_id` es opcional — si no se especifica, la proyección aplica a todas las categorías del proyecto
+- El endpoint de alertas es `GET /projections/alertas` y solo devuelve desviaciones activas (rango vigente + horas reales > horas proyectadas)
+
+### Estado
+
+✅ Lista para desarrollo

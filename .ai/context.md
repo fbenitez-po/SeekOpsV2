@@ -63,13 +63,31 @@ Brief (completado)
 
 Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
+### Regla — nuevas funcionalidades siempre tienen historia de usuario
+
+**Toda funcionalidad que se suma al sistema debe tener su historia de usuario antes o en el mismo momento en que se implementa.** No existe funcionalidad sin story.
+
+Aplica a:
+- Tabla nueva en el schema → debe existir una US que la justifique
+- Endpoint nuevo en la API → debe existir una US que lo requiera
+- Pantalla o componente nuevo en el frontend → ídem
+- Lógica de negocio nueva en el backend → ídem
+
+El flujo correcto es siempre **Story → Schema → API → Código**. Si se detecta código o schema sin story correspondiente, la story se escribe de inmediato, no después.
+
+**Checklist al agregar cualquier funcionalidad nueva:**
+1. ¿Existe una US que justifique esta funcionalidad? → si no, crearla antes de continuar
+2. ¿La US tiene criterios de aceptación Given/When/Then? → si no, completarlos
+3. ¿La US está en el epic correcto con ID único? → verificar que no haya conflictos de ID
+4. ¿Se actualizó el conteo en `stories/README.md` y en `context.md`? → en la misma sesión
+
 ---
 
 ## Estado actual
 
 - **Etapa:** Código (completado ✅) — Proyecto listo para ejecutar y testear
 - **Completado:** 
-  - 21 historias de usuario ✅
+  - 30 historias de usuario ✅
   - 12 flujos UX detallados ✅
   - 25 especificaciones de pantallas (.md) completadas y detalladas ✅
   - Campos y comportamientos definidos por pantalla ✅
@@ -159,16 +177,39 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 - **F-11:** Gestión de proyectos (CRUD) y asignación de usuarios
 - **F-12:** Ver, aprobar, observar, rechazar horas (como gestor global)
   
-- **Design System:** shadcn/ui + Tailwind CSS
-  - Colores semánticos: primary, secondary, destructive, success, warning
-  - Tipografía: Inter, escala xs-2xl
-  - Componentes: Button, Input, Select, Dialog, Table, Badge, Alert, Card
-  - Espaciado: 4px grid, breakpoints responsive (sm: 640px, md: 768px, lg: 1024px)
-  
-- **Accesibilidad:** 
-  - Focus rings visibles
-  - Contraste suficiente (WCAG AA)
-  - Labels asociados a inputs
+### Design System
+
+Basado en shadcn/ui + Tailwind CSS. El preview aprobado en `.ai/preview/` es el contrato visual — el código debe coincidir exactamente.
+
+| Token | Valor | Uso |
+|-------|-------|-----|
+| Primary | `#0f172a` (slate-900) | Botones, sidebar, links activos, logo |
+| Background | `#f8fafc` (slate-50) | Fondo de todas las páginas |
+| Card/Section | `#ffffff` | Fondo de cards y secciones |
+| Border | `#e2e8f0` (slate-200) | Bordes de cards, inputs, separadores |
+| Text principal | `#0f172a` / `#1e293b` | Títulos y texto importante |
+| Text secundario | `#64748b` (slate-500) | Labels, subtítulos, placeholders |
+| Destructive | `#dc2626` (red-600) | Errores, rechazos |
+| Success badge | `bg:#d1fae5 text:#065f46` | Estado APROBADO |
+| Warning badge | `bg:#fef3c7 text:#92400e` | Estado PENDIENTE |
+| Error badge | `bg:#fee2e2 text:#7f1d1d` | Estado RECHAZADO |
+| Muted badge | `bg:#e5e7eb text:#374151` | Estado neutral |
+| Font | Inter, 400/500/600/700 | Todo el sistema |
+| Border radius card | `0.75rem` | Cards y secciones |
+| Border radius input | `0.5rem` | Inputs y botones |
+| Input focus ring | `box-shadow: 0 0 0 3px rgba(15,23,42,0.08)` | Focus state |
+
+**Layout:**
+- **Sidebar**: fondo `#0f172a`, texto blanco, ancho `224px` (w-56)
+- **Contenido**: fondo `#f8fafc`, max-width 6xl, padding `1.5rem`
+- **Cards/Sections**: fondo blanco, borde `#e2e8f0`, border-radius `0.75rem`, padding `1.5rem`
+- **Login**: gradiente `135deg, #f8fafc → #f1f5f9`, logo box navy con "S" blanca
+
+**Componentes disponibles:** Button, Input, Select, Dialog, Table, Badge, Alert, Card  
+**Tipografía:** Inter, escala xs-2xl  
+**Espaciado:** 4px grid, breakpoints sm: 640px / md: 768px / lg: 1024px
+
+**Accesibilidad:** Focus rings visibles, contraste WCAG AA, labels asociados a inputs.
 
 ---
 
@@ -222,12 +263,13 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 
 ## Historias de Usuario
 
-**Total:** 22 historias ✅
+**Total:** 30 historias ✅
 
 - **Epic 00 — General (5):** Login, Reset password, Home Seeker, Home Gestor, Home Admin
 - **Epic 01 — Seeker (4):** Registrar horas, Ver historial, Ajustar observadas, **Alerta semanas sin carga (US-004)**
-- **Epic 02 — Gestor (5):** Ver pendientes (US-201), Aprobar (US-005), Observar (US-006), Rechazar (US-007), Propias horas (US-008)
+- **Epic 02 — Gestor (6):** Ver pendientes (US-201), Aprobar (US-005), Observar (US-006), Rechazar (US-007), Propias horas (US-008), **Proyecciones de horas (US-209)**
 - **Epic 03 — Admin (8):** Crear usuario, Crear cliente, Crear proyecto, Asignar usuarios, Editar usuario, Editar cliente, Editar proyecto, Administración de permisos/roles
+- **Epic 04 — Finanzas y Comercial (7):** Gestionar períodos (US-401), Registrar ingresos (US-402), Gastos administrativos (US-403), Costos de venta (US-404), Costos por persona (US-405), Registros comerciales (US-406), Tipos de documento (US-407)
 
 Ver: `.ai/stories/README.md`
 
@@ -238,11 +280,12 @@ Ver: `.ai/stories/README.md`
 | Archivo | Contenido |
 |---------|-----------|
 | `.ai/brief.md` | Brief completo del producto ✅ |
-| `.ai/stories/README.md` | Índice de 21 historias de usuario ✅ |
+| `.ai/stories/README.md` | Índice de 30 historias de usuario ✅ |
 | `.ai/stories/epic-00-general.md` | Historias transversales ✅ |
 | `.ai/stories/epic-01-seeker.md` | Historias Seeker ✅ |
 | `.ai/stories/epic-02-gestor.md` | Historias Gestor ✅ |
 | `.ai/stories/epic-03-admin.md` | Historias Admin ✅ |
+| `.ai/stories/epic-04-finanzas.md` | Historias Finanzas y Comercial ✅ |
 | `.ai/ux/design-system.md` | Design System (shadcn/ui) ✅ |
 | `.ai/ux/flows/rol-flows.md` | 12 flujos UX detallados (Seeker 4, Gestor 3, Admin 5) ✅ |
 | `.ai/ux/screens/` | 20+ especificaciones de pantallas completadas ✅ |

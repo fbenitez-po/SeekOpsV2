@@ -1,7 +1,7 @@
 # Historias de Usuario — Seekops
 
 > Índice de todas las historias del proyecto, organizadas por rol/epic.
-> **Estado:** 22 historias aprobadas ✅
+> **Estado:** 30 historias aprobadas ✅
 
 ---
 
@@ -41,6 +41,7 @@ Ver: [`epic-01-seeker.md`](epic-01-seeker.md)
 | US-006 | Observar horas y solicitar corrección | ✅ |
 | US-007 | Rechazar horas | ✅ |
 | US-008 | Registrar mis propias horas como Gestor | ✅ |
+| US-209 | Registrar proyecciones de horas para mi equipo | ✅ |
 
 Ver: [`epic-02-gestor.md`](epic-02-gestor.md)
 
@@ -60,6 +61,22 @@ Ver: [`epic-02-gestor.md`](epic-02-gestor.md)
 | US-016 | Administración de accesos y roles | ✅ |
 
 Ver: [`epic-03-admin.md`](epic-03-admin.md)
+
+---
+
+## Epic 04 — Finanzas y Comercial
+
+| ID | Título | Estado |
+|---|---|---|
+| US-401 | Gestionar períodos mensuales | ✅ |
+| US-402 | Registrar ingresos por proyecto y período | ✅ |
+| US-403 | Registrar gastos administrativos por período | ✅ |
+| US-404 | Registrar costos de venta por período | ✅ |
+| US-405 | Gestionar costos por persona | ✅ |
+| US-406 | Registrar propuesta o contrato comercial | ✅ |
+| US-407 | Gestionar tipos de documento comercial | ✅ |
+
+Ver: [`epic-04-finanzas.md`](epic-04-finanzas.md)
 
 ---
 
