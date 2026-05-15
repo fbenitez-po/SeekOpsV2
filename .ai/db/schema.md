@@ -847,7 +847,7 @@ La tabla `periodos` se inicializa con un seed de Jan 2026 → May 2028. Los prim
 | Transaccional | time_entries, time_entry_lines, time_entry_approvals, refresh_tokens, password_reset_tokens, hour_projections |
 | Finanzas | periodos, ingresos, gastos_admin, costos_venta, costos_por_persona |
 | Comercial | tipos_documento, registros_comerciales |
-| **Total** | **27 tablas** |
+| **Total** | **31 tablas** |
 
 ---
 

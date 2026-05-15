@@ -75,7 +75,7 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   - Campos y comportamientos definidos por pantalla ✅
   - 25+ previews HTML interactivos actualizados ✅
   - Índice central de navegación ✅
-  - PostgreSQL schema completado (10 config + 4 core + 4 M2M + 6 transaccional + 5 finanzas + 2 comercial = 27 tablas) ✅
+  - PostgreSQL schema completado (10 config + 4 core + 4 M2M + 6 transaccional + 5 finanzas + 2 comercial = 31 tablas) ✅
   - Architectural consistency: Home → Funcionalidad pattern applied to all roles ✅
 - **Últimas actualizaciones (esta sesión):**
   - ✅ US-004 (nueva): Alerta de semanas sin carga en Home Seeker — muestra al ingresar las semanas desde `fecha_ingreso` hasta hoy que no tienen ninguna carga registrada. Permanente hasta que se carguen. Lógica en JS en el servicio para garantizar consistencia con el formato de semanas del frontend (`S15/26`).
