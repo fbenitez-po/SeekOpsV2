@@ -29,8 +29,9 @@
     .group-m2m      { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
     .group-trans    { background: #fdf2f8; color: #86198f; border: 1px solid #f0abfc; }
     .group-auth     { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .group-finanzas { background: #f0fdfa; color: #065f46; border: 1px solid #6ee7b7; }
+    .group-comercial{ background: #faf5ff; color: #6b21a8; border: 1px solid #d8b4fe; }
 
-    /* tabla DER */
     .der-table { border-collapse: collapse; width: 100%; font-size: 0.78rem; }
     .der-table th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
     .der-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; vertical-align: top; }
@@ -40,11 +41,11 @@
     .badge-pk  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
     .badge-fk  { background: #e0f2fe; color: #0c4a6e; border: 1px solid #bae6fd; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
     .badge-uk  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 700; }
+    .badge-null{ background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 600; }
 
     .col-name  { font-weight: 600; color: #0f172a; font-family: 'Courier New', monospace; font-size: 0.78rem; }
     .col-type  { color: #64748b; font-family: 'Courier New', monospace; font-size: 0.72rem; }
 
-    /* relaciones */
     .rel-table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
     .rel-table th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
     .rel-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
@@ -58,6 +59,25 @@
     .tab-btn.active { color: #0f172a; border-bottom-color: #0f172a; font-weight: 600; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+
+    .section-header { display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem; }
+    .section-title { font-size:1.125rem; font-weight:700; color:#0f172a; }
+    .table-footer { padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0; }
+    .table-header-config  { padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe; }
+    .table-header-core    { padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0; }
+    .table-header-m2m     { padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a; }
+    .table-header-trans   { padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc; }
+    .table-header-auth    { padding:0.75rem 1rem; background:#fff7ed; border-bottom:1px solid #fed7aa; }
+    .table-header-fin     { padding:0.75rem 1rem; background:#f0fdfa; border-bottom:1px solid #6ee7b7; }
+    .table-header-com     { padding:0.75rem 1rem; background:#faf5ff; border-bottom:1px solid #d8b4fe; }
+    .tname-config  { font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8; }
+    .tname-core    { font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534; }
+    .tname-m2m     { font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e; }
+    .tname-trans   { font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f; }
+    .tname-auth    { font-family:monospace; font-weight:700; font-size:0.875rem; color:#9a3412; }
+    .tname-fin     { font-family:monospace; font-weight:700; font-size:0.875rem; color:#065f46; }
+    .tname-com     { font-family:monospace; font-weight:700; font-size:0.875rem; color:#6b21a8; }
+    .tsubtitle     { font-size:0.7rem; margin-left:0.5rem; }
   </style>
 </head>
 <body>
@@ -69,40 +89,48 @@
       <span class="logo-text">Seekops</span>
       <span class="logo-sub">· Database Entity-Relationship Diagram</span>
     </div>
-    <div style="margin-left:auto; color:#94a3b8; font-size:0.75rem;">PostgreSQL · 24 tablas · April 2026</div>
+    <div style="margin-left:auto; color:#94a3b8; font-size:0.75rem;">PostgreSQL · 31 tablas · Mayo 2026</div>
   </div>
 
   <div style="max-width: 1400px; margin: 0 auto; padding: 1.5rem;">
 
     <!-- Stats strip -->
-    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
       <div class="card" style="padding:1rem; text-align:center;">
-        <div style="font-size:1.75rem; font-weight:700; color:#0f172a;">24</div>
-        <div style="font-size:0.75rem; color:#64748b;">Tablas totales</div>
+        <div style="font-size:1.75rem; font-weight:700; color:#0f172a;">31</div>
+        <div style="font-size:0.7rem; color:#64748b;">Total tablas</div>
       </div>
       <div class="card" style="padding:1rem; text-align:center;">
-        <div style="font-size:1.75rem; font-weight:700; color:#1d4ed8;">11</div>
-        <div style="font-size:0.75rem; color:#64748b;">Configuración</div>
+        <div style="font-size:1.75rem; font-weight:700; color:#1d4ed8;">10</div>
+        <div style="font-size:0.7rem; color:#64748b;">Configuración</div>
       </div>
       <div class="card" style="padding:1rem; text-align:center;">
         <div style="font-size:1.75rem; font-weight:700; color:#166534;">4</div>
-        <div style="font-size:0.75rem; color:#64748b;">Core</div>
+        <div style="font-size:0.7rem; color:#64748b;">Core</div>
       </div>
       <div class="card" style="padding:1rem; text-align:center;">
-        <div style="font-size:1.75rem; font-weight:700; color:#86198f;">3</div>
-        <div style="font-size:0.75rem; color:#64748b;">Transaccional</div>
+        <div style="font-size:1.75rem; font-weight:700; color:#854d0e;">4</div>
+        <div style="font-size:0.7rem; color:#64748b;">M2M</div>
       </div>
       <div class="card" style="padding:1rem; text-align:center;">
-        <div style="font-size:1.75rem; font-weight:700; color:#9a3412;">2</div>
-        <div style="font-size:0.75rem; color:#64748b;">Auth tokens</div>
+        <div style="font-size:1.75rem; font-weight:700; color:#86198f;">6</div>
+        <div style="font-size:0.7rem; color:#64748b;">Transaccional</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#065f46;">5</div>
+        <div style="font-size:0.7rem; color:#64748b;">Finanzas</div>
+      </div>
+      <div class="card" style="padding:1rem; text-align:center;">
+        <div style="font-size:1.75rem; font-weight:700; color:#6b21a8;">2</div>
+        <div style="font-size:0.7rem; color:#64748b;">Comercial</div>
       </div>
     </div>
 
     <!-- Tabs -->
     <div style="border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-      <button class="tab-btn active" onclick="switchTab('visual')">Diagrama Visual</button>
-      <button class="tab-btn" onclick="switchTab('tablas')">Detalle de Tablas</button>
-      <button class="tab-btn" onclick="switchTab('relaciones')">Relaciones</button>
+      <button class="tab-btn active" onclick="switchTab('visual', event)">Diagrama Visual</button>
+      <button class="tab-btn" onclick="switchTab('tablas', event)">Detalle de Tablas</button>
+      <button class="tab-btn" onclick="switchTab('relaciones', event)">Relaciones</button>
     </div>
 
     <!-- TAB: Diagrama Visual (Mermaid) -->
@@ -110,87 +138,39 @@
       <div class="card" style="padding: 2rem; overflow-x: auto;">
         <div class="mermaid">
 erDiagram
-    income_categories {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR name
-        BOOLEAN activo
-    }
-    client_categories {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR name
-        BOOLEAN activo
-    }
-    client_segmentations {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    client_sectors {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    project_segmentation {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    project_categories {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    productivity_layers {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    service_types {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
-    teams {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR name
-        BOOLEAN activo
-    }
-    areas {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR name
-        BOOLEAN activo
-    }
+    income_categories { UUID id PK; VARCHAR codigo UK; VARCHAR name; BOOLEAN activo }
+    client_categories { UUID id PK; VARCHAR codigo UK; VARCHAR name; BOOLEAN activo }
+    client_segmentations { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    client_sectors { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    project_segmentation { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    project_categories { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    productivity_layers { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    service_types { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
+    teams { UUID id PK; VARCHAR codigo UK; VARCHAR name; BOOLEAN activo }
+    areas { UUID id PK; VARCHAR codigo UK; VARCHAR name; BOOLEAN activo }
+
     users {
         UUID id PK
         VARCHAR email UK
         VARCHAR numero_documento UK
         VARCHAR nombres
         VARCHAR apellidos
+        VARCHAR puesto
         UUID team_id FK
+        DATE fecha_ingreso
         BOOLEAN activo
         BOOLEAN staff
         BOOLEAN super_usuario
+        TIMESTAMP deactivated_at
     }
-    user_groups {
-        UUID id PK
-        VARCHAR codigo UK
-        VARCHAR nombre
-        BOOLEAN activo
-    }
+    user_groups { UUID id PK; VARCHAR codigo UK; VARCHAR nombre; BOOLEAN activo }
     clients {
         UUID id PK
+        VARCHAR razon_social
+        VARCHAR razon_comercial
         VARCHAR ruc UK
-        VARCHAR nombre
+        VARCHAR nombre_contacto
+        VARCHAR email_contacto
         UUID client_category_id FK
         UUID segmentation_id FK
         UUID sector_id FK
@@ -206,30 +186,17 @@ erDiagram
         UUID service_type_id FK
         UUID gestor_id FK
         UUID area_id FK
+        DATE fecha_inicio
+        DATE fecha_fin
+        DATE fecha_inicio_real
+        DATE fecha_fin_real
         BOOLEAN activo
     }
-    user_group_members {
-        UUID id PK
-        UUID user_id FK
-        UUID group_id FK
-    }
-    user_areas {
-        UUID id PK
-        UUID user_id FK
-        UUID area_id FK
-    }
-    project_users {
-        UUID id PK
-        UUID project_id FK
-        UUID user_id FK
-        VARCHAR rol
-        BOOLEAN activo
-    }
-    project_project_categories {
-        UUID id PK
-        UUID project_id FK
-        UUID project_category_id FK
-    }
+    user_areas { UUID id PK; UUID user_id FK; UUID area_id FK }
+    user_group_members { UUID id PK; UUID user_id FK; UUID group_id FK }
+    project_users { UUID id PK; UUID project_id FK; UUID user_id FK; VARCHAR rol; BOOLEAN activo }
+    project_project_categories { UUID id PK; UUID project_id FK; UUID project_category_id FK }
+
     time_entries {
         UUID id PK
         UUID user_id FK
@@ -241,27 +208,47 @@ erDiagram
         UUID time_entry_id FK
         UUID project_id FK
         UUID income_category_id FK
-        INTEGER hours
-        INTEGER extra_hours
+        NUMERIC hours
+        NUMERIC extra_hours
+        TEXT comment
     }
     time_entry_approvals {
         UUID id PK
         UUID time_entry_id FK
         VARCHAR action
-        INTEGER suggested_hours
+        NUMERIC suggested_hours
+        NUMERIC suggested_extra_hours
         UUID created_by_user_id FK
     }
-    refresh_tokens {
+    refresh_tokens { UUID id PK; UUID user_id FK; TEXT token; TIMESTAMP expires_at }
+    password_reset_tokens { UUID id PK; UUID user_id FK; TEXT token; TIMESTAMP expires_at }
+    hour_projections {
         UUID id PK
-        UUID user_id FK "UNIQUE"
-        TEXT token
-        TIMESTAMP expires_at
+        UUID project_id FK
+        UUID user_id FK
+        UUID categoria_id FK
+        DATE fecha_inicio
+        DATE fecha_fin
+        NUMERIC horas_proyectadas
     }
-    password_reset_tokens {
+
+    periodos { UUID id PK; INTEGER mes; INTEGER anio; BOOLEAN esta_cerrado }
+    ingresos { UUID id PK; UUID proyecto_id FK; UUID periodo_id FK; NUMERIC monto }
+    gastos_admin { UUID id PK; UUID periodo_id FK; VARCHAR codigo; NUMERIC monto }
+    costos_venta { UUID id PK; UUID periodo_id FK; VARCHAR codigo; NUMERIC monto }
+    costos_por_persona { UUID id PK; UUID periodo_id FK; UUID user_id FK; NUMERIC remuneracion; INTEGER dias_habiles }
+
+    tipos_documento { UUID id PK; VARCHAR nombre UK; BOOLEAN activo }
+    registros_comerciales {
         UUID id PK
-        UUID user_id FK "UNIQUE"
-        TEXT token
-        TIMESTAMP expires_at
+        DATE fecha_registro
+        UUID proyecto_id FK
+        UUID responsable_id FK
+        NUMERIC precio
+        VARCHAR moneda
+        UUID tipo_documento_id FK
+        BOOLEAN estado_contrato
+        BOOLEAN facturacion
     }
 
     users }o--|| teams : "team_id"
@@ -273,23 +260,35 @@ erDiagram
     projects ||--o{ project_users : "project_id"
     users ||--o{ projects : "gestor_id"
     clients ||--o{ projects : "client_id"
-    clients }o--|| client_categories : "client_category_id"
+    clients }o--o| client_categories : "client_category_id (null)"
     clients }o--|| client_segmentations : "segmentation_id"
-    clients }o--o| client_sectors : "sector_id"
+    clients }o--o| client_sectors : "sector_id (null)"
     projects }o--|| project_segmentation : "project_segmentation_id"
-    projects }o--o| productivity_layers : "productivity_layer_id"
-    projects }o--o| service_types : "service_type_id"
-    projects }o--o| areas : "area_id"
+    projects }o--o| productivity_layers : "productivity_layer_id (null)"
+    projects }o--o| service_types : "service_type_id (null)"
+    projects }o--o| areas : "area_id (null)"
     projects ||--o{ project_project_categories : "project_id"
     project_project_categories }o--|| project_categories : "project_category_id"
     users ||--o{ time_entries : "user_id"
     time_entries ||--o{ time_entry_lines : "time_entry_id"
     time_entries ||--o{ time_entry_approvals : "time_entry_id"
     projects ||--o{ time_entry_lines : "project_id"
-    time_entry_lines }o--o| income_categories : "income_category_id"
+    time_entry_lines }o--o| income_categories : "income_category_id (null)"
     users ||--o{ time_entry_approvals : "created_by_user_id"
     users ||--o| refresh_tokens : "user_id"
     users ||--o| password_reset_tokens : "user_id"
+    projects ||--o{ hour_projections : "project_id"
+    users ||--o{ hour_projections : "user_id"
+    hour_projections }o--o| client_categories : "categoria_id (null)"
+    periodos ||--o{ ingresos : "periodo_id"
+    projects ||--o{ ingresos : "proyecto_id"
+    periodos ||--o{ gastos_admin : "periodo_id"
+    periodos ||--o{ costos_venta : "periodo_id"
+    periodos ||--o{ costos_por_persona : "periodo_id"
+    users ||--o{ costos_por_persona : "user_id"
+    projects ||--o{ registros_comerciales : "proyecto_id"
+    users ||--o{ registros_comerciales : "responsable_id"
+    tipos_documento ||--o{ registros_comerciales : "tipo_documento_id"
         </div>
       </div>
     </div>
@@ -299,17 +298,15 @@ erDiagram
 
       <!-- CONFIGURACIÓN -->
       <div style="margin-bottom: 2rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
-          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Configuración</h2>
-          <span class="group-label group-config">lookup · seed data</span>
+        <div class="section-header">
+          <h2 class="section-title">Tablas de Configuración</h2>
+          <span class="group-label group-config">10 tablas · lookup · seed data</span>
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
 
           <!-- income_categories -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">income_categories</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">income_categories</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -317,16 +314,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: time_entry_lines.income_category_id
-            </div>
+            <div class="table-footer">Usado en: time_entry_lines.income_category_id · Seeds: CONSULTORIA, DESARROLLO, MANTENIMIENTO, SOPORTE</div>
           </div>
 
           <!-- client_categories -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_categories</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">client_categories</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -334,16 +327,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: clients.client_category_id
-            </div>
+            <div class="table-footer">Usado en: clients.client_category_id (null) · hour_projections.categoria_id · 18 seeds</div>
           </div>
 
           <!-- client_segmentations -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_segmentations</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">client_segmentations</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -351,16 +340,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: clients.segmentation_id · Seeds: ENTERPRISE · MID_MARKET · SMB
-            </div>
+            <div class="table-footer">Seeds: CUENTA_CLAVE, CUENTA_INTERNACIONAL, CUENTA_DESARROLLO, CUENTA_CASUAL, CUENTA_INACTIVA, CUENTA_EXCLUIDA, NUEVOS_CLIENTES</div>
           </div>
 
           <!-- client_sectors -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">client_sectors</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">client_sectors</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -368,16 +353,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: clients.sector_id (nullable)
-            </div>
+            <div class="table-footer">Usado en: clients.sector_id (nullable) · 33 seeds (TECNOLOGIA, BANCA_FINANCIERO, RETAIL…)</div>
           </div>
 
           <!-- project_segmentation -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">project_segmentation</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">project_segmentation</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -385,16 +366,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: projects.project_segmentation_id · Seeds: ENTERPRISE · MID_MARKET · SMB
-            </div>
+            <div class="table-footer">Seeds: I001, I002, I002_DIGITAL, I003, I004, I005, I006, I007, I008</div>
           </div>
 
           <!-- project_categories -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">project_categories</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">project_categories</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -402,16 +379,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Multi-select vía project_project_categories · Seeds: CONSULTORIA · DESARROLLO…
-            </div>
+            <div class="table-footer">Multi-select vía project_project_categories · 34 seeds (DESIGN_PARTNERSHIP_SQUAD, PROD_DIG_E2E, BRANDING…)</div>
           </div>
 
           <!-- productivity_layers -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">productivity_layers</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">productivity_layers</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -419,16 +392,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: projects.productivity_layer_id (nullable)
-            </div>
+            <div class="table-footer">Seeds: OPERATIONAL_BACKBONE, CULTURE_BUILDERS, GROWTH_LEAPS</div>
           </div>
 
           <!-- service_types -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">service_types</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">service_types</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -436,16 +405,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Usado en: projects.service_type_id
-            </div>
+            <div class="table-footer">Seeds: PROYECTO, SERVICIO_RECURRENTE</div>
           </div>
 
           <!-- teams -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">teams</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">teams</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -453,16 +418,12 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Seeds: BACKEND · FRONTEND · QA · DEVOPS · FULLSTACK
-            </div>
+            <div class="table-footer">Seeds: UI, UX, BRANDING, CLIENTE, DIRECTOR, SEO, OUTSOURCING, ADMINISTRATIVO, SOCIAL_MEDIA, ESTRATEGIA, PRODUCTO, DISENIO_EXPERIENCIA, TECNOLOGIA</div>
           </div>
 
           <!-- areas -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#eff6ff; border-bottom:1px solid #bfdbfe;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#1d4ed8;">areas</span>
-            </div>
+            <div class="table-header-config"><span class="tname-config">areas</span></div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
@@ -470,9 +431,7 @@ erDiagram
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Seeds: DESARROLLO · OPERACIONES · RECURSOS · DELIVERY
-            </div>
+            <div class="table-footer">Seeds: TALENTO_CULTURA, COMERCIAL, PRODUCTO, TECNOLOGIA, ESTRATEGIA, ADMINISTRACION, DISENIO_EXPERIENCIA, OUTSOURCING</div>
           </div>
 
         </div>
@@ -480,17 +439,17 @@ erDiagram
 
       <!-- CORE -->
       <div style="margin-bottom: 2rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
-          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas Core</h2>
-          <span class="group-label group-core">entidades principales</span>
+        <div class="section-header">
+          <h2 class="section-title">Tablas Core</h2>
+          <span class="group-label group-core">4 tablas · entidades principales</span>
         </div>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
 
           <!-- users -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">users</span>
-              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría completa</span>
+            <div class="table-header-core">
+              <span class="tname-core">users</span>
+              <span class="tsubtitle" style="color:#166534;">soft delete · auditoría · sin area_id (usa user_areas M2M)</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
@@ -500,84 +459,84 @@ erDiagram
               <tr><td class="col-name">nombres</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
               <tr><td class="col-name">apellidos</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
               <tr><td class="col-name">puesto</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
-              <tr><td class="col-name">celular</td><td class="col-type">VARCHAR(20)</td><td></td></tr>
-              <tr><td class="col-name">avatar_url</td><td class="col-type">VARCHAR(500)</td><td></td></tr>
+              <tr><td class="col-name">celular</td><td class="col-type">VARCHAR(20)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">avatar_url</td><td class="col-type">VARCHAR(500)</td><td><span class="badge-null">NULL</span></td></tr>
               <tr><td class="col-name">team_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → teams</span></td></tr>
-              <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas</span></td></tr>
               <tr><td class="col-name">fecha_ingreso</td><td class="col-type">DATE</td><td></td></tr>
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">staff</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">super_usuario</td><td class="col-type">BOOLEAN</td><td></td></tr>
-              <tr><td class="col-name">deactivated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">deactivated_at</td><td class="col-type">TIMESTAMP</td><td><span class="badge-null">NULL</span></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
               <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
             </table>
           </div>
 
-          <!-- user_groups -->
-          <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">user_groups</span>
-              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">grupos de permisos</span>
-            </div>
-            <table class="der-table">
-              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
-              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
-              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
-              <tr><td class="col-name">descripcion</td><td class="col-type">TEXT</td><td></td></tr>
-              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
-              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
-            </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Seeds: ADMIN · SEEKER · GESTOR
+          <!-- user_groups + clients -->
+          <div style="display:flex; flex-direction:column; gap:1rem;">
+            <div class="card" style="overflow:hidden;">
+              <div class="table-header-core">
+                <span class="tname-core">user_groups</span>
+                <span class="tsubtitle" style="color:#166534;">grupos de permisos del sistema</span>
+              </div>
+              <table class="der-table">
+                <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+                <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td><span class="badge-uk">UK</span></td></tr>
+                <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
+                <tr><td class="col-name">descripcion</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+                <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              </table>
+              <div class="table-footer">Seeds: ADMIN, SEEKER, GESTOR</div>
             </div>
 
-            <!-- clients -->
-            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0; border-top:1px solid #bbf7d0; margin-top:1rem;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">clients</span>
-              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría completa</span>
+            <div class="card" style="overflow:hidden;">
+              <div class="table-header-core">
+                <span class="tname-core">clients</span>
+                <span class="tsubtitle" style="color:#166534;">soft delete · razon_social es el identificador principal</span>
+              </div>
+              <table class="der-table">
+                <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+                <tr><td class="col-name">razon_social</td><td class="col-type">VARCHAR(150)</td><td><span style="font-size:0.65rem;color:#166534;font-weight:600;">NOT NULL</span></td></tr>
+                <tr><td class="col-name">razon_comercial</td><td class="col-type">VARCHAR(150)</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">ruc</td><td class="col-type">VARCHAR(14)</td><td><span class="badge-uk">UK</span></td></tr>
+                <tr><td class="col-name">nombre_contacto</td><td class="col-type">VARCHAR(100)</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">email_contacto</td><td class="col-type">VARCHAR(255)</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">telefono / direccion</td><td class="col-type">VARCHAR</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">client_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_categories</span> <span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">segmentation_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_segmentations</span></td></tr>
+                <tr><td class="col-name">sector_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_sectors</span> <span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
+                <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+                <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+              </table>
             </div>
-            <table class="der-table">
-              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
-              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
-              <tr><td class="col-name">razon_social / razon_comercial</td><td class="col-type">VARCHAR(150)</td><td></td></tr>
-              <tr><td class="col-name">ruc</td><td class="col-type">VARCHAR(14)</td><td><span class="badge-uk">UK</span></td></tr>
-              <tr><td class="col-name">nombre_contacto</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
-              <tr><td class="col-name">email_contacto</td><td class="col-type">VARCHAR(255)</td><td></td></tr>
-              <tr><td class="col-name">telefono / direccion</td><td class="col-type">VARCHAR</td><td></td></tr>
-              <tr><td class="col-name">client_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_categories</span></td></tr>
-              <tr><td class="col-name">segmentation_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_segmentations</span></td></tr>
-              <tr><td class="col-name">sector_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_sectors (null)</span></td></tr>
-              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
-              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
-              <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
-            </table>
           </div>
 
           <!-- projects -->
           <div class="card" style="overflow:hidden; grid-column: span 2;">
-            <div style="padding:0.75rem 1rem; background:#f0fdf4; border-bottom:1px solid #bbf7d0;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#166534;">projects</span>
-              <span style="font-size:0.7rem; color:#166534; margin-left:0.5rem;">soft delete · auditoría · constraint fecha_fin >= fecha_inicio</span>
+            <div class="table-header-core">
+              <span class="tname-core">projects</span>
+              <span class="tsubtitle" style="color:#166534;">soft delete · CHECK fecha_fin >= fecha_inicio · categorías vía M2M</span>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr;">
               <table class="der-table">
                 <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
                 <tr><td class="col-name">code</td><td class="col-type">VARCHAR(20)</td><td><span class="badge-uk">UK</span></td></tr>
                 <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td></td></tr>
-                <tr><td class="col-name">descripcion</td><td class="col-type">TEXT</td><td></td></tr>
                 <tr><td class="col-name">client_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → clients</span></td></tr>
                 <tr><td class="col-name">project_segmentation_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → project_segmentation</span></td></tr>
-                <tr><td class="col-name">productivity_layer_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → productivity_layers (null)</span></td></tr>
+                <tr><td class="col-name">productivity_layer_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → productivity_layers</span> <span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">service_type_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → service_types</span> <span class="badge-null">NULL</span></td></tr>
               </table>
               <table class="der-table">
-                <tr><td class="col-name">service_type_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → service_types (null)</span></td></tr>
                 <tr><td class="col-name">gestor_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
-                <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas (null)</span></td></tr>
-                <tr><td class="col-name">fecha_inicio / fecha_fin</td><td class="col-type">DATE</td><td></td></tr>
+                <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas</span> <span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">fecha_inicio / fecha_fin</td><td class="col-type">DATE</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">fecha_inicio_real</td><td class="col-type">DATE</td><td><span class="badge-null">NULL</span></td></tr>
+                <tr><td class="col-name">fecha_fin_real</td><td class="col-type">DATE</td><td><span class="badge-null">NULL</span></td></tr>
                 <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
                 <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
-                <tr><td colspan="3" style="padding:0.35rem 0.75rem; font-size:0.7rem; color:#64748b; font-style:italic;">Categorías: M2M vía project_project_categories</td></tr>
               </table>
             </div>
           </div>
@@ -585,19 +544,33 @@ erDiagram
         </div>
       </div>
 
-      <!-- M2M + TRANSACCIONAL -->
+      <!-- M2M -->
       <div style="margin-bottom: 2rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
-          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Relación (M2M)</h2>
-          <span class="group-label group-m2m">junction tables</span>
+        <div class="section-header">
+          <h2 class="section-title">Tablas de Relación (M2M)</h2>
+          <span class="group-label group-m2m">4 tablas · junction tables</span>
         </div>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
 
+          <!-- user_areas -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-m2m">
+              <span class="tname-m2m">user_areas</span>
+              <span class="tsubtitle" style="color:#854d0e;">UNIQUE(user_id, area_id) · mínimo 1 área por usuario</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">area_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → areas</span></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
           <!-- user_group_members -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">user_group_members</span>
-              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(user_id, group_id)</span>
+            <div class="table-header-m2m">
+              <span class="tname-m2m">user_group_members</span>
+              <span class="tsubtitle" style="color:#854d0e;">UNIQUE(user_id, group_id)</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
@@ -609,15 +582,15 @@ erDiagram
 
           <!-- project_users -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">project_users</span>
-              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(project_id, user_id, rol) · soft delete</span>
+            <div class="table-header-m2m">
+              <span class="tname-m2m">project_users</span>
+              <span class="tsubtitle" style="color:#854d0e;">UNIQUE(project_id, user_id, rol) · soft delete</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects CASCADE</span></td></tr>
               <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
-              <tr><td class="col-name">rol</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem; color:#64748b;">texto libre</span></td></tr>
+              <tr><td class="col-name">rol</td><td class="col-type">VARCHAR(50)</td><td></td></tr>
               <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
@@ -625,9 +598,9 @@ erDiagram
 
           <!-- project_project_categories -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fef9c3; border-bottom:1px solid #fde68a;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#854d0e;">project_project_categories</span>
-              <span style="font-size:0.7rem; color:#854d0e; margin-left:0.5rem;">UNIQUE(project_id, project_category_id)</span>
+            <div class="table-header-m2m">
+              <span class="tname-m2m">project_project_categories</span>
+              <span class="tsubtitle" style="color:#854d0e;">UNIQUE(project_id, project_category_id)</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
@@ -635,75 +608,122 @@ erDiagram
               <tr><td class="col-name">project_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → project_categories</span></td></tr>
               <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              Multi-select: un proyecto puede tener N categorías
-            </div>
+            <div class="table-footer">Multi-select: un proyecto puede tener N categorías</div>
           </div>
+
         </div>
       </div>
 
       <!-- TRANSACCIONAL -->
       <div style="margin-bottom: 2rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
-          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas Transaccionales</h2>
-          <span class="group-label group-trans">registro de horas</span>
+        <div class="section-header">
+          <h2 class="section-title">Tablas Transaccionales</h2>
+          <span class="group-label group-trans">6 tablas · registro de horas · proyecciones · auth</span>
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
 
           <!-- time_entries -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entries</span>
-              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">cabecera semanal</span>
+            <div class="table-header-trans">
+              <span class="tname-trans">time_entries</span>
+              <span class="tsubtitle" style="color:#86198f;">cabecera semanal</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
-              <tr><td class="col-name">semana</td><td class="col-type">VARCHAR(10)</td><td><span style="font-size:0.65rem;color:#64748b;">ej: "2024-W15"</span></td></tr>
-              <tr><td class="col-name">estado</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem;color:#64748b;">texto directo</span></td></tr>
+              <tr><td class="col-name">semana</td><td class="col-type">VARCHAR(10)</td><td><span style="font-size:0.65rem;color:#64748b;">ej: "S15/26"</span></td></tr>
+              <tr><td class="col-name">estado</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem;color:#64748b;">PENDIENTE…</span></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
               <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
               <tr><td class="col-name">updated_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
             </table>
-            <div style="padding:0.5rem 0.75rem; background:#f8fafc; font-size:0.7rem; color:#64748b; border-top:1px solid #e2e8f0;">
-              idx: user_id · semana · estado · (user_id, semana)
-            </div>
+            <div class="table-footer">Estados: PENDIENTE → APROBADO (final) | OBSERVADO ↔ PENDIENTE | RECHAZADO (final)</div>
           </div>
 
           <!-- time_entry_lines -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entry_lines</span>
-              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">línea por proyecto</span>
+            <div class="table-header-trans">
+              <span class="tname-trans">time_entry_lines</span>
+              <span class="tsubtitle" style="color:#86198f;">línea por proyecto</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">time_entry_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → time_entries CASCADE</span></td></tr>
               <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects</span></td></tr>
-              <tr><td class="col-name">income_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → income_categories (null)</span></td></tr>
-              <tr><td class="col-name">hours</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK 0–24</span></td></tr>
-              <tr><td class="col-name">extra_hours</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK 0–8</span></td></tr>
-              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">income_category_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → income_categories</span> <span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">hours</td><td class="col-type">NUMERIC(6,1)</td><td><span style="font-size:0.65rem;color:#64748b;">≥0, múltiplo 0.5</span></td></tr>
+              <tr><td class="col-name">extra_hours</td><td class="col-type">NUMERIC(4,1)</td><td><span style="font-size:0.65rem;color:#64748b;">0–8, múltiplo 0.5</span></td></tr>
+              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
               <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
             </table>
           </div>
 
           <!-- time_entry_approvals -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fdf2f8; border-bottom:1px solid #f0abfc;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#86198f;">time_entry_approvals</span>
-              <span style="font-size:0.7rem; color:#86198f; margin-left:0.5rem;">historial de acciones</span>
+            <div class="table-header-trans">
+              <span class="tname-trans">time_entry_approvals</span>
+              <span class="tsubtitle" style="color:#86198f;">historial de acciones</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
               <tr><td class="col-name">time_entry_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → time_entries CASCADE</span></td></tr>
-              <tr><td class="col-name">action</td><td class="col-type">VARCHAR(50)</td><td><span style="font-size:0.65rem;color:#64748b;">APROBADO/OBSERVADO…</span></td></tr>
-              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td></td></tr>
-              <tr><td class="col-name">suggested_hours</td><td class="col-type">INTEGER</td><td></td></tr>
-              <tr><td class="col-name">suggested_extra_hours</td><td class="col-type">INTEGER</td><td></td></tr>
-              <tr><td class="col-name">rejection_reason</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">action</td><td class="col-type">VARCHAR(50)</td><td></td></tr>
+              <tr><td class="col-name">comment</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">suggested_hours</td><td class="col-type">NUMERIC(6,1)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">suggested_extra_hours</td><td class="col-type">NUMERIC(4,1)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">rejection_reason</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
               <tr><td class="col-name">allow_resubmit</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- refresh_tokens -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-auth">
+              <span class="tname-auth">refresh_tokens</span>
+              <span class="tsubtitle" style="color:#9a3412;">UNIQUE(user_id) — uno por usuario</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <!-- password_reset_tokens -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-auth">
+              <span class="tname-auth">password_reset_tokens</span>
+              <span class="tsubtitle" style="color:#9a3412;">UNIQUE(user_id) — uno por usuario</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
+              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+          </div>
+
+          <!-- hour_projections -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-trans">
+              <span class="tname-trans">hour_projections</span>
+              <span class="tsubtitle" style="color:#86198f;">proyecciones del gestor · CHECK múltiplo 0.5</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">project_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects CASCADE</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">categoria_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → client_categories</span> <span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">fecha_inicio</td><td class="col-type">DATE</td><td></td></tr>
+              <tr><td class="col-name">fecha_fin</td><td class="col-type">DATE</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ fecha_inicio</span></td></tr>
+              <tr><td class="col-name">horas_proyectadas</td><td class="col-type">NUMERIC(8,1)</td><td><span style="font-size:0.65rem;color:#64748b;">&gt;0, múltiplo 0.5</span></td></tr>
+              <tr><td class="col-name">notas</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
               <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
             </table>
           </div>
@@ -711,41 +731,147 @@ erDiagram
         </div>
       </div>
 
-      <!-- AUTH -->
+      <!-- FINANZAS -->
       <div style="margin-bottom: 2rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem;">
-          <h2 style="font-size:1.125rem; font-weight:700; color:#0f172a;">Tablas de Autenticación</h2>
-          <span class="group-label group-auth">tokens JWT · reset</span>
+        <div class="section-header">
+          <h2 class="section-title">Tablas de Finanzas</h2>
+          <span class="group-label group-finanzas">5 tablas · períodos mensuales · ingresos · costos</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+
+          <!-- periodos -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-fin">
+              <span class="tname-fin">periodos</span>
+              <span class="tsubtitle" style="color:#065f46;">UNIQUE(mes, anio)</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">mes</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK 1–12</span></td></tr>
+              <tr><td class="col-name">anio</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 2020</span></td></tr>
+              <tr><td class="col-name">esta_cerrado</td><td class="col-type">BOOLEAN</td><td><span style="font-size:0.65rem;color:#64748b;">DEFAULT false</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div class="table-footer">Seed: Ene 2026 → May 2028 · Ene–Mar 2026 cerrados</div>
+          </div>
+
+          <!-- ingresos -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-fin">
+              <span class="tname-fin">ingresos</span>
+              <span class="tsubtitle" style="color:#065f46;">UNIQUE(proyecto_id, periodo_id)</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">proyecto_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects CASCADE</span></td></tr>
+              <tr><td class="col-name">periodo_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → periodos CASCADE</span></td></tr>
+              <tr><td class="col-name">monto</td><td class="col-type">NUMERIC(14,2)</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 0</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- gastos_admin -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-fin">
+              <span class="tname-fin">gastos_admin</span>
+              <span class="tsubtitle" style="color:#065f46;">gastos administrativos por período</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">periodo_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → periodos CASCADE</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td></td></tr>
+              <tr><td class="col-name">descripcion</td><td class="col-type">VARCHAR(255)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">monto</td><td class="col-type">NUMERIC(14,2)</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 0</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- costos_venta -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-fin">
+              <span class="tname-fin">costos_venta</span>
+              <span class="tsubtitle" style="color:#065f46;">costos de venta por período</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">periodo_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → periodos CASCADE</span></td></tr>
+              <tr><td class="col-name">codigo</td><td class="col-type">VARCHAR(50)</td><td></td></tr>
+              <tr><td class="col-name">descripcion</td><td class="col-type">VARCHAR(255)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">monto</td><td class="col-type">NUMERIC(14,2)</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 0</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+          <!-- costos_por_persona -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-fin">
+              <span class="tname-fin">costos_por_persona</span>
+              <span class="tsubtitle" style="color:#065f46;">UNIQUE(periodo_id, user_id)</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">periodo_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → periodos CASCADE</span></td></tr>
+              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span></td></tr>
+              <tr><td class="col-name">remuneracion</td><td class="col-type">NUMERIC(14,2)</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 0</span></td></tr>
+              <tr><td class="col-name">dias_habiles</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK &gt; 0</span></td></tr>
+              <tr><td class="col-name">horas_por_dia</td><td class="col-type">INTEGER</td><td><span style="font-size:0.65rem;color:#64748b;">DEFAULT 8</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by_user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- COMERCIAL -->
+      <div style="margin-bottom: 2rem;">
+        <div class="section-header">
+          <h2 class="section-title">Tablas Comercial</h2>
+          <span class="group-label group-comercial">2 tablas · propuestas · contratos</span>
         </div>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
 
+          <!-- tipos_documento -->
           <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fff7ed; border-bottom:1px solid #fed7aa;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#9a3412;">refresh_tokens</span>
-              <span style="font-size:0.7rem; color:#9a3412; margin-left:0.5rem;">UNIQUE(user_id) — uno por usuario</span>
+            <div class="table-header-com">
+              <span class="tname-com">tipos_documento</span>
+              <span class="tsubtitle" style="color:#6b21a8;">catálogo de tipos de documento comercial</span>
             </div>
             <table class="der-table">
               <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
-              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
-              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
-              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">nombre</td><td class="col-type">VARCHAR(100)</td><td><span class="badge-uk">UK</span></td></tr>
+              <tr><td class="col-name">activo</td><td class="col-type">BOOLEAN</td><td></td></tr>
               <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+            </table>
+            <div class="table-footer">Seeds: Orden de Compra, Contrato, Propuesta, Addendum, Carta de Intención, Factura Proforma, Otro</div>
+          </div>
+
+          <!-- registros_comerciales -->
+          <div class="card" style="overflow:hidden;">
+            <div class="table-header-com">
+              <span class="tname-com">registros_comerciales</span>
+              <span class="tsubtitle" style="color:#6b21a8;">propuestas y contratos por proyecto</span>
+            </div>
+            <table class="der-table">
+              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
+              <tr><td class="col-name">fecha_registro</td><td class="col-type">DATE</td><td></td></tr>
+              <tr><td class="col-name">proyecto_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → projects</span></td></tr>
+              <tr><td class="col-name">responsable_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
+              <tr><td class="col-name">detalle</td><td class="col-type">TEXT</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">precio</td><td class="col-type">NUMERIC(12,2)</td><td><span style="font-size:0.65rem;color:#64748b;">CHECK ≥ 0</span></td></tr>
+              <tr><td class="col-name">moneda</td><td class="col-type">VARCHAR(3)</td><td><span style="font-size:0.65rem;color:#64748b;">DEFAULT 'PEN'</span></td></tr>
+              <tr><td class="col-name">tipo_documento_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → tipos_documento</span> <span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">estado_contrato</td><td class="col-type">BOOLEAN</td><td><span style="font-size:0.65rem;color:#64748b;">DEFAULT false</span></td></tr>
+              <tr><td class="col-name">facturacion</td><td class="col-type">BOOLEAN</td><td><span style="font-size:0.65rem;color:#64748b;">DEFAULT false</span></td></tr>
+              <tr><td class="col-name">evidencia_nombre</td><td class="col-type">VARCHAR(500)</td><td><span class="badge-null">NULL</span></td></tr>
+              <tr><td class="col-name">created_at / updated_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+              <tr><td class="col-name">created_by / updated_by</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users</span></td></tr>
             </table>
           </div>
 
-          <div class="card" style="overflow:hidden;">
-            <div style="padding:0.75rem 1rem; background:#fff7ed; border-bottom:1px solid #fed7aa;">
-              <span style="font-family:monospace; font-weight:700; font-size:0.875rem; color:#9a3412;">password_reset_tokens</span>
-              <span style="font-size:0.7rem; color:#9a3412; margin-left:0.5rem;">UNIQUE(user_id) — uno por usuario</span>
-            </div>
-            <table class="der-table">
-              <tr><td class="col-name">id</td><td class="col-type">UUID</td><td><span class="badge-pk">PK</span></td></tr>
-              <tr><td class="col-name">user_id</td><td class="col-type">UUID</td><td><span class="badge-fk">FK → users CASCADE</span> <span class="badge-uk">UK</span></td></tr>
-              <tr><td class="col-name">token</td><td class="col-type">TEXT</td><td></td></tr>
-              <tr><td class="col-name">expires_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
-              <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
-            </table>
-          </div>
         </div>
       </div>
 
@@ -769,36 +895,52 @@ erDiagram
             <tr><td class="tname">users</td><td class="trel">N → 1</td><td class="tname">teams</td><td><code>team_id</code></td><td>RESTRICT</td><td>Usuario pertenece a un equipo</td></tr>
             <tr style="background:#fef9c3;"><td class="tname">user_areas</td><td class="trel">M2M</td><td class="tname">users ↔ areas</td><td><code>user_id / area_id</code></td><td>CASCADE</td><td>Áreas del usuario (mínimo 1)</td></tr>
             <tr style="background:#fef9c3;"><td class="tname">user_group_members</td><td class="trel">M2M</td><td class="tname">users ↔ user_groups</td><td><code>user_id / group_id</code></td><td>CASCADE</td><td>Rol del usuario en el sistema</td></tr>
-            <tr style="background:#fef9c3;"><td class="tname">project_users</td><td class="trel">M2M</td><td class="tname">projects ↔ users</td><td><code>project_id / user_id</code></td><td>CASCADE</td><td>Usuarios asignados a proyecto</td></tr>
+            <tr style="background:#fef9c3;"><td class="tname">project_users</td><td class="trel">M2M</td><td class="tname">projects ↔ users</td><td><code>project_id / user_id</code></td><td>CASCADE</td><td>Usuarios asignados a proyecto con rol</td></tr>
             <tr style="background:#fef9c3;"><td class="tname">project_project_categories</td><td class="trel">M2M</td><td class="tname">projects ↔ project_categories</td><td><code>project_id / project_category_id</code></td><td>CASCADE</td><td>Categorías del proyecto (multi-select)</td></tr>
-            <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>gestor_id</code></td><td>RESTRICT</td><td>Gestor responsable del proyecto</td></tr>
+            <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>gestor_id</code></td><td>RESTRICT</td><td>Gestor responsable</td></tr>
             <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">clients</td><td><code>client_id</code></td><td>RESTRICT</td><td>Proyecto pertenece a un cliente</td></tr>
             <tr><td class="tname">projects</td><td class="trel">N → 1</td><td class="tname">project_segmentation</td><td><code>project_segmentation_id</code></td><td>RESTRICT</td><td>Segmentación del proyecto</td></tr>
             <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">productivity_layers</td><td><code>productivity_layer_id</code></td><td>SET NULL</td><td>Capa de productividad (nullable)</td></tr>
             <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">service_types</td><td><code>service_type_id</code></td><td>SET NULL</td><td>Tipo de servicio (nullable)</td></tr>
             <tr><td class="tname">projects</td><td class="trel">N → 0..1</td><td class="tname">areas</td><td><code>area_id</code></td><td>SET NULL</td><td>Área específica del proyecto (nullable)</td></tr>
-            <tr><td class="tname">clients</td><td class="trel">N → 1</td><td class="tname">client_categories</td><td><code>client_category_id</code></td><td>RESTRICT</td><td>Categoría del cliente</td></tr>
+            <tr><td class="tname">clients</td><td class="trel">N → 0..1</td><td class="tname">client_categories</td><td><code>client_category_id</code></td><td>SET NULL</td><td>Categoría del cliente (nullable)</td></tr>
             <tr><td class="tname">clients</td><td class="trel">N → 1</td><td class="tname">client_segmentations</td><td><code>segmentation_id</code></td><td>RESTRICT</td><td>Segmentación del cliente</td></tr>
-            <tr><td class="tname">clients</td><td class="trel">N → 0..1</td><td class="tname">client_sectors</td><td><code>sector_id</code></td><td>SET NULL</td><td>Sector económico del cliente (nullable)</td></tr>
+            <tr><td class="tname">clients</td><td class="trel">N → 0..1</td><td class="tname">client_sectors</td><td><code>sector_id</code></td><td>SET NULL</td><td>Sector económico (nullable)</td></tr>
             <tr style="background:#fdf2f8;"><td class="tname">time_entries</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>user_id</code></td><td>CASCADE</td><td>Registro de horas del usuario</td></tr>
             <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 1</td><td class="tname">time_entries</td><td><code>time_entry_id</code></td><td>CASCADE</td><td>Línea pertenece a una entrada</td></tr>
             <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 1</td><td class="tname">projects</td><td><code>project_id</code></td><td>RESTRICT</td><td>Horas imputadas a proyecto</td></tr>
-            <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 0..1</td><td class="tname">income_categories</td><td><code>income_category_id</code></td><td>SET NULL</td><td>Categoría de la línea (nullable, solo tipo Area)</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">time_entry_lines</td><td class="trel">N → 0..1</td><td class="tname">income_categories</td><td><code>income_category_id</code></td><td>SET NULL</td><td>Categoría de ingreso (nullable)</td></tr>
             <tr style="background:#fdf2f8;"><td class="tname">time_entry_approvals</td><td class="trel">N → 1</td><td class="tname">time_entries</td><td><code>time_entry_id</code></td><td>CASCADE</td><td>Historial de una entrada</td></tr>
             <tr style="background:#fdf2f8;"><td class="tname">time_entry_approvals</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>created_by_user_id</code></td><td>SET NULL</td><td>Gestor que ejecutó la acción</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">hour_projections</td><td class="trel">N → 1</td><td class="tname">projects</td><td><code>project_id</code></td><td>CASCADE</td><td>Proyección en un proyecto</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">hour_projections</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>user_id</code></td><td>CASCADE</td><td>Proyección para un usuario</td></tr>
+            <tr style="background:#fdf2f8;"><td class="tname">hour_projections</td><td class="trel">N → 0..1</td><td class="tname">client_categories</td><td><code>categoria_id</code></td><td>SET NULL</td><td>Categoría de la proyección (nullable)</td></tr>
             <tr style="background:#fff7ed;"><td class="tname">refresh_tokens</td><td class="trel">1 → 1</td><td class="tname">users</td><td><code>user_id</code> UK</td><td>CASCADE</td><td>Un token activo por usuario</td></tr>
             <tr style="background:#fff7ed;"><td class="tname">password_reset_tokens</td><td class="trel">1 → 1</td><td class="tname">users</td><td><code>user_id</code> UK</td><td>CASCADE</td><td>Un token reset por usuario</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">ingresos</td><td class="trel">N → 1</td><td class="tname">periodos</td><td><code>periodo_id</code></td><td>CASCADE</td><td>Ingreso pertenece a un período</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">ingresos</td><td class="trel">N → 1</td><td class="tname">projects</td><td><code>proyecto_id</code></td><td>CASCADE</td><td>Ingreso de un proyecto</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">gastos_admin</td><td class="trel">N → 1</td><td class="tname">periodos</td><td><code>periodo_id</code></td><td>CASCADE</td><td>Gasto administrativo por período</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">costos_venta</td><td class="trel">N → 1</td><td class="tname">periodos</td><td><code>periodo_id</code></td><td>CASCADE</td><td>Costo de venta por período</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">costos_por_persona</td><td class="trel">N → 1</td><td class="tname">periodos</td><td><code>periodo_id</code></td><td>CASCADE</td><td>Remuneración por período</td></tr>
+            <tr style="background:#f0fdfa;"><td class="tname">costos_por_persona</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>user_id</code></td><td>CASCADE</td><td>Remuneración de un usuario</td></tr>
+            <tr style="background:#faf5ff;"><td class="tname">registros_comerciales</td><td class="trel">N → 1</td><td class="tname">projects</td><td><code>proyecto_id</code></td><td>RESTRICT</td><td>Registro comercial de un proyecto</td></tr>
+            <tr style="background:#faf5ff;"><td class="tname">registros_comerciales</td><td class="trel">N → 1</td><td class="tname">users</td><td><code>responsable_id</code></td><td>RESTRICT</td><td>Responsable del registro</td></tr>
+            <tr style="background:#faf5ff;"><td class="tname">registros_comerciales</td><td class="trel">N → 0..1</td><td class="tname">tipos_documento</td><td><code>tipo_documento_id</code></td><td>SET NULL</td><td>Tipo de documento (nullable)</td></tr>
           </tbody>
         </table>
       </div>
-    </div><!-- /tab-relaciones -->
+    </div>
 
-  </div><!-- /main wrapper -->
+  </div>
 
   <script>
-    mermaid.initialize({ startOnLoad: true, theme: 'default', er: { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, fontSize: 12 } });
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      er: { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, fontSize: 12 }
+    });
 
-    function switchTab(tab) {
+    function switchTab(tab, event) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');

@@ -21,6 +21,20 @@ Este CLAUDE.md se va alimentando a lo largo del desarrollo. Cada vez que se toma
 
 Si al final de una sesión de trabajo hay decisiones tomadas que no están en `.ai/context.md`, el contexto está desactualizado. Actualizarlo es parte del trabajo, no un extra.
 
+## Regla crítica — consistencia de historias de usuario
+
+Cuando se toma una decisión funcional que afecta campos, flujos o comportamientos ya definidos en las historias, **las stories deben actualizarse en la misma sesión**, no después. Esto incluye:
+- Agregar o eliminar campos de una entidad (ej: se elimina `nombre` de clientes → actualizar US-010, US-014)
+- Cambiar el comportamiento de un flujo (ej: auto-aprobación del gestor → actualizar US-008)
+- Agregar una historia nueva → actualizar `README.md` del stories con el ID correcto y el conteo total
+- Renombrar o reasignar IDs para evitar conflictos entre epics
+
+**Checklist al tomar una decisión funcional:**
+1. ¿Afecta campos de alguna entidad? → actualizar las US que mencionan esos campos
+2. ¿Cambia un flujo o comportamiento? → actualizar criterios de aceptación de las US afectadas
+3. ¿Es una historia nueva? → asignar ID único, agregar al epic correspondiente y al README
+4. ¿Cambia el total de historias? → actualizar el conteo en README y en `context.md`
+
 ---
 
 ## Cómo trabajar en este proyecto
@@ -83,9 +97,7 @@ Ejemplo:
 
 ## Convenciones
 
-- **Idioma del código:** Español (variables, comentarios, funciones)
-- **Idioma de commits:** Español
-- **Estilo de nombres:** camelCase (JS/React), snake_case (SQL, env vars)
+Las convenciones de idioma, copy y estilo de nombres están en `.ai/context.md` → sección "Convenciones".
 
 ---
 
@@ -129,6 +141,35 @@ Esta es una regla no negociable. El preview es el contrato visual firmado. No in
 - [ ] Sidebar dark navy con texto blanco
 - [ ] Badges de estado usan los colores exactos de arriba
 - [ ] Font Inter cargada vía Google Fonts
+
+---
+
+## ⚠️ Regla crítica — Base de datos
+
+**La fuente de verdad del schema es `.ai/db/setup_schema.sql`.** Siempre refleja el estado completo y final de todas las tablas, índices y constraints.
+
+### Convención de migraciones
+
+| Situación | Acción |
+|-----------|--------|
+| Nueva BD desde cero | `setup_schema.sql` + `setup_seeds.sql` |
+| BD existente con datos | Aplicar solo la migración incremental |
+| Después de cualquier cambio de schema | Actualizar `setup_schema.sql` Y `schema.md` |
+
+### Archivos
+
+- **`.ai/db/setup_schema.sql`** — DDL completo (todas las tablas). Siempre actualizado.
+- **`.ai/db/setup_seeds.sql`** — Seeds iniciales.
+- **`.ai/db/schema.md`** — Documentación del schema. Debe coincidir con `setup_schema.sql`.
+- **`.ai/db/migrations_archive/`** — Migraciones incrementales (001 en adelante). Aquí van todas las migraciones futuras.
+
+### Cómo agregar un cambio de schema
+
+1. Crear `.ai/db/migrations_archive/NNN_nombre_descriptivo.sql` (solo el delta: ALTER, CREATE, etc.)
+2. Actualizar `.ai/db/setup_schema.sql` incorporando el cambio
+3. Actualizar `.ai/db/schema.md` con la tabla/columna afectada
+
+**Nunca** modificar `setup_schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
 
 ---
 

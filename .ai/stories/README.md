@@ -1,7 +1,7 @@
 # Historias de Usuario — Seekops
 
 > Índice de todas las historias del proyecto, organizadas por rol/epic.
-> **Estado:** 21 historias aprobadas ✅
+> **Estado:** 22 historias aprobadas ✅
 
 ---
 
@@ -26,6 +26,7 @@ Ver: [`epic-00-general.md`](epic-00-general.md)
 | US-001 | Registrar horas semanales en un proyecto | ✅ |
 | US-002 | Visualizar historial de horas cargadas | ✅ |
 | US-003 | Ajustar horas observadas | ✅ |
+| US-004 | Ver alerta de semanas sin carga al ingresar | ✅ |
 
 Ver: [`epic-01-seeker.md`](epic-01-seeker.md)
 
@@ -35,7 +36,7 @@ Ver: [`epic-01-seeker.md`](epic-01-seeker.md)
 
 | ID | Título | Estado |
 |---|---|---|
-| US-004 | Ver horas pendientes de aprobación del equipo | ✅ |
+| US-201 | Ver horas pendientes de aprobación del equipo | ✅ |
 | US-005 | Aprobar horas de un seeker | ✅ |
 | US-006 | Observar horas y solicitar corrección | ✅ |
 | US-007 | Rechazar horas | ✅ |

@@ -47,7 +47,7 @@ Como Admin, quiero registrar nuevos clientes en el sistema, para poder asignarle
 
 ### Criterios de aceptación
 
-- **Given** estoy en el backoffice **When** hago clic en "Clientes" → "Crear cliente" **Then** se abre formulario con: nombre, descripción, estado (Activo/Inactivo)
+- **Given** estoy en el backoffice **When** hago clic en "Clientes" → "Crear cliente" **Then** se abre formulario con: razón social, RUC, estado (Activo/Inactivo), categoría (opcional)
 
 - **Given** he completado el formulario **When** hago clic en "Crear" **Then** el cliente se crea y aparece en listado
 
@@ -168,7 +168,7 @@ Como Admin, quiero editar los datos de un cliente o darlo de baja, para mantener
 
 ### Criterios de aceptación
 
-- **Given** estoy en listado de clientes **When** hago clic en un cliente **Then** se abre detalle/form con: nombre, descripción, estado (Activo/Inactivo)
+- **Given** estoy en listado de clientes **When** hago clic en un cliente **Then** se abre detalle/form con: razón social, RUC, categoría (opcional), estado (Activo/Inactivo)
 
 - **Given** estoy editando un cliente **When** cambio datos y hago clic en "Guardar" **Then** los datos se actualizan
 
@@ -195,7 +195,7 @@ Como Admin, quiero editar los datos de un proyecto, cambiar usuario asignados, o
 
 ### Criterios de aceptación
 
-- **Given** estoy en listado de proyectos **When** hago clic en un proyecto **Then** se abre detalle/form con: nombre, cliente, descripción, estado (Activo/Inactivo), usuarios asignados
+- **Given** estoy en listado de proyectos **When** hago clic en un proyecto **Then** se abre detalle/form con: código, nombre, cliente, gestor, estado (Activo/Inactivo), fechas (inicio/fin estimado y real), área aplicable, categorías de ingreso, usuarios asignados
 
 - **Given** estoy editando un proyecto **When** cambio datos y hago clic en "Guardar" **Then** los datos se actualizan
 
