@@ -132,6 +132,35 @@ Esta es una regla no negociable. El preview es el contrato visual firmado. No in
 
 ---
 
+## ⚠️ Regla crítica — Base de datos
+
+**La fuente de verdad del schema es `.ai/db/setup_schema.sql`.** Siempre refleja el estado completo y final de todas las tablas, índices y constraints.
+
+### Convención de migraciones
+
+| Situación | Acción |
+|-----------|--------|
+| Nueva BD desde cero | `setup_schema.sql` + `setup_seeds.sql` |
+| BD existente con datos | Aplicar solo la migración incremental |
+| Después de cualquier cambio de schema | Actualizar `setup_schema.sql` Y `schema.md` |
+
+### Archivos
+
+- **`.ai/db/setup_schema.sql`** — DDL completo (todas las tablas). Siempre actualizado.
+- **`.ai/db/setup_seeds.sql`** — Seeds iniciales.
+- **`.ai/db/schema.md`** — Documentación del schema. Debe coincidir con `setup_schema.sql`.
+- **`.ai/db/migrations_archive/`** — Migraciones incrementales (001 en adelante). Aquí van todas las migraciones futuras.
+
+### Cómo agregar un cambio de schema
+
+1. Crear `.ai/db/migrations_archive/NNN_nombre_descriptivo.sql` (solo el delta: ALTER, CREATE, etc.)
+2. Actualizar `.ai/db/setup_schema.sql` incorporando el cambio
+3. Actualizar `.ai/db/schema.md` con la tabla/columna afectada
+
+**Nunca** modificar `setup_schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
+
+---
+
 ## Decisiones tomadas
 
 > Esta sección crece a medida que avanza el proyecto. Cada decisión importante se anota acá con su justificación.

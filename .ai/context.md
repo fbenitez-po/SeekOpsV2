@@ -98,7 +98,7 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
   
 - **Próximo paso:** 
   1. ✅ Schema PostgreSQL completado (`.ai/db/schema.md`) — 27 tablas, fuente de verdad: `setup_schema.sql` + `setup_seeds.sql`
-  2. ✅ Migraciones SQL completadas (`.ai/db/migrations/`) — 19 migraciones (001–019), consolidadas en `setup_schema.sql`
+  2. ✅ Schema SQL completo en `.ai/db/setup_schema.sql` (fuente de verdad) + historial en `.ai/db/migrations_archive/`
   3. ✅ Specification Summary completado (`.ai/SPECIFICATION-SUMMARY.md`)
   4. ✅ Contratos REST completados (`.ai/api/contracts-rol.md`) — 35+ endpoints con request/response/errores/validaciones
   5. ✅ Mocks JSON completados (`.ai/api/mocks/`) — 6 archivos: auth, time-entries, users, clients, projects, config
@@ -127,13 +127,13 @@ Ver `WORKFLOW.md` para el checklist completo de cada etapa.
 - **Email:** SMTP integrado con nodemailer (`emailService.js`). Dos tipos de email: bienvenida (link activación 48h) y reset de contraseña (link 1h). Si SMTP no está configurado, el link se imprime en consola (dev mode).
 - **Activación de cuenta:** Nuevos usuarios no tienen contraseña. Al crearlos, se genera un token (tabla `password_reset_tokens`, válido 48h) y se envía email de bienvenida con link a `/activar-cuenta?token=...`. El endpoint de activación reutiliza `POST /api/auth/confirmar-reset`.
 - **Acceso a proyectos del Gestor:** Un Gestor tiene acceso a todos los proyectos donde figura como `gestor_id` en la tabla `projects`, independientemente de si tiene fila en `project_users`. Esta regla aplica en tres puntos del backend: listar proyectos disponibles, verificar acceso al guardar horas, y listar time entries del panel. Los tres puntos fueron corregidos en `projectData.js` y `timeEntryData.js` (2026-04-24).
-- **Áreas de usuario (M2M):** El campo `area_id` fue eliminado de `users`. Reemplazado por tabla `user_areas` (M2M). Un usuario debe tener al menos un área (validado en aplicación y route). El selector en UI es del mismo estilo toggle que los grupos. Migración: `004_user_areas_project_area.sql` (2026-04-30).
-- **Área de proyecto (opcional):** Los proyectos tienen un campo `area_id` nullable. En UI se controla con un checkbox "Este proyecto aplica a un área específica" que habilita un Select para elegir el área. Si el checkbox está desmarcado, se envía `null`. Misma migración `004`.
-- **Proyecciones de horas:** Tabla `hour_projections` (migración 008). El gestor registra rangos de horas proyectadas para un usuario en un proyecto (fecha_inicio, fecha_fin, horas_proyectadas en NUMERIC 0.5). `categoria_id` es FK opcional a `client_categories`. Alertas en Home del Gestor. Endpoint: `GET /projections/alertas`.
-- **Módulo Finanzas:** Tablas `periodos`, `ingresos`, `gastos_admin`, `costos_venta`, `costos_por_persona` (migraciones 014–018). Los períodos son mensuales con estado abierto/cerrado. Los ingresos se registran por (proyecto, período). Los costos por persona incluyen remuneración, días hábiles y horas por día.
-- **Módulo Comercial:** Tablas `tipos_documento` y `registros_comerciales` (migración 019). Los registros comerciales vinculan propuestas/contratos a proyectos y responsables, con precio, moneda, tipo de documento y estado de facturación.
-- **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients` (migración 012). `razon_social` es el identificador principal (NOT NULL). `client_category_id` pasó a ser nullable (migración 011).
-- **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects` (migración 013). Se agregaron `fecha_inicio_real` y `fecha_fin_real` para calcular desviaciones.
+- **Áreas de usuario (M2M):** El campo `area_id` fue eliminado de `users`. Reemplazado por tabla `user_areas` (M2M). Un usuario debe tener al menos un área (validado en aplicación y route). El selector en UI es del mismo estilo toggle que los grupos.
+- **Área de proyecto (opcional):** Los proyectos tienen un campo `area_id` nullable. En UI se controla con un checkbox "Este proyecto aplica a un área específica" que habilita un Select para elegir el área. Si el checkbox está desmarcado, se envía `null`.
+- **Proyecciones de horas:** Tabla `hour_projections`. El gestor registra rangos de horas proyectadas para un usuario en un proyecto (fecha_inicio, fecha_fin, horas_proyectadas en NUMERIC 0.5). `categoria_id` es FK opcional a `client_categories`. Alertas en Home del Gestor. Endpoint: `GET /projections/alertas`.
+- **Módulo Finanzas:** Tablas `periodos`, `ingresos`, `gastos_admin`, `costos_venta`, `costos_por_persona`. Los períodos son mensuales con estado abierto/cerrado. Los ingresos se registran por (proyecto, período). Los costos por persona incluyen remuneración, días hábiles y horas por día.
+- **Módulo Comercial:** Tablas `tipos_documento` y `registros_comerciales`. Los registros comerciales vinculan propuestas/contratos a proyectos y responsables, con precio, moneda, tipo de documento y estado de facturación.
+- **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients`. `razon_social` es el identificador principal (NOT NULL). `client_category_id` es nullable.
+- **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects`. Se agregaron `fecha_inicio_real` y `fecha_fin_real` para calcular desviaciones.
 
 ---
 
@@ -240,7 +240,10 @@ Ver: `.ai/stories/README.md`
 | `.ai/api/mocks/clients.json` | Mocks de clientes ✅ |
 | `.ai/api/mocks/projects.json` | Mocks de proyectos ✅ |
 | `.ai/api/mocks/config.json` | Mocks de tablas de configuración/lookup ✅ |
-| `.ai/db/schema.md` | Schema de base de datos |
+| `.ai/db/setup_schema.sql` | **Fuente de verdad del schema** — DDL completo y actualizado |
+| `.ai/db/setup_seeds.sql` | Seeds iniciales (catálogos + usuario admin) |
+| `.ai/db/schema.md` | Documentación del schema (debe coincidir con `setup_schema.sql`) |
+| `.ai/db/migrations_archive/` | Historial de migraciones incrementales (001 en adelante) |
 | `.ai/pendientes.md` | Decisiones bloqueantes (8 cerradas ✅) |
 | `WORKFLOW.md` | Checklist por etapa |
 
