@@ -53,7 +53,7 @@ async function obtenerPorId(id, usuarioId, roles) {
   };
 }
 
-async function crear(datos) {
+async function crear(datos, email) {
   if (await data.codigoExiste(datos.codigo)) {
     throw new ErrorApp('El código de proyecto ya existe', 400);
   }
@@ -67,10 +67,10 @@ async function crear(datos) {
     throw new ErrorApp('El gestor indicado no tiene rol de Gestor activo', 400);
   }
 
-  return data.crearProyecto(datos);
+  return data.crearProyecto(datos, email);
 }
 
-async function actualizar(id, datos) {
+async function actualizar(id, datos, email) {
   const existe = await data.buscarProyectoPorId(id);
   if (!existe) throw new ErrorApp('Proyecto no encontrado', 404);
 
@@ -84,13 +84,13 @@ async function actualizar(id, datos) {
     throw new ErrorApp('fecha_fin no puede ser anterior a fecha_inicio', 400);
   }
 
-  return data.actualizarProyecto(id, datos);
+  return data.actualizarProyecto(id, datos, email);
 }
 
-async function toggleActivo(id) {
+async function toggleActivo(id, email) {
   const existe = await data.buscarProyectoPorId(id);
   if (!existe) throw new ErrorApp('Proyecto no encontrado', 404);
-  return data.toggleActivo(id);
+  return data.toggleActivo(id, email);
 }
 
 async function asignarUsuarios(id, usuarios) {

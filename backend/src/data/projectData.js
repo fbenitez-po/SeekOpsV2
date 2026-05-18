@@ -18,7 +18,7 @@ async function listarProyectos(filtros, usuarioId, roles) {
 
   if (filtros.activo !== undefined) {
     params.push(filtros.activo === 'true');
-    condiciones.push(`p.activo = $${idx++}`);
+    condiciones.push(`p.enabled = $${idx++}`);
   }
   if (filtros.cliente_id) {
     params.push(filtros.cliente_id);
@@ -38,15 +38,15 @@ async function listarProyectos(filtros, usuarioId, roles) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT p.id, p.code as codigo, p.nombre, p.activo,
+    SELECT p.id, p.code as codigo, p.nombre, p.enabled as activo,
            p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real,
            c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre,
            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
-           s.id as seg_id, s.nombre as seg_nombre,
-           (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)
+           s.id as seg_id, s.name as seg_nombre,
+           (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.name) ORDER BY pc.name), '[]'::json)
             FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
             WHERE ppc.project_id = p.id) as categorias,
-           ts.id as ts_id, ts.nombre as ts_nombre,
+           ts.id as ts_id, ts.name as ts_nombre,
            a.id as area_id, a.name as area_nombre,
            (SELECT COUNT(*) FROM project_users pu WHERE pu.project_id = p.id) as usuarios_count
     FROM projects p
@@ -73,15 +73,15 @@ async function listarProyectos(filtros, usuarioId, roles) {
 
 async function buscarProyectoPorId(id) {
   return consultarUno(
-    `SELECT p.id, p.code as codigo, p.nombre, p.activo,
+    `SELECT p.id, p.code as codigo, p.nombre, p.enabled as activo,
             p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real, p.created_at, p.updated_at,
             c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre, c.ruc,
             g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
-            s.id as seg_id, s.nombre as seg_nombre,
-            (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.nombre) ORDER BY pc.nombre), '[]'::json)
+            s.id as seg_id, s.name as seg_nombre,
+            (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.name) ORDER BY pc.name), '[]'::json)
              FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
              WHERE ppc.project_id = p.id) as categorias,
-            ts.id as ts_id, ts.nombre as ts_nombre,
+            ts.id as ts_id, ts.name as ts_nombre,
             a.id as area_id, a.name as area_nombre
      FROM projects p
      JOIN clients c ON c.id = p.client_id
@@ -119,7 +119,7 @@ async function usuarioTieneRolGestor(usuarioId) {
   );
 }
 
-async function crearProyecto(datos) {
+async function crearProyecto(datos, email) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -128,9 +128,10 @@ async function crearProyecto(datos) {
       `INSERT INTO projects (code, nombre, client_id, project_segmentation_id,
                              productivity_layer_id, service_type_id,
                              gestor_id, area_id, fecha_inicio, fecha_fin,
-                             fecha_inicio_real, fecha_fin_real, activo)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       RETURNING id, code as codigo, nombre, activo, created_at`,
+                             fecha_inicio_real, fecha_fin_real, enabled,
+                             created_by, updated_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14)
+       RETURNING id, code as codigo, nombre, enabled as activo, created_at`,
       [
         datos.codigo, datos.nombre, datos.cliente_id,
         datos.segmentacion_id || null,
@@ -139,6 +140,7 @@ async function crearProyecto(datos) {
         datos.fecha_inicio || null, datos.fecha_fin || null,
         datos.fecha_inicio_real || null, datos.fecha_fin_real || null,
         datos.activo !== false,
+        email || null,
       ]
     );
 
@@ -161,7 +163,7 @@ async function crearProyecto(datos) {
   }
 }
 
-async function actualizarProyecto(id, datos) {
+async function actualizarProyecto(id, datos, email) {
   const campos = [];
   const params = [];
   let idx = 1;
@@ -179,7 +181,7 @@ async function actualizarProyecto(id, datos) {
     fecha_fin: datos.fecha_fin,
     fecha_inicio_real: datos.fecha_inicio_real,
     fecha_fin_real: datos.fecha_fin_real,
-    activo: datos.activo,
+    enabled: datos.activo,
   };
 
   for (const [campo, valor] of Object.entries(mapeados)) {
@@ -194,8 +196,8 @@ async function actualizarProyecto(id, datos) {
     await client.query('BEGIN');
 
     if (campos.length) {
-      campos.push(`updated_at = NOW()`);
-      params.push(id);
+      campos.push(`updated_at = NOW()`, `updated_by = $${idx++}`);
+      params.push(email || null, id);
       await client.query(
         `UPDATE projects SET ${campos.join(', ')} WHERE id = $${idx}`,
         params
@@ -224,10 +226,17 @@ async function actualizarProyecto(id, datos) {
   }
 }
 
-async function toggleActivo(id) {
+async function toggleActivo(id, email) {
   const { rows: [proyecto] } = await pool.query(
-    `UPDATE projects SET activo = NOT activo, updated_at = NOW() WHERE id = $1 RETURNING id, activo, updated_at`,
-    [id]
+    `UPDATE projects
+     SET enabled = NOT enabled,
+         deleted_at = CASE WHEN enabled THEN NOW() ELSE NULL END,
+         deleted_by = CASE WHEN enabled THEN $2 ELSE NULL END,
+         updated_at = NOW(),
+         updated_by = $2
+     WHERE id = $1
+     RETURNING id, enabled as activo, updated_at`,
+    [id, email || null]
   );
   return proyecto;
 }

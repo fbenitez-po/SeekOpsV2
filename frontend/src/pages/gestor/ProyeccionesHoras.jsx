@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 
 function seekerVacio() {
-  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', categoria_id: '', expandido: true };
+  return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', work_category_id: '', expandido: true };
 }
 
 function formatFecha(fecha) {
@@ -51,7 +51,7 @@ export default function ProyeccionesHoras() {
 
   const { data: dataCategorias } = useQuery({
     queryKey: ['categorias-cliente'],
-    queryFn: () => configApi.categoriasUsuario().then((r) => r.data),
+    queryFn: () => configApi.workCategories().then((r) => r.data),
   });
 
   const { data: dataProyectoDetalle } = useQuery({
@@ -95,7 +95,7 @@ export default function ProyeccionesHoras() {
       fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '',
       fecha_fin: proy.fecha_fin?.slice(0, 10) || '',
       notas: proy.notas || '',
-      seekers: [{ id: crypto.randomUUID(), user_id: proy.user_id, fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '', fecha_fin: proy.fecha_fin?.slice(0, 10) || '', horas_proyectadas: String(proy.horas_proyectadas), categoria_id: proy.categoria_id || '' }],
+      seekers: [{ id: crypto.randomUUID(), user_id: proy.user_id, fecha_inicio: proy.fecha_inicio?.slice(0, 10) || '', fecha_fin: proy.fecha_fin?.slice(0, 10) || '', horas_proyectadas: String(proy.horas_proyectadas), work_category_id: proy.work_category_id || '' }],
     });
     setError('');
     setMostrarFormulario(true);
@@ -162,7 +162,7 @@ export default function ProyeccionesHoras() {
         fecha_inicio: s.fecha_inicio,
         fecha_fin: s.fecha_fin,
         horas_proyectadas: parseFloat(s.horas_proyectadas),
-        categoria_id: s.categoria_id || null,
+        work_category_id: s.work_category_id || null,
         notas: form.notas || null,
       };
       mutActualizar.mutate({ id: editando.id, datos });
@@ -179,7 +179,7 @@ export default function ProyeccionesHoras() {
             fecha_inicio: s.fecha_inicio,
             fecha_fin: s.fecha_fin,
             horas_proyectadas: parseFloat(s.horas_proyectadas),
-            categoria_id: s.categoria_id || null,
+            work_category_id: s.work_category_id || null,
             notas: form.notas || null,
           })
         )
@@ -322,8 +322,8 @@ export default function ProyeccionesHoras() {
                                 <label className="text-xs font-medium text-muted-foreground">Categoría</label>
                                 <select
                                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                  value={seeker.categoria_id}
-                                  onChange={(e) => actualizarSeeker(seeker.id, 'categoria_id', e.target.value)}
+                                  value={seeker.work_category_id}
+                                  onChange={(e) => actualizarSeeker(seeker.id, 'work_category_id', e.target.value)}
                                 >
                                   <option value="">Sin categoría</option>
                                   {(dataCategorias || []).map((c) => (

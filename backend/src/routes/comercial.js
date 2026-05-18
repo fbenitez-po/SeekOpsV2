@@ -8,7 +8,7 @@ router.use(verificarToken, soloAdmin);
 router.get('/tipos-documento', async (_req, res, next) => {
   try {
     const filas = await consultar(
-      `SELECT id, nombre FROM tipos_documento WHERE activo = true ORDER BY nombre`,
+      `SELECT id, nombre FROM tipos_documento WHERE enabled = true ORDER BY nombre`,
       []
     );
     res.json(filas);
@@ -44,8 +44,8 @@ router.get('/', async (req, res, next) => {
               u.apellidos AS responsable_apellidos,
               td.id     AS tipo_documento_id,
               td.nombre AS tipo_documento_nombre,
-              ts.nombre AS proyecto_tipo,
-              seg.nombre AS proyecto_division,
+              ts.name AS proyecto_tipo,
+              seg.name AS proyecto_division,
               p.fecha_inicio,
               p.fecha_fin
        FROM registros_comerciales rc
@@ -83,8 +83,8 @@ router.get('/:id', async (req, res, next) => {
               p.nombre AS proyecto_nombre,
               p.fecha_inicio,
               p.fecha_fin,
-              ts.nombre AS proyecto_tipo,
-              seg.nombre AS proyecto_division,
+              ts.name AS proyecto_tipo,
+              seg.name AS proyecto_division,
               u.nombres  AS responsable_nombres,
               u.apellidos AS responsable_apellidos,
               td.nombre AS tipo_documento_nombre
@@ -133,7 +133,7 @@ router.post('/', async (req, res, next) => {
         tipo_documento_id || null,
         estado_contrato ?? false, facturacion ?? false,
         evidencia_nombre?.trim() || null,
-        req.usuario.usuario_id,
+        req.usuario.email || null,
       ]
     );
     res.status(201).json(filas[0]);
@@ -172,7 +172,7 @@ router.put('/:id', async (req, res, next) => {
         tipo_documento_id || null,
         estado_contrato ?? false, facturacion ?? false,
         evidencia_nombre?.trim() || null,
-        req.usuario.usuario_id, req.params.id,
+        req.usuario.email || null, req.params.id,
       ]
     );
     if (!filas.length) return res.status(404).json({ error: 'Registro no encontrado' });

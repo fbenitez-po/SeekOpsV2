@@ -28,8 +28,8 @@ router.post(
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id, roles } = req.usuario;
-      const resultado = await service.crear(usuario_id, roles, req.body);
+      const { usuario_id, email, roles } = req.usuario;
+      const resultado = await service.crear(usuario_id, email || null, roles, req.body);
       res.status(201).json(resultado);
     } catch (err) {
       next(err);
@@ -88,8 +88,8 @@ router.put(
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id } = req.usuario;
-      const resultado = await service.ajustar(req.params.id, usuario_id, req.body.lineas);
+      const { usuario_id, email } = req.usuario;
+      const resultado = await service.ajustar(req.params.id, usuario_id, email || null, req.body.lineas);
       res.json(resultado);
     } catch (err) {
       next(err);
@@ -99,8 +99,8 @@ router.put(
 
 router.post('/:id/aprobar', async (req, res, next) => {
   try {
-    const { usuario_id, roles } = req.usuario;
-    const resultado = await service.aprobar(req.params.id, usuario_id, roles);
+    const { usuario_id, email, roles } = req.usuario;
+    const resultado = await service.aprobar(req.params.id, usuario_id, email || null, roles);
     res.json(resultado);
   } catch (err) {
     next(err);
@@ -113,8 +113,8 @@ router.post(
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id, roles } = req.usuario;
-      const resultado = await service.aprobarConObservacion(req.params.id, usuario_id, roles, req.body);
+      const { usuario_id, email, roles } = req.usuario;
+      const resultado = await service.aprobarConObservacion(req.params.id, usuario_id, email || null, roles, req.body);
       res.json(resultado);
     } catch (err) {
       next(err);
@@ -129,8 +129,8 @@ router.post(
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id, roles } = req.usuario;
-      const resultado = await service.rechazar(req.params.id, usuario_id, roles, req.body);
+      const { usuario_id, email, roles } = req.usuario;
+      const resultado = await service.rechazar(req.params.id, usuario_id, email || null, roles, req.body);
       res.json(resultado);
     } catch (err) {
       next(err);

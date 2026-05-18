@@ -89,7 +89,7 @@ async function obtenerPorId(id, usuarioId, roles) {
   return construirEntrada(entrada, lineas, aprobaciones);
 }
 
-async function crear(usuarioId, roles, body) {
+async function crear(usuarioId, usuarioEmail, roles, body) {
   const { semana, lineas } = body;
 
   if (!lineas || lineas.length === 0) {
@@ -119,10 +119,10 @@ async function crear(usuarioId, roles, body) {
   const esGestor = roles.includes('GESTOR') && !roles.includes('SEEKER');
   const estado = esGestor ? 'APROBADO' : 'PENDIENTE';
 
-  return data.crearEntrada({ usuarioId, semana, estado, lineas });
+  return data.crearEntrada({ usuarioId, usuarioEmail, semana, estado, lineas });
 }
 
-async function ajustar(id, usuarioId, lineas) {
+async function ajustar(id, usuarioId, usuarioEmail, lineas) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
   if (entrada.user_id !== usuarioId) throw new ErrorApp('Solo el dueño del registro puede editarlo', 403);
@@ -135,12 +135,12 @@ async function ajustar(id, usuarioId, lineas) {
     }
   }
 
-  const entradaActualizada = await data.actualizarLineasEntrada(id, lineas, usuarioId);
+  const entradaActualizada = await data.actualizarLineasEntrada(id, lineas, usuarioId, usuarioEmail);
   const lineasActualizadas = await data.obtenerLineasDeEntrada(id);
   return construirEntrada({ ...entradaActualizada, user_id: usuarioId, nombres: '', apellidos: '' }, lineasActualizadas, []);
 }
 
-async function aprobar(id, usuarioId, roles) {
+async function aprobar(id, usuarioId, usuarioEmail, roles) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
   if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden aprobar registros en estado PENDIENTE', 403);
@@ -152,12 +152,11 @@ async function aprobar(id, usuarioId, roles) {
     if (!esGestor) throw new ErrorApp('Solo el gestor del proyecto o un administrador puede aprobar', 403);
   }
 
-  await data.registrarAprobacion({ entradaId: id, accion: 'APROBAR', usuarioId });
+  await data.registrarAprobacion({ entradaId: id, accion: 'APROBAR', usuarioId, usuarioEmail });
   return { id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
-
-async function aprobarConObservacion(id, usuarioId, roles, datos) {
+async function aprobarConObservacion(id, usuarioId, usuarioEmail, roles, datos) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
   if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden aprobar registros en estado PENDIENTE', 403);
@@ -179,11 +178,11 @@ async function aprobarConObservacion(id, usuarioId, roles, datos) {
     if (!esGestor) throw new ErrorApp('Solo el gestor del proyecto o un administrador puede aprobar', 403);
   }
 
-  await data.registrarAprobacion({ entradaId: id, accion: 'APROBAR_CON_OBSERVACION', usuarioId, datos });
+  await data.registrarAprobacion({ entradaId: id, accion: 'APROBAR_CON_OBSERVACION', usuarioId, usuarioEmail, datos });
   return { id, estado: 'APROBADO_CON_OBSERVACION', aprobado_en: new Date().toISOString(), comentario_observacion: datos.comentario_observacion };
 }
 
-async function rechazar(id, usuarioId, roles, datos) {
+async function rechazar(id, usuarioId, usuarioEmail, roles, datos) {
   const entrada = await data.buscarEntradaPorId(id);
   if (!entrada) throw new ErrorApp('Registro no encontrado', 404);
   if (entrada.estado !== 'PENDIENTE') throw new ErrorApp('Solo se pueden rechazar registros en estado PENDIENTE', 403);
@@ -196,7 +195,7 @@ async function rechazar(id, usuarioId, roles, datos) {
     if (!esGestor) throw new ErrorApp('Solo el gestor del proyecto o un administrador puede rechazar', 403);
   }
 
-  await data.registrarAprobacion({ entradaId: id, accion: 'RECHAZAR', usuarioId, datos });
+  await data.registrarAprobacion({ entradaId: id, accion: 'RECHAZAR', usuarioId, usuarioEmail, datos });
   return { id, estado: 'RECHAZADO', rechazado_en: new Date().toISOString(), ...datos };
 }
 

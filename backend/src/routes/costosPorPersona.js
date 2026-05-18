@@ -85,10 +85,10 @@ router.post('/', async (req, res, next) => {
     if (horas <= 0) return res.status(400).json({ error: 'Las horas por día deben ser mayores a 0' });
 
     const filas = await consultar(
-      `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by_user_id, updated_by_user_id)
+      `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $5, $6, $6)
        RETURNING id, periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia`,
-      [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.usuario_id]
+      [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
   } catch (err) {
@@ -112,10 +112,10 @@ router.put('/:id', async (req, res, next) => {
     const filas = await consultar(
       `UPDATE costos_por_persona
        SET periodo_id = $1, user_id = $2, remuneracion = $3, dias_habiles = $4, horas_por_dia = $5,
-           updated_at = NOW(), updated_by_user_id = $6
+           updated_at = NOW(), updated_by = $6
        WHERE id = $7
        RETURNING id, periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia`,
-      [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.usuario_id, req.params.id]
+      [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Registro no encontrado' });
     res.json(filas[0]);
@@ -160,15 +160,15 @@ router.post('/importar', async (req, res, next) => {
       const horas = horas_por_dia !== undefined && horas_por_dia !== null ? Number(horas_por_dia) : 8;
       try {
         await consultar(
-          `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by_user_id, updated_by_user_id)
+          `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by, updated_by)
            VALUES ($1, $2, $3, $4, $5, $6, $6)
            ON CONFLICT (periodo_id, user_id) DO UPDATE
              SET remuneracion = EXCLUDED.remuneracion,
                  dias_habiles = EXCLUDED.dias_habiles,
                  horas_por_dia = EXCLUDED.horas_por_dia,
                  updated_at = NOW(),
-                 updated_by_user_id = EXCLUDED.updated_by_user_id`,
-          [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.usuario_id]
+                 updated_by = EXCLUDED.updated_by`,
+          [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null]
         );
         insertados++;
       } catch (e) {

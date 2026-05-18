@@ -51,12 +51,13 @@ El CHECK es `hours >= 0`. Se puede guardar una línea con 0 horas, que no tiene 
 
 ### 🟡 Importantes
 
-### #5 — Inconsistencia de idioma en nombres de columna
+### #5 — Inconsistencia de idioma en nombres de columna ✅ RESUELTO
 Algunas tablas usan `name` (inglés) y otras usan `nombre` (español). Tablas afectadas: `service_types`, `client_segmentations`, `client_sectors`, `project_segmentation`, `project_categories`, `productivity_layers`.
 **Avance:** Convención documentada en `context.md` ✅ — pendiente normalizar columnas en el schema.
 **Decisión:** Renombrar `nombre` → `name` en las tablas afectadas.
+**Ejecutado:** Migración `020_normalize_audit_and_naming.sql` + `setup_schema.sql` actualizado + código backend ajustado.
 
-### #6 — Inconsistencia en columnas de auditoría
+### #6 — Inconsistencia en columnas de auditoría ✅ RESUELTO
 La mitad de las tablas usa `created_by` / `updated_by` (clients, projects, registros_comerciales), la otra mitad usa `created_by_user_id` / `updated_by_user_id` (time_entries, ingresos, gastos_admin, etc.). Complica las queries.
 **Decisión:** Estandarizar en todas las tablas el siguiente conjunto de columnas de auditoría:
 - `created_at` — timestamp de creación
@@ -66,26 +67,28 @@ La mitad de las tablas usa `created_by` / `updated_by` (clients, projects, regis
 - `enabled` — baja lógica (`BOOLEAN NOT NULL DEFAULT true`), reemplaza `activo`
 - `deleted_at` — timestamp de baja (solo en tablas con baja lógica)
 - `deleted_by` — email del usuario que dio de baja (`VARCHAR(255)`, no FK, solo en tablas con baja lógica)
+**Ejecutado:** Migración `020_normalize_audit_and_naming.sql` + `setup_schema.sql` actualizado + todo el código backend ajustado (auth, users, clients, projects, config, comercial, ingresos, gastos, costos, timeEntries, projections). Email propagado desde JWT → route → service → data.
 
 ### #7 — `TIMESTAMP` sin timezone ⭐ superdeseable
 Todos los timestamps son `TIMESTAMP` (sin timezone). En un sistema con usuarios o servidores en distintas zonas horarias, los valores son ambiguos. Debería ser `TIMESTAMPTZ`.
 **Nota:** No se ejecuta en esta etapa.
 
-### #8 — `updated_at` debe setearse desde el BE
+### #8 — `updated_at` debe setearse desde el BE ✅ RESUELTO
 `updated_at` no es responsabilidad de la BD — se setea desde el backend en cada operación de escritura.
 **Decisión:** No se usa trigger. Es responsabilidad del BE.
-**Revisión realizada:** 14 UPDATE relevados. 12 correctos ✅. 2 faltantes ⚠️:
-- `timeEntryData.js` ~línea 178 — `actualizarSoloHorasLineas()` sobre `time_entry_lines`
-- `timeEntryData.js` ~línea 191 — `actualizarLineasEntrada()` sobre `time_entry_lines`
+**Revisión realizada:** 14 UPDATE relevados. 12 correctos ✅. 2 faltantes corregidos ✅:
+- `timeEntryData.js` `actualizarSoloHorasLineas()` — agregado `updated_at = NOW()`
+- `timeEntryData.js` `actualizarLineasEntrada()` — agregado `updated_at = NOW()`
 
-### #9 — `hour_projections.categoria_id` referencia `client_categories`
-El nombre es confuso: `categoria_id` apunta a categorías de cliente, no del proyecto. Semánticamente poco claro por qué una proyección de horas necesita la categoría del cliente.
+### #9 — `hour_projections.categoria_id` referencia `client_categories` ✅ RESUELTO
+**Decisión:** La tabla `client_categories` contenía categorías de tipo de trabajo (backend, frontend, etc.), no categorías de cliente. Se renombró la tabla a `work_categories` y la columna a `work_category_id`. Se eliminó también la FK incorrecta `clients.client_category_id`.
+**Ejecutado:** Migración `021_rename_client_categories_to_work_categories.sql` + `setup_schema.sql` actualizado + código backend ajustado (projectionData, projectionService, projections route, clientData, clientService, config route) + frontend ajustado (ProyeccionesHoras.jsx, api.js).
 
 ### #10 — `projects` sin campo `status`
 Solo tiene `activo` (boolean). No hay forma de distinguir un proyecto en propuesta, en ejecución, pausado o terminado.
 
-### #11 — `registros_comerciales.estado_contrato` y `facturacion` son BOOLEAN
-Un contrato puede estar en revisión, firmado, vencido, etc. No cabe en true/false. Idem facturación.
+### #11 — `registros_comerciales.estado_contrato` y `facturacion` son BOOLEAN ❌ DESCARTADO
+No se ataca. Se mantiene el diseño actual.
 
 ---
 

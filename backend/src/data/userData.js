@@ -7,7 +7,7 @@ function construirFiltros(filtros) {
 
   if (filtros.activo !== undefined) {
     params.push(filtros.activo === 'true');
-    condiciones.push(`u.activo = $${idx++}`);
+    condiciones.push(`u.enabled = $${idx++}`);
   }
   if (filtros.search) {
     params.push(`%${filtros.search}%`);
@@ -33,7 +33,7 @@ async function listarUsuarios(filtros) {
 
   const sql = `
     SELECT u.id, u.email, u.nombres, u.apellidos, u.numero_documento, u.puesto,
-           u.celular, u.avatar_url, u.activo, u.staff, u.super_usuario,
+           u.celular, u.avatar_url, u.enabled as activo, u.staff, u.super_usuario,
            u.fecha_ingreso, u.created_at, u.updated_at,
            t.id as equipo_id, t.name as equipo_nombre,
            (
@@ -80,7 +80,7 @@ async function obtenerAreasDeUsuario(usuarioId) {
 
 async function obtenerProyectosDeUsuario(usuarioId) {
   return consultar(
-    `SELECT p.id, p.nombre, p.code as codigo, COALESCE(c.razon_comercial, c.razon_social) as cliente, pu.rol, p.activo
+    `SELECT p.id, p.nombre, p.code as codigo, COALESCE(c.razon_comercial, c.razon_social) as cliente, pu.rol, p.enabled as activo
      FROM projects p
      JOIN project_users pu ON pu.project_id = p.id
      JOIN clients c ON c.id = p.client_id
@@ -92,8 +92,8 @@ async function obtenerProyectosDeUsuario(usuarioId) {
 async function buscarUsuarioPorId(id) {
   return consultarUno(
     `SELECT u.id, u.email, u.nombres, u.apellidos, u.numero_documento, u.puesto,
-            u.celular, u.avatar_url, u.activo, u.staff, u.super_usuario,
-            u.fecha_ingreso, u.created_at, u.updated_at, u.deactivated_at,
+            u.celular, u.avatar_url, u.enabled as activo, u.staff, u.super_usuario,
+            u.fecha_ingreso, u.created_at, u.updated_at, u.deleted_at,
             t.id as equipo_id, t.name as equipo_nombre
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
@@ -125,9 +125,9 @@ async function crearUsuario(datos) {
 
     const { rows: [usuario] } = await client.query(
       `INSERT INTO users (email, password_hash, nombres, apellidos, numero_documento, puesto,
-                          celular, avatar_url, team_id, fecha_ingreso, activo, staff, super_usuario)
+                          celular, avatar_url, team_id, fecha_ingreso, enabled, staff, super_usuario)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       RETURNING id, email, nombres, apellidos, activo, created_at`,
+       RETURNING id, email, nombres, apellidos, enabled as activo, created_at`,
       [
         datos.email,
         '$placeholder$',
@@ -181,7 +181,7 @@ async function actualizarUsuario(id, datos) {
       avatar_url: datos.avatar_url,
       team_id: datos.equipo_id,
       fecha_ingreso: datos.fecha_ingreso,
-      activo: datos.activo,
+      enabled: datos.activo,
       staff: datos.staff,
       super_usuario: datos.super_usuario,
     };
@@ -233,15 +233,17 @@ async function actualizarUsuario(id, datos) {
   }
 }
 
-async function toggleActivo(id) {
+async function toggleActivo(id, email) {
   const { rows: [usuario] } = await pool.query(
     `UPDATE users
-     SET activo = NOT activo,
-         deactivated_at = CASE WHEN activo THEN NOW() ELSE NULL END,
-         updated_at = NOW()
+     SET enabled = NOT enabled,
+         deleted_at = CASE WHEN enabled THEN NOW() ELSE NULL END,
+         deleted_by = CASE WHEN enabled THEN $2 ELSE NULL END,
+         updated_at = NOW(),
+         updated_by = $2
      WHERE id = $1
-     RETURNING id, activo, deactivated_at`,
-    [id]
+     RETURNING id, enabled as activo, deleted_at`,
+    [id, email || null]
   );
   return usuario;
 }

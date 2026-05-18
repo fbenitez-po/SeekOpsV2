@@ -59,7 +59,7 @@ router.put('/:id', validacionesBase, validate, async (req, res, next) => {
 
 router.patch('/:id/toggle-activo', async (req, res, next) => {
   try {
-    res.json(await service.toggleActivo(req.params.id));
+    res.json(await service.toggleActivo(req.params.id, req.usuario.email || null));
   } catch (err) {
     next(err);
   }

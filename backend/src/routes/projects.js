@@ -35,7 +35,7 @@ router.post(
   validate,
   async (req, res, next) => {
     try {
-      res.status(201).json(await service.crear(req.body));
+      res.status(201).json(await service.crear(req.body, req.usuario.email || null));
     } catch (err) {
       next(err);
     }
@@ -53,7 +53,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', soloAdmin, async (req, res, next) => {
   try {
-    res.json(await service.actualizar(req.params.id, req.body));
+    res.json(await service.actualizar(req.params.id, req.body, req.usuario.email || null));
   } catch (err) {
     next(err);
   }
@@ -61,7 +61,7 @@ router.put('/:id', soloAdmin, async (req, res, next) => {
 
 router.patch('/:id/toggle-activo', soloAdmin, async (req, res, next) => {
   try {
-    res.json(await service.toggleActivo(req.params.id));
+    res.json(await service.toggleActivo(req.params.id, req.usuario.email || null));
   } catch (err) {
     next(err);
   }

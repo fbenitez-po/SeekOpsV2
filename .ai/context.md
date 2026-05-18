@@ -140,8 +140,8 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
 
 - **Autenticación:** JWT (stateless)
 - **Sesiones:** Timeout a definir en código
-- **Soft delete:** Users, Clients, Projects (inactivos, no eliminados)
-- **Auditoria:** Campo `updated_at` + logs de cambios en TimeEntry
+- **Soft delete:** Users, Clients, Projects — campo `enabled` (boolean). Las tablas con soft delete tienen además `deleted_at` y `deleted_by` (email del responsable).
+- **Auditoria:** Columnas `created_by` / `updated_by` en todas las tablas como `VARCHAR(255)` almacenando el **email** del usuario (sin FK). Migración 020 estandarizó: `activo → enabled`, `deactivated_at → deleted_at`, `created_by_user_id → created_by`, `nombre → name` en 6 tablas lookup. El JWT ahora incluye `email` y se propaga por toda la cadena route → service → data.
 - **Email:** SMTP integrado con nodemailer (`emailService.js`). Dos tipos de email: bienvenida (link activación 48h) y reset de contraseña (link 1h). Si SMTP no está configurado, el link se imprime en consola (dev mode).
 - **Activación de cuenta:** Nuevos usuarios no tienen contraseña. Al crearlos, se genera un token (tabla `password_reset_tokens`, válido 48h) y se envía email de bienvenida con link a `/activar-cuenta?token=...`. El endpoint de activación reutiliza `POST /api/auth/confirmar-reset`.
 - **Acceso a proyectos del Gestor:** Un Gestor tiene acceso a todos los proyectos donde figura como `gestor_id` en la tabla `projects`, independientemente de si tiene fila en `project_users`. Esta regla aplica en tres puntos del backend: listar proyectos disponibles, verificar acceso al guardar horas, y listar time entries del panel. Los tres puntos fueron corregidos en `projectData.js` y `timeEntryData.js` (2026-04-24).

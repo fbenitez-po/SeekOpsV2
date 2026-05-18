@@ -56,10 +56,10 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'El monto no puede ser negativo' });
     }
     const filas = await consultar(
-      `INSERT INTO gastos_admin (periodo_id, codigo, descripcion, monto, created_by_user_id, updated_by_user_id)
+      `INSERT INTO gastos_admin (periodo_id, codigo, descripcion, monto, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $5, $5)
        RETURNING id, periodo_id, codigo, descripcion, monto`,
-      [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.usuario_id]
+      [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
   } catch (err) {
@@ -80,10 +80,10 @@ router.put('/:id', async (req, res, next) => {
     const filas = await consultar(
       `UPDATE gastos_admin
        SET periodo_id = $1, codigo = $2, descripcion = $3, monto = $4,
-           updated_at = NOW(), updated_by_user_id = $5
+           updated_at = NOW(), updated_by = $5
        WHERE id = $6
        RETURNING id, periodo_id, codigo, descripcion, monto`,
-      [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.usuario_id, req.params.id]
+      [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Gasto no encontrado' });
     res.json(filas[0]);

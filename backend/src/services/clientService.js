@@ -11,7 +11,6 @@ function formatearCliente(c) {
     email_contacto: c.email_contacto,
     telefono: c.telefono,
     direccion: c.direccion,
-    categoria_usuario: c.cat_id ? { id: c.cat_id, nombre: c.cat_nombre } : null,
     segmentacion: c.seg_id ? { id: c.seg_id, nombre: c.seg_nombre } : null,
     sector: c.sec_id ? { id: c.sec_id, nombre: c.sec_nombre } : null,
     activo: c.activo,
@@ -43,14 +42,14 @@ async function obtenerPorId(id) {
   };
 }
 
-async function crear(datos) {
+async function crear(datos, email) {
   if (await data.rucExiste(datos.ruc)) {
     throw new ErrorApp('El RUC ya está registrado en otro cliente', 400);
   }
-  return data.crearCliente(datos);
+  return data.crearCliente(datos, email);
 }
 
-async function actualizar(id, datos) {
+async function actualizar(id, datos, email) {
   const existe = await data.buscarClientePorId(id);
   if (!existe) throw new ErrorApp('Cliente no encontrado', 404);
 
@@ -58,13 +57,13 @@ async function actualizar(id, datos) {
     throw new ErrorApp('El RUC ya está en uso por otro cliente', 400);
   }
 
-  return data.actualizarCliente(id, datos);
+  return data.actualizarCliente(id, datos, email);
 }
 
-async function toggleActivo(id) {
+async function toggleActivo(id, email) {
   const existe = await data.buscarClientePorId(id);
   if (!existe) throw new ErrorApp('Cliente no encontrado', 404);
-  return data.toggleActivo(id);
+  return data.toggleActivo(id, email);
 }
 
 module.exports = { listar, obtenerPorId, crear, actualizar, toggleActivo };

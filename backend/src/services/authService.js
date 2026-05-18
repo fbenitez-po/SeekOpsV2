@@ -36,7 +36,7 @@ async function login(email, password) {
   const roles = await authData.obtenerRolesDelUsuario(usuario.id);
   const proyectos = await authData.obtenerProyectosDelUsuario(usuario.id);
 
-  const payload = { usuario_id: usuario.id, roles, proyectos_ids: proyectos.map((p) => p.id) };
+  const payload = { usuario_id: usuario.id, email: usuario.email, roles, proyectos_ids: proyectos.map((p) => p.id) };
 
   const accessToken = generarAccessToken(payload);
   const refreshToken = generarRefreshToken({ usuario_id: usuario.id });
@@ -89,6 +89,7 @@ async function renovarToken(refreshToken) {
 
   const nuevoToken = generarAccessToken({
     usuario_id: usuario.id,
+    email: usuario.email,
     roles,
     proyectos_ids: proyectos.map((p) => p.id),
   });

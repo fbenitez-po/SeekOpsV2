@@ -11,8 +11,8 @@ async function listar(filtros, gestorId, roles) {
   return data.listar(filtros, gestorId, roles);
 }
 
-async function crear(body, gestorId, roles) {
-  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, categoria_id } = body;
+async function crear(body, gestorId, email, roles) {
+  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, work_category_id } = body;
 
   if (!project_id || !user_id || !fecha_inicio || !fecha_fin || !horas_proyectadas) {
     throw crearError('project_id, user_id, fecha_inicio, fecha_fin y horas_proyectadas son requeridos');
@@ -34,11 +34,11 @@ async function crear(body, gestorId, roles) {
     }
   }
 
-  const proyeccion = await data.crear(body, gestorId);
+  const proyeccion = await data.crear(body, email);
   return data.obtenerPorId(proyeccion.id);
 }
 
-async function actualizar(id, body, gestorId, roles) {
+async function actualizar(id, body, gestorId, email, roles) {
   const existente = await data.obtenerPorId(id);
   if (!existente) throw crearError('Proyección no encontrada', 404);
 
@@ -61,8 +61,8 @@ async function actualizar(id, body, gestorId, roles) {
     fecha_fin: fecha_fin || existente.fecha_fin,
     horas_proyectadas: horas_proyectadas || existente.horas_proyectadas,
     notas: body.notas !== undefined ? body.notas : existente.notas,
-    categoria_id: body.categoria_id !== undefined ? body.categoria_id : existente.categoria_id,
-  }, gestorId);
+    work_category_id: body.work_category_id !== undefined ? body.work_category_id : existente.work_category_id,
+  }, email);
 
   return data.obtenerPorId(id);
 }

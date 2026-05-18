@@ -38,14 +38,14 @@ router.post(
     body('fecha_inicio').isDate().withMessage('La fecha de inicio no es válida (YYYY-MM-DD)'),
     body('fecha_fin').isDate().withMessage('La fecha de fin no es válida (YYYY-MM-DD)'),
     body('horas_proyectadas').isFloat({ min: 0.5 }).withMessage('Las horas proyectadas deben ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('Las horas proyectadas deben ser múltiplo de 0.5'); return true; }),
-    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
+    body('work_category_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
     body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('Las notas no pueden superar 500 caracteres'),
   ],
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id, roles } = req.usuario;
-      const proyeccion = await service.crear(req.body, usuario_id, roles);
+      const { usuario_id, email, roles } = req.usuario;
+      const proyeccion = await service.crear(req.body, usuario_id, email || null, roles);
       res.status(201).json(proyeccion);
     } catch (err) {
       next(err);
@@ -60,14 +60,14 @@ router.put(
     body('fecha_inicio').optional().isDate().withMessage('La fecha de inicio no es válida'),
     body('fecha_fin').optional().isDate().withMessage('La fecha de fin no es válida'),
     body('horas_proyectadas').optional().isFloat({ min: 0.5 }).withMessage('Las horas proyectadas deben ser mayor a 0').custom((v) => { if (Number(v) % 0.5 !== 0) throw new Error('Las horas proyectadas deben ser múltiplo de 0.5'); return true; }),
-    body('categoria_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
+    body('work_category_id').optional({ nullable: true }).isUUID().withMessage('La categoría seleccionada no es válida'),
     body('notas').optional({ nullable: true }).isLength({ max: 500 }).withMessage('Las notas no pueden superar 500 caracteres'),
   ],
   validate,
   async (req, res, next) => {
     try {
-      const { usuario_id, roles } = req.usuario;
-      const proyeccion = await service.actualizar(req.params.id, req.body, usuario_id, roles);
+      const { usuario_id, email, roles } = req.usuario;
+      const proyeccion = await service.actualizar(req.params.id, req.body, usuario_id, email || null, roles);
       res.json(proyeccion);
     } catch (err) {
       next(err);

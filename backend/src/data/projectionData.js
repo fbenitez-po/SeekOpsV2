@@ -44,14 +44,14 @@ async function listar(filtros, gestorId, roles) {
       hp.fecha_fin,
       hp.horas_proyectadas,
       hp.notas,
-      hp.categoria_id,
-      cc.name AS categoria_nombre,
+      hp.work_category_id,
+      wc.name AS work_category_nombre,
       hp.created_at,
       hp.updated_at
     FROM hour_projections hp
     JOIN projects p ON p.id = hp.project_id
     JOIN users    u ON u.id = hp.user_id
-    LEFT JOIN client_categories cc ON cc.id = hp.categoria_id
+    LEFT JOIN work_categories wc ON wc.id = hp.work_category_id
     ${where}
     ORDER BY hp.fecha_inicio DESC, p.nombre, u.apellidos
   `;
@@ -64,45 +64,45 @@ async function obtenerPorId(id) {
     SELECT
       hp.id, hp.project_id, hp.user_id,
       hp.fecha_inicio, hp.fecha_fin, hp.horas_proyectadas, hp.notas,
-      hp.categoria_id, cc.name AS categoria_nombre,
+      hp.work_category_id, wc.name AS work_category_nombre,
       hp.created_at, hp.updated_at,
       p.nombre AS proyecto_nombre, p.gestor_id,
       u.nombres AS usuario_nombres, u.apellidos AS usuario_apellidos
     FROM hour_projections hp
     JOIN projects p ON p.id = hp.project_id
     JOIN users    u ON u.id = hp.user_id
-    LEFT JOIN client_categories cc ON cc.id = hp.categoria_id
+    LEFT JOIN work_categories wc ON wc.id = hp.work_category_id
     WHERE hp.id = $1
   `;
   return consultarUno(sql, [id]);
 }
 
-async function crear(datos, createdByUserId) {
-  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas, categoria_id } = datos;
+async function crear(datos, email) {
+  const { project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas, work_category_id } = datos;
   const sql = `
     INSERT INTO hour_projections
-      (project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas, categoria_id, created_by_user_id, updated_by_user_id)
+      (project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas, work_category_id, created_by, updated_by)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
     RETURNING id
   `;
-  return consultarUno(sql, [project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas || null, categoria_id || null, createdByUserId]);
+  return consultarUno(sql, [project_id, user_id, fecha_inicio, fecha_fin, horas_proyectadas, notas || null, work_category_id || null, email]);
 }
 
-async function actualizar(id, datos, updatedByUserId) {
-  const { fecha_inicio, fecha_fin, horas_proyectadas, notas, categoria_id } = datos;
+async function actualizar(id, datos, email) {
+  const { fecha_inicio, fecha_fin, horas_proyectadas, notas, work_category_id } = datos;
   const sql = `
     UPDATE hour_projections
     SET fecha_inicio = $1,
         fecha_fin = $2,
         horas_proyectadas = $3,
         notas = $4,
-        categoria_id = $5,
+        work_category_id = $5,
         updated_at = NOW(),
-        updated_by_user_id = $6
+        updated_by = $6
     WHERE id = $7
     RETURNING id
   `;
-  return consultarUno(sql, [fecha_inicio, fecha_fin, horas_proyectadas, notas || null, categoria_id || null, updatedByUserId, id]);
+  return consultarUno(sql, [fecha_inicio, fecha_fin, horas_proyectadas, notas || null, work_category_id || null, email, id]);
 }
 
 async function eliminar(id) {

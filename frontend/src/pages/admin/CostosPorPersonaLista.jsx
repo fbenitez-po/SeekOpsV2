@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Download, Plus, Pencil, Trash2, X, Upload, ChevronRight, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Download, FileDown, Plus, Pencil, Trash2, X, Upload, ChevronRight, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { costosPorPersonaApi, periodosApi, userApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
@@ -105,6 +105,17 @@ export default function CostosPorPersonaLista() {
     });
   }
 
+  function descargarPlantilla() {
+    const filas = [
+      { DNI: '12345678', REMUNERACION: 5000, DIAS: 20, HORAS: 8 },
+    ];
+    const ws = XLSX.utils.json_to_sheet(filas);
+    ws['!cols'] = [{ wch: 12 }, { wch: 16 }, { wch: 8 }, { wch: 8 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+    XLSX.writeFile(wb, 'plantilla_costos_por_persona.xlsx');
+  }
+
   function exportar() {
     const filas = costos.map((c) => {
       const { totalHoras, costoPorHora, horasUsadas, horasNoUsadas, pctDirecto, pctIndirecto } = calcular(c);
@@ -193,6 +204,9 @@ export default function CostosPorPersonaLista() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Costo por Persona</h1>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={descargarPlantilla} className="gap-2" title="Descargar plantilla para importar">
+                <FileDown className="h-4 w-4" /> Plantilla
+              </Button>
               <Button variant="outline" onClick={() => inputRef.current?.click()} className="gap-2" disabled={mutImportar.isPending}>
                 <Upload className="h-4 w-4" /> {mutImportar.isPending ? 'Importando...' : 'Importar'}
               </Button>

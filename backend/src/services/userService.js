@@ -64,7 +64,7 @@ async function obtenerPorId(id) {
       rol: p.rol,
       activo: p.activo,
     })),
-    desactivado_en: usuario.deactivated_at || null,
+    desactivado_en: usuario.deleted_at || null,
   };
 }
 
@@ -110,10 +110,10 @@ async function actualizar(id, datos) {
   return data.actualizarUsuario(id, datos);
 }
 
-async function toggleActivo(id) {
+async function toggleActivo(id, email) {
   const existe = await data.buscarUsuarioPorId(id);
   if (!existe) throw new ErrorApp('Usuario no encontrado', 404);
-  return data.toggleActivo(id);
+  return data.toggleActivo(id, email);
 }
 
 module.exports = { listar, obtenerPorId, crear, actualizar, toggleActivo };

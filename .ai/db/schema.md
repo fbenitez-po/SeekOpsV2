@@ -2,7 +2,7 @@
 
 > PostgreSQL schema: tablas, columnas, relaciones, índices y decisiones.
 > **Fuente de verdad:** `.ai/db/setup_schema.sql` + `.ai/db/setup_seeds.sql`
-> **Última actualización:** 15 de Mayo 2026
+> **Última actualización:** 18 de Mayo 2026
 
 ---
 
@@ -66,7 +66,7 @@ CREATE TABLE income_categories (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -87,7 +87,7 @@ CREATE TABLE client_categories (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -106,9 +106,9 @@ Segmentación comercial del cliente.
 CREATE TABLE client_segmentations (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -127,9 +127,9 @@ Sector económico del cliente.
 CREATE TABLE client_sectors (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -148,9 +148,9 @@ Tipos de servicio ofrecido en proyectos.
 CREATE TABLE service_types (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -169,9 +169,9 @@ Segmentación del proyecto (diferente a la de clientes).
 CREATE TABLE project_segmentation (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -190,9 +190,9 @@ Categorías del proyecto. Multi-select vía `project_project_categories`.
 CREATE TABLE project_categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -211,9 +211,9 @@ Capa de productividad del proyecto.
 CREATE TABLE productivity_layers (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -234,7 +234,7 @@ CREATE TABLE teams (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -255,7 +255,7 @@ CREATE TABLE areas (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -270,7 +270,7 @@ CREATE INDEX idx_areas_codigo ON areas(codigo);
 
 ### users
 
-Usuarios del sistema (Seekers, Gestores, Admins). Soft delete con `activo`.
+Usuarios del sistema (Seekers, Gestores, Admins). Soft delete con `enabled`.
 
 > **Nota:** No tiene `area_id`. Las áreas se gestionan vía `user_areas` (M2M).
 
@@ -287,18 +287,19 @@ CREATE TABLE users (
   avatar_url       VARCHAR(500),
   team_id          UUID NOT NULL REFERENCES teams(id),
   fecha_ingreso    DATE NOT NULL,
-  activo           BOOLEAN   NOT NULL DEFAULT true,
+  enabled          BOOLEAN   NOT NULL DEFAULT true,
   staff            BOOLEAN   NOT NULL DEFAULT false,
   super_usuario    BOOLEAN   NOT NULL DEFAULT false,
-  deactivated_at   TIMESTAMP,
+  deleted_at       TIMESTAMP,
+  deleted_by       VARCHAR(255),
   created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by       UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by       UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by       VARCHAR(255),
+  updated_by       VARCHAR(255)
 );
 CREATE INDEX idx_users_email            ON users(email);
 CREATE INDEX idx_users_numero_documento ON users(numero_documento);
-CREATE INDEX idx_users_activo           ON users(activo);
+CREATE INDEX idx_users_enabled          ON users(enabled);
 CREATE INDEX idx_users_team_id          ON users(team_id);
 ```
 
@@ -314,7 +315,7 @@ CREATE TABLE user_groups (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   nombre      VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -327,7 +328,7 @@ CREATE INDEX idx_user_groups_codigo ON user_groups(codigo);
 
 ### clients
 
-Clientes para los que se trabaja. Soft delete con `activo`.
+Clientes para los que se trabaja. Soft delete con `enabled`.
 
 > **Notas:** `nombre` fue eliminado (migración 012). `razon_social` es el identificador principal (NOT NULL). `client_category_id` es nullable.
 
@@ -344,14 +345,16 @@ CREATE TABLE clients (
   client_category_id UUID REFERENCES client_categories(id),
   segmentation_id    UUID NOT NULL REFERENCES client_segmentations(id),
   sector_id          UUID REFERENCES client_sectors(id),
-  activo             BOOLEAN   NOT NULL DEFAULT true,
+  enabled            BOOLEAN   NOT NULL DEFAULT true,
+  deleted_at         TIMESTAMP,
+  deleted_by         VARCHAR(255),
   created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by         UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by         UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by         VARCHAR(255),
+  updated_by         VARCHAR(255)
 );
 CREATE INDEX idx_clients_ruc             ON clients(ruc);
-CREATE INDEX idx_clients_activo          ON clients(activo);
+CREATE INDEX idx_clients_enabled         ON clients(enabled);
 CREATE INDEX idx_clients_segmentation_id ON clients(segmentation_id);
 CREATE INDEX idx_clients_sector_id       ON clients(sector_id);
 ```
@@ -360,7 +363,7 @@ CREATE INDEX idx_clients_sector_id       ON clients(sector_id);
 
 ### projects
 
-Proyectos de clientes. Soft delete con `activo`.
+Proyectos de clientes. Soft delete con `enabled`.
 
 > **Notas:** `descripcion` fue eliminado (migración 013). Tiene `fecha_inicio_real` y `fecha_fin_real` para calcular desviaciones.
 
@@ -379,18 +382,20 @@ CREATE TABLE projects (
   fecha_fin               DATE,
   fecha_inicio_real       DATE,
   fecha_fin_real          DATE,
-  activo                  BOOLEAN   NOT NULL DEFAULT true,
+  enabled                 BOOLEAN   NOT NULL DEFAULT true,
+  deleted_at              TIMESTAMP,
+  deleted_by              VARCHAR(255),
   created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at              TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by              UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by              UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_by              VARCHAR(255),
+  updated_by              VARCHAR(255),
   CONSTRAINT check_fecha_fin_mayor_inicio
     CHECK (fecha_fin IS NULL OR fecha_inicio IS NULL OR fecha_fin >= fecha_inicio)
 );
 CREATE INDEX idx_projects_code                    ON projects(code);
 CREATE INDEX idx_projects_client_id               ON projects(client_id);
 CREATE INDEX idx_projects_gestor_id               ON projects(gestor_id);
-CREATE INDEX idx_projects_activo                  ON projects(activo);
+CREATE INDEX idx_projects_enabled                 ON projects(enabled);
 CREATE INDEX idx_projects_project_segmentation_id ON projects(project_segmentation_id);
 CREATE INDEX idx_projects_area_id                 ON projects(area_id);
 ```
@@ -455,7 +460,7 @@ CREATE INDEX idx_ppc_category_id ON project_project_categories(project_category_
 
 ### project_users
 
-Usuarios asignados a un proyecto con su rol. Soft delete con `activo`.
+Usuarios asignados a un proyecto con su rol. Soft delete con `enabled`.
 
 ```sql
 CREATE TABLE project_users (
@@ -463,14 +468,14 @@ CREATE TABLE project_users (
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rol        VARCHAR(50) NOT NULL,
-  activo     BOOLEAN   NOT NULL DEFAULT true,
+  enabled    BOOLEAN   NOT NULL DEFAULT true,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE(project_id, user_id, rol)
 );
 CREATE INDEX idx_project_users_project_id ON project_users(project_id);
 CREATE INDEX idx_project_users_user_id    ON project_users(user_id);
-CREATE INDEX idx_project_users_activo     ON project_users(activo);
+CREATE INDEX idx_project_users_enabled    ON project_users(enabled);
 ```
 
 ---
@@ -483,14 +488,14 @@ Registros semanales de horas (cabecera). Un registro por (usuario, semana).
 
 ```sql
 CREATE TABLE time_entries (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id            UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  semana             VARCHAR(10) NOT NULL,
-  estado             VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  semana     VARCHAR(10) NOT NULL,
+  estado     VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by VARCHAR(255),
+  updated_by VARCHAR(255)
 );
 CREATE INDEX idx_time_entries_user_id     ON time_entries(user_id);
 CREATE INDEX idx_time_entries_semana      ON time_entries(semana);
@@ -543,10 +548,10 @@ CREATE TABLE time_entry_approvals (
   rejection_reason      TEXT,
   allow_resubmit        BOOLEAN DEFAULT true,
   created_at            TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id    UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by            VARCHAR(255)
 );
 CREATE INDEX idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
-CREATE INDEX idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by_user_id);
+CREATE INDEX idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
 CREATE INDEX idx_time_entry_approvals_action        ON time_entry_approvals(action);
 CREATE INDEX idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);
 ```
@@ -585,18 +590,18 @@ Proyecciones de horas del gestor para un usuario en un proyecto.
 
 ```sql
 CREATE TABLE hour_projections (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id         UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  user_id            UUID NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
-  categoria_id       UUID REFERENCES client_categories(id) ON DELETE SET NULL,
-  fecha_inicio       DATE         NOT NULL,
-  fecha_fin          DATE         NOT NULL,
-  horas_proyectadas  NUMERIC(8,1) NOT NULL,
-  notas              TEXT,
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id        UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id           UUID NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+  categoria_id      UUID REFERENCES client_categories(id) ON DELETE SET NULL,
+  fecha_inicio      DATE         NOT NULL,
+  fecha_fin         DATE         NOT NULL,
+  horas_proyectadas NUMERIC(8,1) NOT NULL,
+  notas             TEXT,
+  created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by        VARCHAR(255),
+  updated_by        VARCHAR(255),
   CONSTRAINT check_projection_dates  CHECK (fecha_fin >= fecha_inicio),
   CONSTRAINT check_horas_proyectadas CHECK (horas_proyectadas > 0 AND MOD(horas_proyectadas, 0.5) = 0)
 );
@@ -637,14 +642,14 @@ Ingresos por proyecto y período. Un ingreso por (proyecto, período).
 
 ```sql
 CREATE TABLE ingresos (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  proyecto_id        UUID NOT NULL REFERENCES projects(id)  ON DELETE CASCADE,
-  periodo_id         UUID NOT NULL REFERENCES periodos(id)  ON DELETE CASCADE,
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  proyecto_id UUID NOT NULL REFERENCES projects(id)  ON DELETE CASCADE,
+  periodo_id  UUID NOT NULL REFERENCES periodos(id)  ON DELETE CASCADE,
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255),
   CONSTRAINT uq_ingresos_proyecto_periodo UNIQUE (proyecto_id, periodo_id)
 );
 CREATE INDEX idx_ingresos_proyecto_id ON ingresos(proyecto_id);
@@ -659,15 +664,15 @@ Gastos administrativos por período. Múltiples líneas por período con código
 
 ```sql
 CREATE TABLE gastos_admin (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id         UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  codigo             VARCHAR(50) NOT NULL,
-  descripcion        VARCHAR(255),
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id  UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  codigo      VARCHAR(50) NOT NULL,
+  descripcion VARCHAR(255),
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_gastos_admin_periodo_id ON gastos_admin(periodo_id);
 ```
@@ -680,15 +685,15 @@ Costos de venta por período. Misma estructura que `gastos_admin`, categoría se
 
 ```sql
 CREATE TABLE costos_venta (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id         UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  codigo             VARCHAR(50) NOT NULL,
-  descripcion        VARCHAR(255),
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id  UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  codigo      VARCHAR(50) NOT NULL,
+  descripcion VARCHAR(255),
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_costos_venta_periodo_id ON costos_venta(periodo_id);
 ```
@@ -701,16 +706,16 @@ Remuneración por persona por período. Un registro por (usuario, período).
 
 ```sql
 CREATE TABLE costos_por_persona (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id       UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  user_id          UUID NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
-  remuneracion     NUMERIC(14,2) NOT NULL CHECK (remuneracion >= 0),
-  dias_habiles     INTEGER NOT NULL CHECK (dias_habiles > 0),
-  horas_por_dia    INTEGER NOT NULL DEFAULT 8 CHECK (horas_por_dia > 0),
-  created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id    UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  user_id       UUID NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  remuneracion  NUMERIC(14,2) NOT NULL CHECK (remuneracion >= 0),
+  dias_habiles  INTEGER NOT NULL CHECK (dias_habiles > 0),
+  horas_por_dia INTEGER NOT NULL DEFAULT 8 CHECK (horas_por_dia > 0),
+  created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by    VARCHAR(255),
+  updated_by    VARCHAR(255),
   UNIQUE (periodo_id, user_id)
 );
 CREATE INDEX idx_costos_por_persona_periodo_id ON costos_por_persona(periodo_id);
@@ -729,7 +734,7 @@ Catálogo de tipos de documento comercial.
 CREATE TABLE tipos_documento (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre     VARCHAR(100) NOT NULL UNIQUE,
-  activo     BOOLEAN NOT NULL DEFAULT true,
+  enabled    BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
@@ -757,8 +762,8 @@ CREATE TABLE registros_comerciales (
   evidencia_nombre  VARCHAR(500),
   created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by        UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by        UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by        VARCHAR(255),
+  updated_by        VARCHAR(255)
 );
 CREATE INDEX idx_registros_comerciales_proyecto_id    ON registros_comerciales(proyecto_id);
 CREATE INDEX idx_registros_comerciales_responsable_id ON registros_comerciales(responsable_id);
@@ -777,7 +782,6 @@ CREATE INDEX idx_registros_comerciales_fecha_registro ON registros_comerciales(f
 | users | M:N | projects | via project_users (con rol) |
 | users | 1:N | projects | FK gestor_id |
 | users | 1:N | time_entries | FK user_id |
-| users | 1:N | time_entry_approvals | FK created_by_user_id |
 | users | 1:N | costos_por_persona | FK user_id |
 | clients | N:0..1 | client_categories | FK client_category_id (nullable) |
 | clients | N:1 | client_segmentations | FK segmentation_id |
@@ -801,6 +805,8 @@ CREATE INDEX idx_registros_comerciales_fecha_registro ON registros_comerciales(f
 | periodos | 1:N | costos_por_persona | FK periodo_id |
 | tipos_documento | 1:N | registros_comerciales | FK tipo_documento_id |
 
+> **Nota auditoría:** Los campos `created_by` y `updated_by` son `VARCHAR(255)` (email). No son FK — no aparecen en esta tabla de relaciones.
+
 ---
 
 ## Decisiones de Diseño
@@ -809,10 +815,10 @@ CREATE INDEX idx_registros_comerciales_fecha_registro ON registros_comerciales(f
 Todos los IDs son UUID (`gen_random_uuid()`). No expone secuencias, compatible con escalabilidad horizontal.
 
 ### Soft Deletes
-Campo `activo` (boolean) en `users`, `clients`, `projects`, `project_users`. Queries filtran `WHERE activo = true`.
+Campo `enabled` (boolean) en `users`, `clients`, `projects`, `project_users`. Queries filtran `WHERE enabled = true`. Las tablas con soft delete también tienen `deleted_at` (timestamp de baja) y `deleted_by` (email del responsable).
 
 ### Auditoría
-Todas las tablas tienen `created_at`, `updated_at`, `created_by`, `updated_by`.
+Todas las tablas tienen `created_at` y `updated_at`. Los campos `created_by` y `updated_by` almacenan el **email** del usuario que realizó la acción (`VARCHAR(255)`, sin FK). Esto simplifica queries y evita dependencias circulares.
 
 ### Horas en NUMERIC
 `hours`, `extra_hours` y `horas_proyectadas` son `NUMERIC` (no INTEGER) para soportar medias horas (0.5). Constraints requieren que sean múltiplos de 0.5.
@@ -834,6 +840,11 @@ Un Gestor tiene acceso a todos los proyectos donde figura como `gestor_id`, inde
 
 ### Períodos financieros pre-cargados
 La tabla `periodos` se inicializa con un seed de Jan 2026 → May 2028. Los primeros 3 meses (Jan–Mar 2026) arrancan cerrados.
+
+### Convención de nombres de columnas
+- Tablas de configuración/lookup: columna de nombre en inglés (`name`). Excepción: `user_groups.nombre` y `tipos_documento.nombre` (conservan español por coherencia con su dominio).
+- `projects.nombre` conserva español (nombre del proyecto).
+- Columnas de auditoría estandarizadas: `enabled`, `deleted_at`, `deleted_by`, `created_by`, `updated_by` (todos VARCHAR email, sin FK).
 
 ---
 
@@ -861,4 +872,4 @@ psql "<connection_string>" -f .ai/db/setup_seeds.sql
 
 - **`setup_schema.sql`** — DDL completo: DROP + CREATE de todas las tablas, índices y constraints
 - **`setup_seeds.sql`** — Seeds: catálogos, usuario admin inicial
-- **`migrations/`** — Historial de migraciones individuales (001–019) para referencia
+- **`migrations/`** — Historial de migraciones individuales (001–020) para referencia

@@ -49,10 +49,10 @@ router.post('/', async (req, res, next) => {
     }
 
     const filas = await consultar(
-      `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by_user_id, updated_by_user_id)
+      `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $4)
        RETURNING id, proyecto_id, periodo_id, monto`,
-      [proyecto_id, periodo_id, monto, req.usuario.usuario_id]
+      [proyecto_id, periodo_id, monto, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
   } catch (err) {
@@ -74,10 +74,10 @@ router.put('/:id', async (req, res, next) => {
 
     const filas = await consultar(
       `UPDATE ingresos
-       SET monto = $1, updated_at = NOW(), updated_by_user_id = $2
+       SET monto = $1, updated_at = NOW(), updated_by = $2
        WHERE id = $3
        RETURNING id, proyecto_id, periodo_id, monto`,
-      [monto, req.usuario.usuario_id, req.params.id]
+      [monto, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Ingreso no encontrado' });
     res.json(filas[0]);
@@ -137,7 +137,7 @@ router.post('/importar', async (req, res, next) => {
       }
 
       // Buscar proyecto por code
-      const proyecto = await consultar(`SELECT id FROM projects WHERE code = $1 AND activo = true`, [String(code)]);
+      const proyecto = await consultar(`SELECT id FROM projects WHERE code = $1 AND enabled = true`, [String(code)]);
       if (!proyecto.length) {
         resultados.errores.push({ fila, motivo: `Proyecto con código "${code}" no encontrado o inactivo` });
         continue;
@@ -152,12 +152,12 @@ router.post('/importar', async (req, res, next) => {
 
       // Upsert
       const resultado = await consultar(
-        `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by_user_id, updated_by_user_id)
+        `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by, updated_by)
          VALUES ($1, $2, $3, $4, $4)
          ON CONFLICT (proyecto_id, periodo_id)
-         DO UPDATE SET monto = EXCLUDED.monto, updated_at = NOW(), updated_by_user_id = $4
+         DO UPDATE SET monto = EXCLUDED.monto, updated_at = NOW(), updated_by = $4
          RETURNING (xmax = 0) AS es_nuevo`,
-        [proyecto[0].id, periodo[0].id, ingreso, req.usuario.usuario_id]
+        [proyecto[0].id, periodo[0].id, ingreso, req.usuario.email || null]
       );
 
       if (resultado[0].es_nuevo) resultados.insertados++;

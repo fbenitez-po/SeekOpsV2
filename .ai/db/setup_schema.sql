@@ -23,53 +23,63 @@ CREATE TABLE income_categories (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_income_categories_codigo ON income_categories(codigo);
 
-CREATE TABLE client_categories (
+CREATE TABLE work_categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
-CREATE INDEX idx_client_categories_codigo ON client_categories(codigo);
+CREATE INDEX idx_work_categories_codigo ON work_categories(codigo);
 
 CREATE TABLE service_types (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_service_types_codigo ON service_types(codigo);
 
 CREATE TABLE client_segmentations (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_client_segmentations_codigo ON client_segmentations(codigo);
 
 CREATE TABLE client_sectors (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_client_sectors_codigo ON client_sectors(codigo);
 
@@ -78,9 +88,11 @@ CREATE TABLE teams (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_teams_codigo ON teams(codigo);
 
@@ -89,42 +101,50 @@ CREATE TABLE areas (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_areas_codigo ON areas(codigo);
 
 CREATE TABLE project_segmentation (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_project_segmentation_codigo ON project_segmentation(codigo);
 
 CREATE TABLE project_categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_project_categories_codigo ON project_categories(codigo);
 
 CREATE TABLE productivity_layers (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
-  nombre      VARCHAR(100) NOT NULL,
+  name        VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_productivity_layers_codigo ON productivity_layers(codigo);
 
@@ -142,18 +162,19 @@ CREATE TABLE users (
   avatar_url       VARCHAR(500),
   team_id          UUID NOT NULL REFERENCES teams(id),
   fecha_ingreso    DATE NOT NULL,
-  activo           BOOLEAN   NOT NULL DEFAULT true,
+  enabled          BOOLEAN   NOT NULL DEFAULT true,
   staff            BOOLEAN   NOT NULL DEFAULT false,
   super_usuario    BOOLEAN   NOT NULL DEFAULT false,
-  deactivated_at   TIMESTAMP,
+  deleted_at       TIMESTAMP,
+  deleted_by       VARCHAR(255),
   created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by       UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by       UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by       VARCHAR(255),
+  updated_by       VARCHAR(255)
 );
 CREATE INDEX idx_users_email            ON users(email);
 CREATE INDEX idx_users_numero_documento ON users(numero_documento);
-CREATE INDEX idx_users_activo           ON users(activo);
+CREATE INDEX idx_users_enabled          ON users(enabled);
 CREATE INDEX idx_users_team_id          ON users(team_id);
 
 CREATE TABLE user_groups (
@@ -161,7 +182,7 @@ CREATE TABLE user_groups (
   codigo      VARCHAR(50)  NOT NULL UNIQUE,
   nombre      VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  activo      BOOLEAN   NOT NULL DEFAULT true,
+  enabled     BOOLEAN   NOT NULL DEFAULT true,
   created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -176,17 +197,18 @@ CREATE TABLE clients (
   email_contacto     VARCHAR(255),
   telefono           VARCHAR(20),
   direccion          VARCHAR(200),
-  client_category_id UUID REFERENCES client_categories(id),
   segmentation_id    UUID NOT NULL REFERENCES client_segmentations(id),
   sector_id          UUID REFERENCES client_sectors(id),
-  activo             BOOLEAN   NOT NULL DEFAULT true,
+  enabled            BOOLEAN   NOT NULL DEFAULT true,
+  deleted_at         TIMESTAMP,
+  deleted_by         VARCHAR(255),
   created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by         UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by         UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by         VARCHAR(255),
+  updated_by         VARCHAR(255)
 );
 CREATE INDEX idx_clients_ruc             ON clients(ruc);
-CREATE INDEX idx_clients_activo          ON clients(activo);
+CREATE INDEX idx_clients_enabled         ON clients(enabled);
 CREATE INDEX idx_clients_segmentation_id ON clients(segmentation_id);
 CREATE INDEX idx_clients_sector_id       ON clients(sector_id);
 
@@ -204,18 +226,20 @@ CREATE TABLE projects (
   fecha_fin               DATE,
   fecha_inicio_real       DATE,
   fecha_fin_real          DATE,
-  activo                  BOOLEAN   NOT NULL DEFAULT true,
+  enabled                 BOOLEAN   NOT NULL DEFAULT true,
+  deleted_at              TIMESTAMP,
+  deleted_by              VARCHAR(255),
   created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at              TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by              UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by              UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_by              VARCHAR(255),
+  updated_by              VARCHAR(255),
   CONSTRAINT check_fecha_fin_mayor_inicio
     CHECK (fecha_fin IS NULL OR fecha_inicio IS NULL OR fecha_fin >= fecha_inicio)
 );
 CREATE INDEX idx_projects_code                    ON projects(code);
 CREATE INDEX idx_projects_client_id               ON projects(client_id);
 CREATE INDEX idx_projects_gestor_id               ON projects(gestor_id);
-CREATE INDEX idx_projects_activo                  ON projects(activo);
+CREATE INDEX idx_projects_enabled                 ON projects(enabled);
 CREATE INDEX idx_projects_project_segmentation_id ON projects(project_segmentation_id);
 CREATE INDEX idx_projects_area_id                 ON projects(area_id);
 
@@ -256,26 +280,26 @@ CREATE TABLE project_users (
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rol        VARCHAR(50) NOT NULL,
-  activo     BOOLEAN   NOT NULL DEFAULT true,
+  enabled    BOOLEAN   NOT NULL DEFAULT true,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE(project_id, user_id, rol)
 );
 CREATE INDEX idx_project_users_project_id ON project_users(project_id);
 CREATE INDEX idx_project_users_user_id    ON project_users(user_id);
-CREATE INDEX idx_project_users_activo     ON project_users(activo);
+CREATE INDEX idx_project_users_enabled    ON project_users(enabled);
 
 -- ── Tablas transaccionales ───────────────────────────────────
 
 CREATE TABLE time_entries (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id            UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  semana             VARCHAR(10) NOT NULL,
-  estado             VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  semana     VARCHAR(10) NOT NULL,
+  estado     VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by VARCHAR(255),
+  updated_by VARCHAR(255)
 );
 CREATE INDEX idx_time_entries_user_id     ON time_entries(user_id);
 CREATE INDEX idx_time_entries_semana      ON time_entries(semana);
@@ -308,10 +332,10 @@ CREATE TABLE time_entry_approvals (
   rejection_reason      TEXT,
   allow_resubmit        BOOLEAN DEFAULT true,
   created_at            TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id    UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by            VARCHAR(255)
 );
 CREATE INDEX idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
-CREATE INDEX idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by_user_id);
+CREATE INDEX idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
 CREATE INDEX idx_time_entry_approvals_action        ON time_entry_approvals(action);
 CREATE INDEX idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);
 
@@ -334,18 +358,18 @@ CREATE TABLE password_reset_tokens (
 CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
 
 CREATE TABLE hour_projections (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id         UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  user_id            UUID NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
-  categoria_id       UUID REFERENCES client_categories(id) ON DELETE SET NULL,
-  fecha_inicio       DATE         NOT NULL,
-  fecha_fin          DATE         NOT NULL,
-  horas_proyectadas  NUMERIC(8,1) NOT NULL,
-  notas              TEXT,
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id        UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id           UUID NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+  work_category_id  UUID REFERENCES work_categories(id) ON DELETE SET NULL,
+  fecha_inicio      DATE         NOT NULL,
+  fecha_fin         DATE         NOT NULL,
+  horas_proyectadas NUMERIC(8,1) NOT NULL,
+  notas             TEXT,
+  created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by        VARCHAR(255),
+  updated_by        VARCHAR(255),
   CONSTRAINT check_projection_dates  CHECK (fecha_fin >= fecha_inicio),
   CONSTRAINT check_horas_proyectadas CHECK (horas_proyectadas > 0 AND MOD(horas_proyectadas, 0.5) = 0)
 );
@@ -353,7 +377,7 @@ CREATE INDEX idx_hour_projections_project_id    ON hour_projections(project_id);
 CREATE INDEX idx_hour_projections_user_id       ON hour_projections(user_id);
 CREATE INDEX idx_hour_projections_project_user  ON hour_projections(project_id, user_id);
 CREATE INDEX idx_hour_projections_fechas        ON hour_projections(fecha_inicio, fecha_fin);
-CREATE INDEX idx_hour_projections_categoria_id  ON hour_projections(categoria_id);
+CREATE INDEX idx_hour_projections_work_category_id ON hour_projections(work_category_id);
 
 -- ── Finanzas: períodos ───────────────────────────────────────
 
@@ -387,14 +411,14 @@ FROM generate_series(
 -- ── Finanzas: ingresos ───────────────────────────────────────
 
 CREATE TABLE ingresos (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  proyecto_id        UUID NOT NULL REFERENCES projects(id)  ON DELETE CASCADE,
-  periodo_id         UUID NOT NULL REFERENCES periodos(id)  ON DELETE CASCADE,
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  proyecto_id UUID NOT NULL REFERENCES projects(id)  ON DELETE CASCADE,
+  periodo_id  UUID NOT NULL REFERENCES periodos(id)  ON DELETE CASCADE,
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255),
   CONSTRAINT uq_ingresos_proyecto_periodo UNIQUE (proyecto_id, periodo_id)
 );
 CREATE INDEX idx_ingresos_proyecto_id ON ingresos(proyecto_id);
@@ -403,46 +427,46 @@ CREATE INDEX idx_ingresos_periodo_id  ON ingresos(periodo_id);
 -- ── Finanzas: gastos administrativos ────────────────────────
 
 CREATE TABLE gastos_admin (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id         UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  codigo             VARCHAR(50) NOT NULL,
-  descripcion        VARCHAR(255),
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id  UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  codigo      VARCHAR(50) NOT NULL,
+  descripcion VARCHAR(255),
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_gastos_admin_periodo_id ON gastos_admin(periodo_id);
 
 -- ── Finanzas: costos de venta ────────────────────────────────
 
 CREATE TABLE costos_venta (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id         UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  codigo             VARCHAR(50) NOT NULL,
-  descripcion        VARCHAR(255),
-  monto              NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
-  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id  UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  codigo      VARCHAR(50) NOT NULL,
+  descripcion VARCHAR(255),
+  monto       NUMERIC(14,2) NOT NULL CHECK (monto >= 0),
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR(255),
+  updated_by  VARCHAR(255)
 );
 CREATE INDEX idx_costos_venta_periodo_id ON costos_venta(periodo_id);
 
 -- ── Finanzas: costos por persona ─────────────────────────────
 
 CREATE TABLE costos_por_persona (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  periodo_id       UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
-  user_id          UUID NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
-  remuneracion     NUMERIC(14,2) NOT NULL CHECK (remuneracion >= 0),
-  dias_habiles     INTEGER NOT NULL CHECK (dias_habiles > 0),
-  horas_por_dia    INTEGER NOT NULL DEFAULT 8 CHECK (horas_por_dia > 0),
-  created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo_id   UUID NOT NULL REFERENCES periodos(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  remuneracion NUMERIC(14,2) NOT NULL CHECK (remuneracion >= 0),
+  dias_habiles INTEGER NOT NULL CHECK (dias_habiles > 0),
+  horas_por_dia INTEGER NOT NULL DEFAULT 8 CHECK (horas_por_dia > 0),
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by   VARCHAR(255),
+  updated_by   VARCHAR(255),
   UNIQUE (periodo_id, user_id)
 );
 CREATE INDEX idx_costos_por_persona_periodo_id ON costos_por_persona(periodo_id);
@@ -453,7 +477,7 @@ CREATE INDEX idx_costos_por_persona_user_id    ON costos_por_persona(user_id);
 CREATE TABLE tipos_documento (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre     VARCHAR(100) NOT NULL UNIQUE,
-  activo     BOOLEAN NOT NULL DEFAULT true,
+  enabled    BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -480,8 +504,8 @@ CREATE TABLE registros_comerciales (
   evidencia_nombre  VARCHAR(500),
   created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
-  created_by        UUID REFERENCES users(id) ON DELETE SET NULL,
-  updated_by        UUID REFERENCES users(id) ON DELETE SET NULL
+  created_by        VARCHAR(255),
+  updated_by        VARCHAR(255)
 );
 CREATE INDEX idx_registros_comerciales_proyecto_id    ON registros_comerciales(proyecto_id);
 CREATE INDEX idx_registros_comerciales_responsable_id ON registros_comerciales(responsable_id);
