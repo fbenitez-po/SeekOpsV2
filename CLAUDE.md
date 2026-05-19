@@ -75,7 +75,7 @@ Los skills están en `.claude/skills/` y se invocan directamente:
 | `pm-`   | `/pm-session-start`, `/pm-brief`, `/pm-story`, `/pm-prioritize`, `/pm-risks` |
 | `ux-`   | `/ux-screen-spec`, `/ux-user-flow`, `/ux-design-review` |
 | `qa-`   | `/qa-test-plan` |
-| `be-`   | `/be-api-contract`, `/be-api-review`, `/be-error-map`, `/nodejs-backend-patterns` |
+| `be-`   | `/be-api-contract`, `/be-api-review`, `/be-error-map`, `/nodejs-backend-patterns`, `/clean-ddd-hexagonal` |
 | `fe-`   | `/fe-component-spec`, `/fe-api-integration`, `/fe-ui-states`, `/frontend-design`, `/vercel-react-best-practices` |
 | `db-`   | `/db-schema-design`, `/db-migration-write`, `/db-query-review`, `/postgresql-table-design`, `/postgresql-optimization`, `/postgresql-code-review` |
 | otros   | `/find-skills` |
@@ -114,6 +114,7 @@ Ejemplo:
 | Crear un servidor, endpoint o middleware en Node.js/Express | `/nodejs-backend-patterns` |
 | Definir el contrato de un endpoint antes de implementarlo | `/be-api-contract` |
 | Revisar la implementación de un endpoint | `/be-api-review` |
+| Diseñar arquitectura hexagonal, DDD, capas de dominio, puertos y adaptadores | `/clean-ddd-hexagonal` |
 
 **Discovery**
 
