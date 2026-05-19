@@ -78,6 +78,8 @@ Los skills están en `.claude/skills/` y se invocan directamente:
 | `be-`   | `/be-api-contract`, `/be-api-review`, `/be-error-map`, `/nodejs-backend-patterns`, `/clean-ddd-hexagonal` |
 | `fe-`   | `/fe-component-spec`, `/fe-api-integration`, `/fe-ui-states`, `/frontend-design`, `/vercel-react-best-practices` |
 | `db-`   | `/db-schema-design`, `/db-migration-write`, `/db-query-review`, `/postgresql-table-design`, `/postgresql-optimization`, `/postgresql-code-review` |
+| `prisma-` | `/prisma-postgres`, `/prisma-client-api`, `/prisma-cli` |
+| `ts-`   | `/typescript-advanced-types` |
 | otros   | `/find-skills` |
 
 Ejemplo:
@@ -115,6 +117,21 @@ Ejemplo:
 | Definir el contrato de un endpoint antes de implementarlo | `/be-api-contract` |
 | Revisar la implementación de un endpoint | `/be-api-review` |
 | Diseñar arquitectura hexagonal, DDD, capas de dominio, puertos y adaptadores | `/clean-ddd-hexagonal` |
+
+**Prisma**
+
+| Situación | Skill |
+|-----------|-------|
+| Diseñar o revisar `schema.prisma` con tipos nativos de PostgreSQL (`@db.Uuid`, `@db.VarChar`, etc.) | `/prisma-postgres` |
+| Escribir queries con PrismaClient (`findMany`, `create`, `update`, transacciones, `include`/`select`) | `/prisma-client-api` |
+| Ejecutar o diseñar comandos de Prisma CLI (`migrate`, `seed`, `generate`, `studio`) | `/prisma-cli` |
+
+**TypeScript**
+
+| Situación | Skill |
+|-----------|-------|
+| Definir tipos complejos (generics, conditional types, mapped types, utility types) | `/typescript-advanced-types` |
+| Code review de tipado TypeScript en el backend | `/typescript-advanced-types` |
 
 **Discovery**
 
