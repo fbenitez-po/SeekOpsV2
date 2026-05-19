@@ -10,10 +10,11 @@ BEGIN;
 -- income_categories -----------------------------------------
 
 INSERT INTO income_categories (code, name, description) VALUES
-  ('CONSULTORIA',   'Consultoría',   ''),
-  ('DESARROLLO',    'Desarrollo',    ''),
-  ('MANTENIMIENTO', 'Mantenimiento', ''),
-  ('SOPORTE',       'Soporte',       '');
+  ('RECLUTAMIENTO', 'Reclutamiento', ''),
+  ('CAPACITACION',  'Capacitación',  ''),
+  ('COMERCIAL',     'Comercial',     ''),
+  ('AREA',          'Área',          ''),
+  ('CULTURA',       'Cultura',       '');
 
 -- work_categories -------------------------------------------
 
