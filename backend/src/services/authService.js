@@ -1,9 +1,23 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { ErrorApp } = require('../middlewares/errorHandler');
 const authData = require('../data/authData');
 const emailService = require('./emailService');
+
+async function verificarPassword(password, hash) {
+  if (hash.startsWith('pbkdf2_sha256$')) {
+    const [, iterations, salt, djangoHash] = hash.split('$');
+    return new Promise((resolve, reject) => {
+      crypto.pbkdf2(password, salt, parseInt(iterations), 32, 'sha256', (err, key) => {
+        if (err) return reject(err);
+        resolve(key.toString('base64') === djangoHash);
+      });
+    });
+  }
+  return bcrypt.compare(password, hash);
+}
 
 function generarAccessToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, {
@@ -28,9 +42,14 @@ async function login(email, password) {
     throw new ErrorApp('Usuario inactivo. Contactá al administrador.', 403);
   }
 
-  const passwordValida = await bcrypt.compare(password, usuario.password_hash);
+  const passwordValida = await verificarPassword(password, usuario.password_hash);
   if (!passwordValida) {
     throw new ErrorApp('Credenciales inválidas', 401);
+  }
+
+  if (usuario.password_hash.startsWith('pbkdf2_sha256$')) {
+    const nuevoHash = await bcrypt.hash(password, 10);
+    await authData.actualizarPassword(usuario.id, nuevoHash);
   }
 
   const roles = await authData.obtenerRolesDelUsuario(usuario.id);
