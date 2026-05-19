@@ -75,14 +75,52 @@ Los skills están en `.claude/skills/` y se invocan directamente:
 | `pm-`   | `/pm-session-start`, `/pm-brief`, `/pm-story`, `/pm-prioritize`, `/pm-risks` |
 | `ux-`   | `/ux-screen-spec`, `/ux-user-flow`, `/ux-design-review` |
 | `qa-`   | `/qa-test-plan` |
-| `be-`   | `/be-api-contract`, `/be-api-review`, `/be-error-map` |
-| `fe-`   | `/fe-component-spec`, `/fe-api-integration`, `/fe-ui-states` |
-| `db-`   | `/db-schema-design`, `/db-migration-write`, `/db-query-review` |
+| `be-`   | `/be-api-contract`, `/be-api-review`, `/be-error-map`, `/nodejs-backend-patterns` |
+| `fe-`   | `/fe-component-spec`, `/fe-api-integration`, `/fe-ui-states`, `/frontend-design`, `/vercel-react-best-practices` |
+| `db-`   | `/db-schema-design`, `/db-migration-write`, `/db-query-review`, `/postgresql-table-design`, `/postgresql-optimization`, `/postgresql-code-review` |
+| otros   | `/find-skills` |
 
 Ejemplo:
 ```
 /pm-brief quiero un MVP que permita [descripción de la idea]
 ```
+
+### Cuándo usarlos automáticamente
+
+**Invocar el skill correspondiente ANTES de responder** en las siguientes situaciones. No esperar a que el usuario lo pida explícitamente.
+
+**Base de datos / PostgreSQL**
+
+| Situación | Skill |
+|-----------|-------|
+| Diseñar o revisar tablas, columnas, índices o relaciones | `/postgresql-table-design` |
+| Escribir o revisar queries SQL (SELECT, JOIN, subqueries, CTEs) | `/postgresql-optimization` |
+| Code review de funciones, triggers o procedimientos PG | `/postgresql-code-review` |
+| Crear o revisar una migración | `/db-migration-write` |
+| Revisar una query puntual | `/db-query-review` |
+
+**Frontend / React**
+
+| Situación | Skill |
+|-----------|-------|
+| Crear o modificar componentes React o páginas completas | `/frontend-design` |
+| Preguntas sobre rendimiento, bundle size o patrones React/Next.js | `/vercel-react-best-practices` |
+| Planificar cómo un componente consume un endpoint | `/fe-api-integration` |
+
+**Backend / Node.js**
+
+| Situación | Skill |
+|-----------|-------|
+| Crear un servidor, endpoint o middleware en Node.js/Express | `/nodejs-backend-patterns` |
+| Definir el contrato de un endpoint antes de implementarlo | `/be-api-contract` |
+| Revisar la implementación de un endpoint | `/be-api-review` |
+
+**Discovery**
+
+| Situación | Skill |
+|-----------|-------|
+| El usuario pregunta si hay un skill para algo | `/find-skills` |
+| No está claro qué skill aplica | `/find-skills` |
 
 ---
 
