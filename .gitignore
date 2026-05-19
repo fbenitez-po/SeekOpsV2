@@ -56,5 +56,4 @@ tmp/
 .agents/
 .opencode/
 openspec/
-skills-lock.json
 AGENTS.md
