@@ -46,10 +46,10 @@ export const timeEntryApi = {
   obtener: (id) => api.get(`/time-entries/${id}`),
   crear: (datos) => api.post('/time-entries', datos),
   ajustar: (id, datos) => api.put(`/time-entries/${id}`, datos),
-  aprobar: (id) => api.post(`/time-entries/${id}/aprobar`),
-  aprobarConObservacion: (id, datos) => api.post(`/time-entries/${id}/aprobar-con-observacion`, datos),
-  observar: (id, datos) => api.post(`/time-entries/${id}/observar`, datos),
-  rechazar: (id, datos) => api.post(`/time-entries/${id}/rechazar`, datos),
+  aprobar: (id) => api.post(`/time-entries/${id}/approve`),
+  aprobarConObservacion: (id, datos) => api.post(`/time-entries/${id}/observe`, datos),
+  observar: (id, datos) => api.post(`/time-entries/${id}/observe`, datos),
+  rechazar: (id, datos) => api.post(`/time-entries/${id}/reject`, datos),
   semanasSinCarga: () => api.get('/time-entries/semanas-sin-carga'),
   seekersSinCarga: () => api.get('/time-entries/seekers-sin-carga'),
   enviarRecordatorio: (userId) => api.post(`/time-entries/seekers-sin-carga/${userId}/recordatorio`),
@@ -90,60 +90,60 @@ export const projectionApi = {
   crear: (datos) => api.post('/projections', datos),
   actualizar: (id, datos) => api.put(`/projections/${id}`, datos),
   eliminar: (id) => api.delete(`/projections/${id}`),
-  alertas: () => api.get('/projections/alertas'),
+  alertas: () => api.get('/projections/alerts'),
 };
 
 // Periodos
 export const periodosApi = {
-  listar: () => api.get('/periodos'),
-  toggle: (id) => api.patch(`/periodos/${id}/toggle`),
+  listar: () => api.get('/periods'),
+  toggle: (id) => api.patch(`/periods/${id}/toggle`),
 };
 
 // Ingresos
 export const ingresosApi = {
-  listar: (params) => api.get('/ingresos', { params }),
-  crear: (datos) => api.post('/ingresos', datos),
-  actualizar: (id, datos) => api.put(`/ingresos/${id}`, datos),
-  eliminar: (id) => api.delete(`/ingresos/${id}`),
-  importar: (filas) => api.post('/ingresos/importar', filas),
+  listar: (params) => api.get('/revenues', { params }),
+  crear: (datos) => api.post('/revenues', datos),
+  actualizar: (id, datos) => api.put(`/revenues/${id}`, datos),
+  eliminar: (id) => api.delete(`/revenues/${id}`),
+  importar: (filas) => api.post('/revenues/import', filas),
 };
 
 // Costos de Venta
 export const costosVentaApi = {
-  listar: (params) => api.get('/costos-venta', { params }),
-  obtener: (id) => api.get(`/costos-venta/${id}`),
-  crear: (datos) => api.post('/costos-venta', datos),
-  actualizar: (id, datos) => api.put(`/costos-venta/${id}`, datos),
-  eliminar: (id) => api.delete(`/costos-venta/${id}`),
+  listar: (params) => api.get('/sales-costs', { params }),
+  obtener: (id) => api.get(`/sales-costs/${id}`),
+  crear: (datos) => api.post('/sales-costs', datos),
+  actualizar: (id, datos) => api.put(`/sales-costs/${id}`, datos),
+  eliminar: (id) => api.delete(`/sales-costs/${id}`),
 };
 
 // Costos por Persona
 export const costosPorPersonaApi = {
-  listar: (params) => api.get('/costos-por-persona', { params }),
-  obtener: (id) => api.get(`/costos-por-persona/${id}`),
-  crear: (datos) => api.post('/costos-por-persona', datos),
-  actualizar: (id, datos) => api.put(`/costos-por-persona/${id}`, datos),
-  eliminar: (id) => api.delete(`/costos-por-persona/${id}`),
-  importar: (filas) => api.post('/costos-por-persona/importar', filas),
+  listar: (params) => api.get('/personnel-costs', { params }),
+  obtener: (id) => api.get(`/personnel-costs/${id}`),
+  crear: (datos) => api.post('/personnel-costs', datos),
+  actualizar: (id, datos) => api.put(`/personnel-costs/${id}`, datos),
+  eliminar: (id) => api.delete(`/personnel-costs/${id}`),
+  importar: (filas) => api.post('/personnel-costs/import', filas),
 };
 
 // Gastos Administrativos
 export const gastosAdminApi = {
-  listar: (params) => api.get('/gastos-admin', { params }),
-  obtener: (id) => api.get(`/gastos-admin/${id}`),
-  crear: (datos) => api.post('/gastos-admin', datos),
-  actualizar: (id, datos) => api.put(`/gastos-admin/${id}`, datos),
-  eliminar: (id) => api.delete(`/gastos-admin/${id}`),
+  listar: (params) => api.get('/admin-expenses', { params }),
+  obtener: (id) => api.get(`/admin-expenses/${id}`),
+  crear: (datos) => api.post('/admin-expenses', datos),
+  actualizar: (id, datos) => api.put(`/admin-expenses/${id}`, datos),
+  eliminar: (id) => api.delete(`/admin-expenses/${id}`),
 };
 
 // Comercial
 export const comercialApi = {
-  listar: (params) => api.get('/comercial', { params }),
-  obtener: (id) => api.get(`/comercial/${id}`),
-  crear: (datos) => api.post('/comercial', datos),
-  actualizar: (id, datos) => api.put(`/comercial/${id}`, datos),
-  eliminar: (id) => api.delete(`/comercial/${id}`),
-  tiposDocumento: () => api.get('/comercial/tipos-documento'),
+  listar: (params) => api.get('/commercial', { params }),
+  obtener: (id) => api.get(`/commercial/${id}`),
+  crear: (datos) => api.post('/commercial', datos),
+  actualizar: (id, datos) => api.put(`/commercial/${id}`, datos),
+  eliminar: (id) => api.delete(`/commercial/${id}`),
+  tiposDocumento: () => api.get('/commercial/document-types'),
 };
 
 // Config

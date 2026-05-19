@@ -13,11 +13,11 @@ Seekops es una plataforma web moderna para registro de horas trabajadas de emple
 
 ## Stack tecnológico
 
-- **Frontend:** React (web)
-- **Backend:** Node.js + Express
+- **Frontend:** React + Vite + shadcn/ui + Tailwind CSS
+- **Backend:** Node.js + Express + **TypeScript strict** + **Prisma ORM** + Zod
 - **Base de datos:** PostgreSQL
-- **Autenticación:** JWT
-- **Deploy:** Por confirmar
+- **Autenticación:** JWT (access + refresh tokens)
+- **Deploy:** Vercel (backend serverless en `api/index.js` → `dist/`)
 
 ---
 
@@ -113,6 +113,16 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
   - ✅ Renombre solo del lado BD: 15 tablas (`user_groups→profiles`, `user_group_members→user_profile`, `user_areas→user_area`, `project_users→project_user`, `project_project_categories→project_project_category`, `periodos→periods`, `ingresos→revenues`, `gastos_admin→admin_expenses`, `costos_venta→sales_costs`, `costos_por_persona→personnel_costs`, `registros_comerciales→commercial_records`, `tipos_documento→document_types`) + ~50 columnas (`gestor_id→manager_id`, `enabled→is_active`, `semana→week`, `estado→status`, `allow_resubmit→can_resubmit`, etc.)
   - ✅ **Decisión:** la capa API/DTO se mantiene en español vía alias SQL (`first_name AS nombres`, `is_active as activo`) y claves `datos.*`. Sin cambios en services, rutas, validadores ni frontend. Sin cambios funcionales (auditoría como email y roles vía `profiles.code` ya estaban así)
   - ✅ Verificado end-to-end con docker-compose (db+backend+frontend): 17 GET 200, write paths (clientes, usuarios, proyectos, finanzas), 0 errores Postgres
+- **Refactor backend TypeScript + Prisma + modular (2026-05-19):**
+  - ✅ Migración completa de JS → TypeScript strict (`allowJs: false`, `tsc --noEmit` sin errores)
+  - ✅ Prisma 7 como ORM (bootstrap por `db pull` + baseline `0_init`); fuente de verdad DB pasa a `prisma/schema.prisma` + `prisma/migrations/`
+  - ✅ Arquitectura modular por dominio: `src/modules/<dominio>/{routes,controller,service,repository,mapper,schema}` + `src/shared/{db,config,http,middlewares,services}`
+  - ✅ Validación con Zod (reemplaza express-validator)
+  - ✅ Contrato API congelado: claves JSON en español vía capa mapper, status codes y formato `{ error }` invariantes
+  - ✅ Paths anglicizados: `/periodos→/periods`, `/ingresos→/revenues`, `/gastos-admin→/admin-expenses`, `/costos-venta→/sales-costs`, `/costos-por-persona→/personnel-costs`, `/comercial→/commercial`, `/alertas→/alerts`, verbos `/aprobar→/approve`, `/observar→/observe`, `/rechazar→/reject`, `/importar→/import`, `/tipos-documento→/document-types`
+  - ✅ Impacto frontend: solo `frontend/src/services/api.js` (cero cambios en componentes)
+  - ✅ Suite de tests de contrato (13 tests supertest): body+status verificados pre/post refactor
+  - ✅ Módulos migrados: clients, config, users, projects, timeEntries, projections, finance (periods, revenues, adminExpenses, salesCosts, personnelCosts), commercial, auth
 - **Documentación lista para desarrollo:**
   - ✅ `.ai/SPECIFICATION-SUMMARY.md` — Referencia técnica centralizada (campos, validaciones, endpoints)
   - ✅ Historias de usuario (Epic 00-03) con criterios de aceptación detallados
@@ -309,9 +319,12 @@ Ver: `.ai/stories/README.md`
 | `.ai/api/mocks/clients.json` | Mocks de clientes ✅ |
 | `.ai/api/mocks/projects.json` | Mocks de proyectos ✅ |
 | `.ai/api/mocks/config.json` | Mocks de tablas de configuración/lookup ✅ |
-| `.ai/db/schema.sql` | **Fuente de verdad del schema** — DDL completo y actualizado |
-| `.ai/db/data.sql` | Seeds iniciales (catálogos + usuario admin) |
-| `.ai/db/schema.md` | Documentación del schema (debe coincidir con `schema.sql`) |
+| `backend/prisma/schema.prisma` | **Fuente de verdad del schema** — editar aquí, luego `prisma migrate dev` |
+| `backend/prisma/migrations/` | Historial de migraciones generadas por Prisma |
+| `backend/prisma/seed.ts` | Seeds iniciales (catálogos + usuario admin) |
+| `.ai/db/schema.sql` | Referencia histórica del DDL original (solo lectura) |
+| `.ai/db/data.sql` | Origen de los datos iniciales; trasladado a `prisma/seed.ts` |
+| `.ai/db/schema.md` | Documentación del schema (mantener actualizada con `schema.prisma`) |
 | `.ai/db/migrations_archive/` | Historial de migraciones incrementales (001 en adelante) |
 | `.ai/pendientes.md` | Decisiones bloqueantes (8 cerradas ✅) |
 | `WORKFLOW.md` | Checklist por etapa |

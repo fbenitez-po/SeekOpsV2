@@ -152,38 +152,39 @@ Los tokens exactos (colores, tipografía, layout, badges) están en `.ai/context
 
 ## ⚠️ Regla crítica — Base de datos
 
-**La fuente de verdad del schema es `.ai/db/schema.sql` + `.ai/db/data.sql`.** Juntos reflejan el estado completo y final de todas las tablas, índices, constraints y datos iniciales.
+**La fuente de verdad del schema es `backend/prisma/schema.prisma` + `backend/prisma/migrations/`.** Prisma gestiona el ciclo de vida completo del schema desde el refactor del backend (2026-05-19).
 
 ### Convenciones del schema (no negociables)
 
 - **Idioma:** todos los identificadores (tablas, columnas, constraints, índices) en **inglés**. Los *valores* de datos pueden quedar en español (contenido de negocio).
-- **Auditoría tiered:** bloque estándar al final de cada tabla = `created_at`, `created_by` (`VARCHAR(50)` `DEFAULT 'admin'`), `updated_at` (nullable), `updated_by`, `deleted_at`, `deleted_by`, `is_active`. No todas las tablas llevan el bloque completo (tablas puente, tokens y logs llevan menos). Detalle por tabla en `.ai/db/schema.md`.
+- **Auditoría tiered:** bloque estándar al final de cada tabla = `created_at`, `created_by` (`VARCHAR(50)` `DEFAULT 'admin'`), `updated_at` (nullable), `updated_by`, `deleted_at`, `deleted_by`, `is_active`. No todas las tablas llevan el bloque completo (tablas puente, tokens y logs llevan menos).
 - **PKs:** UUID `gen_random_uuid()` en entidades; las tablas puente usan **PK compuesta** sin `id` surrogate.
-- **Layout:** constraints e índices inline / junto a cada `CREATE TABLE` (estilo terso).
 
-### Convención de migraciones
+### Workflow de migraciones (Prisma)
 
 | Situación | Acción |
 |-----------|--------|
-| Nueva BD desde cero | `schema.sql` + `data.sql` |
-| BD existente con datos | Aplicar solo la migración incremental |
-| Después de cualquier cambio de schema | Actualizar `schema.sql` y `schema.md` |
+| Nueva BD desde cero | `docker compose up` + `prisma migrate deploy` + `prisma db seed` |
+| BD existente con datos | `prisma migrate dev --name <descripcion>` |
+| Tests locales | `prisma migrate reset` (borra + migra + seedea) |
+| Producción | `prisma migrate deploy` (no interactivo, no resetea) |
 
 ### Archivos
 
-- **`.ai/db/schema.sql`** — DDL completo (31 tablas, índices, constraints), identificadores en inglés. Siempre actualizado.
-- **`.ai/db/data.sql`** — Solo datos: catálogos/seeds + usuario admin. Sin DDL. Se ejecuta **después** de `schema.sql`.
-- **`.ai/db/schema.md`** — Documentación del schema. Debe coincidir con `schema.sql`.
-- **`.ai/db/migrations_archive/`** — Historial de migraciones incrementales (001–021), solo referencia.
-- **`.ai/db/setup_schema.sql` / `setup_seeds.sql`** — ⚠️ Legacy/obsoletos, reemplazados por `schema.sql` + `data.sql`. Pendientes de borrar.
+- **`backend/prisma/schema.prisma`** — Fuente de verdad del schema. Editar aquí, luego `prisma migrate dev`.
+- **`backend/prisma/migrations/`** — Historial de migraciones generadas por Prisma. No editar manualmente.
+- **`backend/prisma/seed.ts`** — Datos iniciales (catálogos + usuario admin). Se ejecuta con `prisma db seed` o `prisma migrate reset`.
+- **`.ai/db/schema.sql`** — Referencia histórica del DDL original (bootstrap de la migración inicial `0_init`). Solo lectura.
+- **`.ai/db/data.sql`** — Origen de los datos iniciales, trasladado a `prisma/seed.ts`. Solo referencia.
+- **`.ai/db/schema.md`** — Documentación del schema. Mantener actualizada cuando cambie `schema.prisma`.
 
 ### Cómo agregar un cambio de schema
 
-1. Crear `.ai/db/migrations_archive/YYYYMMDDHHMMSS_description.sql` (solo el delta: ALTER, CREATE, etc.)
-2. Actualizar `.ai/db/schema.sql` incorporando el cambio
+1. Editar `backend/prisma/schema.prisma` con el cambio deseado
+2. Ejecutar `prisma migrate dev --name <descripcion>` — Prisma genera el SQL y aplica
 3. Actualizar `.ai/db/schema.md` con la tabla/columna afectada
 
-**Nunca** modificar `schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
+**Nunca** modificar los archivos de migración generados ni aplicar SQL directo a la BD sin registrarlo en Prisma.
 
 ---
 

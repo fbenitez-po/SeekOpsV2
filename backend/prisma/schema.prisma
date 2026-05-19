@@ -1,0 +1,625 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_expenses {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  period_id   String    @db.Uuid
+  code        String    @db.VarChar(50)
+  description String?   @db.VarChar(255)
+  amount      Decimal   @db.Decimal(14, 2)
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  created_by  String    @default("admin") @db.VarChar(50)
+  updated_at  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  deleted_at  DateTime? @db.Timestamp(6)
+  deleted_by  String?   @db.VarChar(50)
+  is_active   Boolean   @default(true)
+  periods     periods   @relation(fields: [period_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([period_id], map: "idx_admin_expenses_period_id")
+}
+
+model areas {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String      @unique @db.VarChar(50)
+  name        String      @db.VarChar(100)
+  description String?
+  created_at  DateTime    @default(now()) @db.Timestamp(6)
+  created_by  String      @default("admin") @db.VarChar(50)
+  updated_at  DateTime?   @db.Timestamp(6)
+  updated_by  String?     @db.VarChar(50)
+  deleted_at  DateTime?   @db.Timestamp(6)
+  deleted_by  String?     @db.VarChar(50)
+  is_active   Boolean     @default(true)
+  projects    projects[]
+  user_area   user_area[]
+
+  @@index([code], map: "idx_areas_code")
+}
+
+model client_sectors {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  created_by  String    @default("admin") @db.VarChar(50)
+  updated_at  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  deleted_at  DateTime? @db.Timestamp(6)
+  deleted_by  String?   @db.VarChar(50)
+  is_active   Boolean   @default(true)
+  clients     clients[]
+
+  @@index([code], map: "idx_client_sectors_code")
+}
+
+model client_segmentations {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  created_by  String    @default("admin") @db.VarChar(50)
+  updated_at  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  deleted_at  DateTime? @db.Timestamp(6)
+  deleted_by  String?   @db.VarChar(50)
+  is_active   Boolean   @default(true)
+  clients     clients[]
+
+  @@index([code], map: "idx_client_segmentations_code")
+}
+
+model clients {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  legal_name           String               @db.VarChar(150)
+  trade_name           String?              @db.VarChar(150)
+  ruc                  String               @unique @db.VarChar(14)
+  contact_name         String?              @db.VarChar(100)
+  contact_email        String?              @db.VarChar(255)
+  phone                String?              @db.VarChar(20)
+  address              String?              @db.VarChar(200)
+  segmentation_id      String               @db.Uuid
+  sector_id            String?              @db.Uuid
+  created_at           DateTime             @default(now()) @db.Timestamp(6)
+  created_by           String               @default("admin") @db.VarChar(50)
+  updated_at           DateTime?            @db.Timestamp(6)
+  updated_by           String?              @db.VarChar(50)
+  deleted_at           DateTime?            @db.Timestamp(6)
+  deleted_by           String?              @db.VarChar(50)
+  is_active            Boolean              @default(true)
+  client_sectors       client_sectors?      @relation(fields: [sector_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  client_segmentations client_segmentations @relation(fields: [segmentation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projects             projects[]
+
+  @@index([is_active], map: "idx_clients_is_active")
+  @@index([ruc], map: "idx_clients_ruc")
+  @@index([sector_id], map: "idx_clients_sector_id")
+  @@index([segmentation_id], map: "idx_clients_segmentation_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model commercial_records {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  record_date       DateTime        @db.Date
+  project_id        String          @db.Uuid
+  owner_id          String          @db.Uuid
+  detail            String?
+  price             Decimal         @db.Decimal(12, 2)
+  currency          String          @default("PEN") @db.VarChar(3)
+  document_type_id  String?         @db.Uuid
+  has_contract      Boolean         @default(false)
+  is_billed         Boolean         @default(false)
+  evidence_filename String?         @db.VarChar(500)
+  created_at        DateTime        @default(now()) @db.Timestamp(6)
+  created_by        String          @default("admin") @db.VarChar(50)
+  updated_at        DateTime?       @db.Timestamp(6)
+  updated_by        String?         @db.VarChar(50)
+  deleted_at        DateTime?       @db.Timestamp(6)
+  deleted_by        String?         @db.VarChar(50)
+  is_active         Boolean         @default(true)
+  document_types    document_types? @relation(fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users             users           @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projects          projects        @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([owner_id], map: "idx_commercial_records_owner_id")
+  @@index([project_id], map: "idx_commercial_records_project_id")
+  @@index([record_date(sort: Desc)], map: "idx_commercial_records_record_date")
+}
+
+model document_types {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String               @unique @db.VarChar(100)
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  created_by         String               @default("admin") @db.VarChar(50)
+  updated_at         DateTime?            @db.Timestamp(6)
+  updated_by         String?              @db.VarChar(50)
+  deleted_at         DateTime?            @db.Timestamp(6)
+  deleted_by         String?              @db.VarChar(50)
+  is_active          Boolean              @default(true)
+  commercial_records commercial_records[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model hour_projections {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id       String           @db.Uuid
+  user_id          String           @db.Uuid
+  work_category_id String?          @db.Uuid
+  start_date       DateTime         @db.Date
+  end_date         DateTime         @db.Date
+  projected_hours  Decimal          @db.Decimal(8, 1)
+  notes            String?
+  created_at       DateTime         @default(now()) @db.Timestamp(6)
+  created_by       String           @default("admin") @db.VarChar(50)
+  updated_at       DateTime?        @db.Timestamp(6)
+  updated_by       String?          @db.VarChar(50)
+  deleted_at       DateTime?        @db.Timestamp(6)
+  deleted_by       String?          @db.VarChar(50)
+  is_active        Boolean          @default(true)
+  projects         projects         @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  work_categories  work_categories? @relation(fields: [work_category_id], references: [id], onUpdate: NoAction)
+
+  @@index([start_date, end_date], map: "idx_hour_projections_dates")
+  @@index([project_id], map: "idx_hour_projections_project_id")
+  @@index([project_id, user_id], map: "idx_hour_projections_project_user")
+  @@index([user_id], map: "idx_hour_projections_user_id")
+  @@index([work_category_id], map: "idx_hour_projections_work_category_id")
+}
+
+model income_categories {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String             @unique @db.VarChar(50)
+  name             String             @db.VarChar(100)
+  description      String?
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  created_by       String             @default("admin") @db.VarChar(50)
+  updated_at       DateTime?          @db.Timestamp(6)
+  updated_by       String?            @db.VarChar(50)
+  deleted_at       DateTime?          @db.Timestamp(6)
+  deleted_by       String?            @db.VarChar(50)
+  is_active        Boolean            @default(true)
+  time_entry_lines time_entry_lines[]
+
+  @@index([code], map: "idx_income_categories_code")
+}
+
+model password_reset_tokens {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  token      String
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token], map: "idx_password_reset_tokens_token")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model periods {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  month           Int
+  year            Int
+  is_closed       Boolean           @default(false)
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  created_by      String            @default("admin") @db.VarChar(50)
+  updated_at      DateTime?         @db.Timestamp(6)
+  updated_by      String?           @db.VarChar(50)
+  deleted_at      DateTime?         @db.Timestamp(6)
+  deleted_by      String?           @db.VarChar(50)
+  is_active       Boolean           @default(true)
+  admin_expenses  admin_expenses[]
+  personnel_costs personnel_costs[]
+  revenues        revenues[]
+  sales_costs     sales_costs[]
+
+  @@unique([month, year], map: "uq_periods_month_year")
+  @@index([year], map: "idx_periods_year")
+  @@index([year, month], map: "idx_periods_year_month")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model personnel_costs {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  period_id     String    @db.Uuid
+  user_id       String    @db.Uuid
+  compensation  Decimal   @db.Decimal(14, 2)
+  business_days Int
+  hours_per_day Int       @default(8)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  created_by    String    @default("admin") @db.VarChar(50)
+  updated_at    DateTime? @db.Timestamp(6)
+  updated_by    String?   @db.VarChar(50)
+  deleted_at    DateTime? @db.Timestamp(6)
+  deleted_by    String?   @db.VarChar(50)
+  is_active     Boolean   @default(true)
+  periods       periods   @relation(fields: [period_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([period_id, user_id], map: "uq_personnel_costs_period_user")
+  @@index([period_id], map: "idx_personnel_costs_period_id")
+  @@index([user_id], map: "idx_personnel_costs_user_id")
+}
+
+model productivity_layers {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String     @unique @db.VarChar(50)
+  name        String     @db.VarChar(100)
+  description String?
+  created_at  DateTime   @default(now()) @db.Timestamp(6)
+  created_by  String     @default("admin") @db.VarChar(50)
+  updated_at  DateTime?  @db.Timestamp(6)
+  updated_by  String?    @db.VarChar(50)
+  deleted_at  DateTime?  @db.Timestamp(6)
+  deleted_by  String?    @db.VarChar(50)
+  is_active   Boolean    @default(true)
+  projects    projects[]
+
+  @@index([code], map: "idx_productivity_layers_code")
+}
+
+model profiles {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String         @unique @db.VarChar(50)
+  name         String         @db.VarChar(100)
+  description  String?
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  created_by   String         @default("admin") @db.VarChar(50)
+  updated_at   DateTime?      @db.Timestamp(6)
+  updated_by   String?        @db.VarChar(50)
+  deleted_at   DateTime?      @db.Timestamp(6)
+  deleted_by   String?        @db.VarChar(50)
+  is_active    Boolean        @default(true)
+  user_profile user_profile[]
+
+  @@index([code], map: "idx_profiles_code")
+}
+
+model project_categories {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                     String                     @unique @db.VarChar(50)
+  name                     String                     @db.VarChar(100)
+  description              String?
+  created_at               DateTime                   @default(now()) @db.Timestamp(6)
+  created_by               String                     @default("admin") @db.VarChar(50)
+  updated_at               DateTime?                  @db.Timestamp(6)
+  updated_by               String?                    @db.VarChar(50)
+  deleted_at               DateTime?                  @db.Timestamp(6)
+  deleted_by               String?                    @db.VarChar(50)
+  is_active                Boolean                    @default(true)
+  project_project_category project_project_category[]
+
+  @@index([code], map: "idx_project_categories_code")
+}
+
+model project_project_category {
+  project_id          String             @db.Uuid
+  project_category_id String             @db.Uuid
+  created_at          DateTime           @default(now()) @db.Timestamp(6)
+  created_by          String             @default("admin") @db.VarChar(50)
+  project_categories  project_categories @relation(fields: [project_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projects            projects           @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([project_id, project_category_id])
+  @@index([project_category_id], map: "idx_project_project_category_category_id")
+  @@index([project_id], map: "idx_project_project_category_project_id")
+}
+
+model project_segmentation {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String     @unique @db.VarChar(50)
+  name        String     @db.VarChar(100)
+  description String?
+  created_at  DateTime   @default(now()) @db.Timestamp(6)
+  created_by  String     @default("admin") @db.VarChar(50)
+  updated_at  DateTime?  @db.Timestamp(6)
+  updated_by  String?    @db.VarChar(50)
+  deleted_at  DateTime?  @db.Timestamp(6)
+  deleted_by  String?    @db.VarChar(50)
+  is_active   Boolean    @default(true)
+  projects    projects[]
+
+  @@index([code], map: "idx_project_segmentation_code")
+}
+
+model project_user {
+  project_id String    @db.Uuid
+  user_id    String    @db.Uuid
+  role       String    @db.VarChar(50)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  created_by String    @default("admin") @db.VarChar(50)
+  updated_at DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  is_active  Boolean   @default(true)
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([project_id, user_id, role])
+  @@index([is_active], map: "idx_project_user_is_active")
+  @@index([project_id], map: "idx_project_user_project_id")
+  @@index([user_id], map: "idx_project_user_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model projects {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                     String                     @unique @db.VarChar(20)
+  name                     String                     @db.VarChar(100)
+  client_id                String                     @db.Uuid
+  project_segmentation_id  String                     @db.Uuid
+  productivity_layer_id    String?                    @db.Uuid
+  service_type_id          String?                    @db.Uuid
+  area_id                  String?                    @db.Uuid
+  manager_id               String                     @db.Uuid
+  start_date               DateTime?                  @db.Date
+  end_date                 DateTime?                  @db.Date
+  actual_start_date        DateTime?                  @db.Date
+  actual_end_date          DateTime?                  @db.Date
+  created_at               DateTime                   @default(now()) @db.Timestamp(6)
+  created_by               String                     @default("admin") @db.VarChar(50)
+  updated_at               DateTime?                  @db.Timestamp(6)
+  updated_by               String?                    @db.VarChar(50)
+  deleted_at               DateTime?                  @db.Timestamp(6)
+  deleted_by               String?                    @db.VarChar(50)
+  is_active                Boolean                    @default(true)
+  commercial_records       commercial_records[]
+  hour_projections         hour_projections[]
+  project_project_category project_project_category[]
+  project_user             project_user[]
+  areas                    areas?                     @relation(fields: [area_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clients                  clients                    @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                    users                      @relation(fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  productivity_layers      productivity_layers?       @relation(fields: [productivity_layer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project_segmentation     project_segmentation       @relation(fields: [project_segmentation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_types            service_types?             @relation(fields: [service_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  revenues                 revenues[]
+  time_entry_lines         time_entry_lines[]
+
+  @@index([area_id], map: "idx_projects_area_id")
+  @@index([client_id], map: "idx_projects_client_id")
+  @@index([code], map: "idx_projects_code")
+  @@index([is_active], map: "idx_projects_is_active")
+  @@index([manager_id], map: "idx_projects_manager_id")
+  @@index([project_segmentation_id], map: "idx_projects_project_segmentation_id")
+}
+
+model refresh_tokens {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @unique @db.Uuid
+  token      String
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token], map: "idx_refresh_tokens_token")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model revenues {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id String    @db.Uuid
+  period_id  String    @db.Uuid
+  amount     Decimal   @db.Decimal(14, 2)
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  created_by String    @default("admin") @db.VarChar(50)
+  updated_at DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  deleted_at DateTime? @db.Timestamp(6)
+  deleted_by String?   @db.VarChar(50)
+  is_active  Boolean   @default(true)
+  periods    periods   @relation(fields: [period_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects   projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, period_id], map: "uq_revenues_project_period")
+  @@index([period_id], map: "idx_revenues_period_id")
+  @@index([project_id], map: "idx_revenues_project_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sales_costs {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  period_id   String    @db.Uuid
+  code        String    @db.VarChar(50)
+  description String?   @db.VarChar(255)
+  amount      Decimal   @db.Decimal(14, 2)
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  created_by  String    @default("admin") @db.VarChar(50)
+  updated_at  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  deleted_at  DateTime? @db.Timestamp(6)
+  deleted_by  String?   @db.VarChar(50)
+  is_active   Boolean   @default(true)
+  periods     periods   @relation(fields: [period_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([period_id], map: "idx_sales_costs_period_id")
+}
+
+model service_types {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String     @unique @db.VarChar(50)
+  name        String     @db.VarChar(100)
+  description String?
+  created_at  DateTime   @default(now()) @db.Timestamp(6)
+  created_by  String     @default("admin") @db.VarChar(50)
+  updated_at  DateTime?  @db.Timestamp(6)
+  updated_by  String?    @db.VarChar(50)
+  deleted_at  DateTime?  @db.Timestamp(6)
+  deleted_by  String?    @db.VarChar(50)
+  is_active   Boolean    @default(true)
+  projects    projects[]
+
+  @@index([code], map: "idx_service_types_code")
+}
+
+model teams {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  created_by  String    @default("admin") @db.VarChar(50)
+  updated_at  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  deleted_at  DateTime? @db.Timestamp(6)
+  deleted_by  String?   @db.VarChar(50)
+  is_active   Boolean   @default(true)
+  users       users[]
+
+  @@index([code], map: "idx_teams_code")
+}
+
+model time_entries {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id              String                 @db.Uuid
+  week                 String                 @db.VarChar(10)
+  status               String                 @default("PENDIENTE") @db.VarChar(50)
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  created_by           String                 @default("admin") @db.VarChar(50)
+  updated_at           DateTime?              @db.Timestamp(6)
+  updated_by           String?                @db.VarChar(50)
+  deleted_at           DateTime?              @db.Timestamp(6)
+  deleted_by           String?                @db.VarChar(50)
+  is_active            Boolean                @default(true)
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  time_entry_approvals time_entry_approvals[]
+  time_entry_lines     time_entry_lines[]
+
+  @@index([status], map: "idx_time_entries_status")
+  @@index([user_id], map: "idx_time_entries_user_id")
+  @@index([user_id, week], map: "idx_time_entries_user_week")
+  @@index([week], map: "idx_time_entries_week")
+}
+
+model time_entry_approvals {
+  id                    String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  time_entry_id         String       @db.Uuid
+  action                String       @db.VarChar(50)
+  comment               String?
+  suggested_hours       Decimal?     @db.Decimal(6, 1)
+  suggested_extra_hours Decimal?     @db.Decimal(4, 1)
+  rejection_reason      String?
+  can_resubmit          Boolean?     @default(true)
+  created_at            DateTime     @default(now()) @db.Timestamp(6)
+  created_by            String       @default("admin") @db.VarChar(50)
+  time_entries          time_entries @relation(fields: [time_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([action], map: "idx_time_entry_approvals_action")
+  @@index([created_at], map: "idx_time_entry_approvals_created_at")
+  @@index([created_by], map: "idx_time_entry_approvals_created_by")
+  @@index([time_entry_id], map: "idx_time_entry_approvals_time_entry_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model time_entry_lines {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  time_entry_id      String             @db.Uuid
+  project_id         String             @db.Uuid
+  income_category_id String?            @db.Uuid
+  hours              Decimal            @db.Decimal(6, 1)
+  extra_hours        Decimal            @default(0) @db.Decimal(4, 1)
+  comment            String?
+  created_at         DateTime           @default(now()) @db.Timestamp(6)
+  created_by         String             @default("admin") @db.VarChar(50)
+  updated_at         DateTime?          @db.Timestamp(6)
+  updated_by         String?            @db.VarChar(50)
+  deleted_at         DateTime?          @db.Timestamp(6)
+  deleted_by         String?            @db.VarChar(50)
+  is_active          Boolean            @default(true)
+  income_categories  income_categories? @relation(fields: [income_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projects           projects           @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  time_entries       time_entries       @relation(fields: [time_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id], map: "idx_time_entry_lines_project_id")
+  @@index([time_entry_id], map: "idx_time_entry_lines_time_entry_id")
+}
+
+model user_area {
+  user_id    String   @db.Uuid
+  area_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  created_by String   @default("admin") @db.VarChar(50)
+  areas      areas    @relation(fields: [area_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, area_id])
+  @@index([area_id], map: "idx_user_area_area_id")
+  @@index([user_id], map: "idx_user_area_user_id")
+}
+
+model user_profile {
+  user_id    String   @db.Uuid
+  profile_id String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  created_by String   @default("admin") @db.VarChar(50)
+  profiles   profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, profile_id])
+  @@index([profile_id], map: "idx_user_profile_profile_id")
+  @@index([user_id], map: "idx_user_profile_user_id")
+}
+
+model users {
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String                 @unique @db.VarChar(255)
+  password_hash         String                 @default("$placeholder$") @db.VarChar(255)
+  document_number       String                 @unique @db.VarChar(20)
+  first_name            String                 @db.VarChar(100)
+  last_name             String                 @db.VarChar(100)
+  position              String                 @db.VarChar(100)
+  mobile_phone          String?                @db.VarChar(20)
+  avatar_url            String?                @db.VarChar(500)
+  team_id               String                 @db.Uuid
+  hire_date             DateTime               @db.Date
+  is_staff              Boolean                @default(false)
+  is_superuser          Boolean                @default(false)
+  created_at            DateTime               @default(now()) @db.Timestamp(6)
+  created_by            String                 @default("admin") @db.VarChar(50)
+  updated_at            DateTime?              @db.Timestamp(6)
+  updated_by            String?                @db.VarChar(50)
+  deleted_at            DateTime?              @db.Timestamp(6)
+  deleted_by            String?                @db.VarChar(50)
+  is_active             Boolean                @default(true)
+  commercial_records    commercial_records[]
+  hour_projections      hour_projections[]
+  password_reset_tokens password_reset_tokens?
+  personnel_costs       personnel_costs[]
+  project_user          project_user[]
+  projects              projects[]
+  refresh_tokens        refresh_tokens?
+  time_entries          time_entries[]
+  user_area             user_area[]
+  user_profile          user_profile[]
+  teams                 teams                  @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([document_number], map: "idx_users_document_number")
+  @@index([email], map: "idx_users_email")
+  @@index([is_active], map: "idx_users_is_active")
+  @@index([team_id], map: "idx_users_team_id")
+}
+
+model work_categories {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String             @unique @db.VarChar(50)
+  name             String             @db.VarChar(100)
+  description      String?
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  created_by       String             @default("admin") @db.VarChar(50)
+  updated_at       DateTime?          @db.Timestamp(6)
+  updated_by       String?            @db.VarChar(50)
+  deleted_at       DateTime?          @db.Timestamp(6)
+  deleted_by       String?            @db.VarChar(50)
+  is_active        Boolean            @default(true)
+  hour_projections hour_projections[]
+
+  @@index([code], map: "idx_work_categories_code")
+}
