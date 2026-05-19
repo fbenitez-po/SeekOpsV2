@@ -9,16 +9,16 @@ async function listarProyectos(filtros, usuarioId, roles) {
     if (roles.includes('GESTOR')) {
       params.push(usuarioId);
       params.push(usuarioId);
-      condiciones.push(`(EXISTS (SELECT 1 FROM project_users pu WHERE pu.project_id = p.id AND pu.user_id = $${idx++}) OR p.gestor_id = $${idx++})`);
+      condiciones.push(`(EXISTS (SELECT 1 FROM project_user pu WHERE pu.project_id = p.id AND pu.user_id = $${idx++}) OR p.manager_id = $${idx++})`);
     } else {
       params.push(usuarioId);
-      condiciones.push(`EXISTS (SELECT 1 FROM project_users pu WHERE pu.project_id = p.id AND pu.user_id = $${idx++})`);
+      condiciones.push(`EXISTS (SELECT 1 FROM project_user pu WHERE pu.project_id = p.id AND pu.user_id = $${idx++})`);
     }
   }
 
   if (filtros.activo !== undefined) {
     params.push(filtros.activo === 'true');
-    condiciones.push(`p.enabled = $${idx++}`);
+    condiciones.push(`p.is_active = $${idx++}`);
   }
   if (filtros.cliente_id) {
     params.push(filtros.cliente_id);
@@ -26,11 +26,11 @@ async function listarProyectos(filtros, usuarioId, roles) {
   }
   if (filtros.gestor_id) {
     params.push(filtros.gestor_id);
-    condiciones.push(`p.gestor_id = $${idx++}`);
+    condiciones.push(`p.manager_id = $${idx++}`);
   }
   if (filtros.search) {
     params.push(`%${filtros.search}%`);
-    condiciones.push(`(p.nombre ILIKE $${idx} OR p.code ILIKE $${idx++})`);
+    condiciones.push(`(p.name ILIKE $${idx} OR p.code ILIKE $${idx++})`);
   }
 
   const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
@@ -38,32 +38,33 @@ async function listarProyectos(filtros, usuarioId, roles) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT p.id, p.code as codigo, p.nombre, p.enabled as activo,
-           p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real,
-           c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre,
-           g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
+    SELECT p.id, p.code as codigo, p.name AS nombre, p.is_active as activo,
+           p.start_date AS fecha_inicio, p.end_date AS fecha_fin,
+           p.actual_start_date AS fecha_inicio_real, p.actual_end_date AS fecha_fin_real,
+           c.id as cliente_id, COALESCE(c.trade_name, c.legal_name) as cliente_nombre,
+           g.id as gestor_id, g.first_name as gestor_nombres, g.last_name as gestor_apellidos,
            s.id as seg_id, s.name as seg_nombre,
            (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.name) ORDER BY pc.name), '[]'::json)
-            FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
+            FROM project_project_category ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
             WHERE ppc.project_id = p.id) as categorias,
            ts.id as ts_id, ts.name as ts_nombre,
            a.id as area_id, a.name as area_nombre,
-           (SELECT COUNT(*) FROM project_users pu WHERE pu.project_id = p.id) as usuarios_count
+           (SELECT COUNT(*) FROM project_user pu WHERE pu.project_id = p.id) as usuarios_count
     FROM projects p
     JOIN clients c ON c.id = p.client_id
-    JOIN users g ON g.id = p.gestor_id
+    JOIN users g ON g.id = p.manager_id
     LEFT JOIN project_segmentation s ON s.id = p.project_segmentation_id
     LEFT JOIN service_types ts ON ts.id = p.service_type_id
     LEFT JOIN areas a ON a.id = p.area_id
     ${where}
-    ORDER BY p.nombre
+    ORDER BY p.name
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
 
   const [proyectos, [conteo]] = await Promise.all([
     consultar(sql, [...params, limite, offset]),
     consultar(
-      `SELECT COUNT(DISTINCT p.id) as total FROM projects p JOIN clients c ON c.id = p.client_id JOIN users g ON g.id = p.gestor_id ${where}`,
+      `SELECT COUNT(DISTINCT p.id) as total FROM projects p JOIN clients c ON c.id = p.client_id JOIN users g ON g.id = p.manager_id ${where}`,
       params
     ),
   ]);
@@ -73,19 +74,21 @@ async function listarProyectos(filtros, usuarioId, roles) {
 
 async function buscarProyectoPorId(id) {
   return consultarUno(
-    `SELECT p.id, p.code as codigo, p.nombre, p.enabled as activo,
-            p.fecha_inicio, p.fecha_fin, p.fecha_inicio_real, p.fecha_fin_real, p.created_at, p.updated_at,
-            c.id as cliente_id, COALESCE(c.razon_comercial, c.razon_social) as cliente_nombre, c.ruc,
-            g.id as gestor_id, g.nombres as gestor_nombres, g.apellidos as gestor_apellidos,
+    `SELECT p.id, p.code as codigo, p.name AS nombre, p.is_active as activo,
+            p.start_date AS fecha_inicio, p.end_date AS fecha_fin,
+            p.actual_start_date AS fecha_inicio_real, p.actual_end_date AS fecha_fin_real,
+            p.created_at, p.updated_at,
+            c.id as cliente_id, COALESCE(c.trade_name, c.legal_name) as cliente_nombre, c.ruc,
+            g.id as gestor_id, g.first_name as gestor_nombres, g.last_name as gestor_apellidos,
             s.id as seg_id, s.name as seg_nombre,
             (SELECT COALESCE(json_agg(json_build_object('id', pc.id, 'nombre', pc.name) ORDER BY pc.name), '[]'::json)
-             FROM project_project_categories ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
+             FROM project_project_category ppc JOIN project_categories pc ON pc.id = ppc.project_category_id
              WHERE ppc.project_id = p.id) as categorias,
             ts.id as ts_id, ts.name as ts_nombre,
             a.id as area_id, a.name as area_nombre
      FROM projects p
      JOIN clients c ON c.id = p.client_id
-     JOIN users g ON g.id = p.gestor_id
+     JOIN users g ON g.id = p.manager_id
      LEFT JOIN project_segmentation s ON s.id = p.project_segmentation_id
      LEFT JOIN service_types ts ON ts.id = p.service_type_id
      LEFT JOIN areas a ON a.id = p.area_id
@@ -96,9 +99,9 @@ async function buscarProyectoPorId(id) {
 
 async function obtenerUsuariosDeProyecto(proyectoId) {
   return consultar(
-    `SELECT u.id, u.nombres, u.apellidos, u.email, u.avatar_url, pu.rol
-     FROM users u JOIN project_users pu ON pu.user_id = u.id
-     WHERE pu.project_id = $1 ORDER BY u.apellidos`,
+    `SELECT u.id, u.first_name AS nombres, u.last_name AS apellidos, u.email, u.avatar_url, pu.role AS rol
+     FROM users u JOIN project_user pu ON pu.user_id = u.id
+     WHERE pu.project_id = $1 ORDER BY u.last_name`,
     [proyectoId]
   );
 }
@@ -112,9 +115,9 @@ async function codigoExiste(codigo, excluirId = null) {
 
 async function usuarioTieneRolGestor(usuarioId) {
   return consultarUno(
-    `SELECT 1 FROM user_group_members ugm
-     JOIN user_groups ug ON ug.id = ugm.group_id
-     WHERE ugm.user_id = $1 AND ug.codigo = 'GESTOR'`,
+    `SELECT 1 FROM user_profile up
+     JOIN profiles pr ON pr.id = up.profile_id
+     WHERE up.user_id = $1 AND pr.code = 'GESTOR'`,
     [usuarioId]
   );
 }
@@ -125,13 +128,13 @@ async function crearProyecto(datos, email) {
     await client.query('BEGIN');
 
     const { rows: [proyecto] } = await client.query(
-      `INSERT INTO projects (code, nombre, client_id, project_segmentation_id,
+      `INSERT INTO projects (code, name, client_id, project_segmentation_id,
                              productivity_layer_id, service_type_id,
-                             gestor_id, area_id, fecha_inicio, fecha_fin,
-                             fecha_inicio_real, fecha_fin_real, enabled,
+                             manager_id, area_id, start_date, end_date,
+                             actual_start_date, actual_end_date, is_active,
                              created_by, updated_by)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14)
-       RETURNING id, code as codigo, nombre, enabled as activo, created_at`,
+       RETURNING id, code as codigo, name AS nombre, is_active as activo, created_at`,
       [
         datos.codigo, datos.nombre, datos.cliente_id,
         datos.segmentacion_id || null,
@@ -147,7 +150,7 @@ async function crearProyecto(datos, email) {
     if (Array.isArray(datos.categorias_proyecto_ids) && datos.categorias_proyecto_ids.length) {
       for (const catId of datos.categorias_proyecto_ids) {
         await client.query(
-          `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          `INSERT INTO project_project_category (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
           [proyecto.id, catId]
         );
       }
@@ -170,18 +173,18 @@ async function actualizarProyecto(id, datos, email) {
 
   const mapeados = {
     code: datos.codigo,
-    nombre: datos.nombre,
+    name: datos.nombre,
     client_id: datos.cliente_id,
     project_segmentation_id: datos.segmentacion_id,
     productivity_layer_id: datos.capa_productividad_id,
     service_type_id: datos.tipo_servicio_id,
-    gestor_id: datos.gestor_id,
+    manager_id: datos.gestor_id,
     area_id: datos.area_id !== undefined ? (datos.area_id || null) : undefined,
-    fecha_inicio: datos.fecha_inicio,
-    fecha_fin: datos.fecha_fin,
-    fecha_inicio_real: datos.fecha_inicio_real,
-    fecha_fin_real: datos.fecha_fin_real,
-    enabled: datos.activo,
+    start_date: datos.fecha_inicio,
+    end_date: datos.fecha_fin,
+    actual_start_date: datos.fecha_inicio_real,
+    actual_end_date: datos.fecha_fin_real,
+    is_active: datos.activo,
   };
 
   for (const [campo, valor] of Object.entries(mapeados)) {
@@ -205,11 +208,11 @@ async function actualizarProyecto(id, datos, email) {
     }
 
     if (datos.categorias_proyecto_ids !== undefined) {
-      await client.query(`DELETE FROM project_project_categories WHERE project_id = $1`, [id]);
+      await client.query(`DELETE FROM project_project_category WHERE project_id = $1`, [id]);
       if (Array.isArray(datos.categorias_proyecto_ids) && datos.categorias_proyecto_ids.length) {
         for (const catId of datos.categorias_proyecto_ids) {
           await client.query(
-            `INSERT INTO project_project_categories (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+            `INSERT INTO project_project_category (project_id, project_category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
             [id, catId]
           );
         }
@@ -229,13 +232,13 @@ async function actualizarProyecto(id, datos, email) {
 async function toggleActivo(id, email) {
   const { rows: [proyecto] } = await pool.query(
     `UPDATE projects
-     SET enabled = NOT enabled,
-         deleted_at = CASE WHEN enabled THEN NOW() ELSE NULL END,
-         deleted_by = CASE WHEN enabled THEN $2 ELSE NULL END,
+     SET is_active = NOT is_active,
+         deleted_at = CASE WHEN is_active THEN NOW() ELSE NULL END,
+         deleted_by = CASE WHEN is_active THEN $2 ELSE NULL END,
          updated_at = NOW(),
          updated_by = $2
      WHERE id = $1
-     RETURNING id, enabled as activo, updated_at`,
+     RETURNING id, is_active as activo, updated_at`,
     [id, email || null]
   );
   return proyecto;
@@ -247,7 +250,7 @@ async function asignarUsuarios(proyectoId, usuarios) {
 
   for (const { usuario_id, rol } of usuarios) {
     const existente = await consultarUno(
-      `SELECT 1 FROM project_users WHERE project_id = $1 AND user_id = $2 AND rol = $3`,
+      `SELECT 1 FROM project_user WHERE project_id = $1 AND user_id = $2 AND role = $3`,
       [proyectoId, usuario_id, rol]
     );
 
@@ -255,7 +258,7 @@ async function asignarUsuarios(proyectoId, usuarios) {
       yaExistian.push({ usuario_id, rol });
     } else {
       await pool.query(
-        `INSERT INTO project_users (project_id, user_id, rol) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+        `INSERT INTO project_user (project_id, user_id, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [proyectoId, usuario_id, rol]
       );
       asignados.push({ usuario_id, rol });
@@ -267,13 +270,13 @@ async function asignarUsuarios(proyectoId, usuarios) {
 
 async function desasignarUsuario(proyectoId, usuarioId) {
   const existente = await consultarUno(
-    `SELECT 1 FROM project_users WHERE project_id = $1 AND user_id = $2`,
+    `SELECT 1 FROM project_user WHERE project_id = $1 AND user_id = $2`,
     [proyectoId, usuarioId]
   );
   if (!existente) return false;
 
   await pool.query(
-    `DELETE FROM project_users WHERE project_id = $1 AND user_id = $2`,
+    `DELETE FROM project_user WHERE project_id = $1 AND user_id = $2`,
     [proyectoId, usuarioId]
   );
   return true;

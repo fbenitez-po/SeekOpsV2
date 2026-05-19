@@ -7,11 +7,11 @@ function construirFiltros(filtros) {
 
   if (filtros.activo !== undefined) {
     params.push(filtros.activo === 'true');
-    condiciones.push(`u.enabled = $${idx++}`);
+    condiciones.push(`u.is_active = $${idx++}`);
   }
   if (filtros.search) {
     params.push(`%${filtros.search}%`);
-    condiciones.push(`(u.nombres ILIKE $${idx} OR u.apellidos ILIKE $${idx} OR u.email ILIKE $${idx++})`);
+    condiciones.push(`(u.first_name ILIKE $${idx} OR u.last_name ILIKE $${idx} OR u.email ILIKE $${idx++})`);
   }
   if (filtros.equipo_id) {
     params.push(filtros.equipo_id);
@@ -19,7 +19,7 @@ function construirFiltros(filtros) {
   }
   if (filtros.grupo) {
     params.push(filtros.grupo);
-    condiciones.push(`u.id IN (SELECT ugm.user_id FROM user_group_members ugm JOIN user_groups ug ON ug.id = ugm.group_id WHERE ug.codigo = $${idx++})`);
+    condiciones.push(`u.id IN (SELECT up.user_id FROM user_profile up JOIN profiles pr ON pr.id = up.profile_id WHERE pr.code = $${idx++})`);
   }
 
   return { params, condiciones };
@@ -32,19 +32,21 @@ async function listarUsuarios(filtros) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT u.id, u.email, u.nombres, u.apellidos, u.numero_documento, u.puesto,
-           u.celular, u.avatar_url, u.enabled as activo, u.staff, u.super_usuario,
-           u.fecha_ingreso, u.created_at, u.updated_at,
+    SELECT u.id, u.email, u.first_name AS nombres, u.last_name AS apellidos,
+           u.document_number AS numero_documento, u.position AS puesto,
+           u.mobile_phone AS celular, u.avatar_url, u.is_active as activo,
+           u.is_staff AS staff, u.is_superuser AS super_usuario,
+           u.hire_date AS fecha_ingreso, u.created_at, u.updated_at,
            t.id as equipo_id, t.name as equipo_nombre,
            (
              SELECT JSON_AGG(json_build_object('id', a.id, 'nombre', a.name) ORDER BY a.name)
-             FROM user_areas ua JOIN areas a ON a.id = ua.area_id
+             FROM user_area ua JOIN areas a ON a.id = ua.area_id
              WHERE ua.user_id = u.id
            ) as areas
     FROM users u
     LEFT JOIN teams t ON t.id = u.team_id
     ${where}
-    ORDER BY u.apellidos, u.nombres
+    ORDER BY u.last_name, u.first_name
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
 
@@ -60,9 +62,9 @@ async function listarUsuarios(filtros) {
 
 async function obtenerGruposDeUsuario(usuarioId) {
   const filas = await consultar(
-    `SELECT ug.codigo FROM user_groups ug
-     JOIN user_group_members ugm ON ugm.group_id = ug.id
-     WHERE ugm.user_id = $1`,
+    `SELECT pr.code AS codigo FROM profiles pr
+     JOIN user_profile up ON up.profile_id = pr.id
+     WHERE up.user_id = $1`,
     [usuarioId]
   );
   return filas.map((f) => f.codigo);
@@ -71,7 +73,7 @@ async function obtenerGruposDeUsuario(usuarioId) {
 async function obtenerAreasDeUsuario(usuarioId) {
   return consultar(
     `SELECT a.id, a.name as nombre
-     FROM areas a JOIN user_areas ua ON ua.area_id = a.id
+     FROM areas a JOIN user_area ua ON ua.area_id = a.id
      WHERE ua.user_id = $1
      ORDER BY a.name`,
     [usuarioId]
@@ -80,9 +82,9 @@ async function obtenerAreasDeUsuario(usuarioId) {
 
 async function obtenerProyectosDeUsuario(usuarioId) {
   return consultar(
-    `SELECT p.id, p.nombre, p.code as codigo, COALESCE(c.razon_comercial, c.razon_social) as cliente, pu.rol, p.enabled as activo
+    `SELECT p.id, p.name AS nombre, p.code as codigo, COALESCE(c.trade_name, c.legal_name) as cliente, pu.role AS rol, p.is_active as activo
      FROM projects p
-     JOIN project_users pu ON pu.project_id = p.id
+     JOIN project_user pu ON pu.project_id = p.id
      JOIN clients c ON c.id = p.client_id
      WHERE pu.user_id = $1`,
     [usuarioId]
@@ -91,9 +93,11 @@ async function obtenerProyectosDeUsuario(usuarioId) {
 
 async function buscarUsuarioPorId(id) {
   return consultarUno(
-    `SELECT u.id, u.email, u.nombres, u.apellidos, u.numero_documento, u.puesto,
-            u.celular, u.avatar_url, u.enabled as activo, u.staff, u.super_usuario,
-            u.fecha_ingreso, u.created_at, u.updated_at, u.deleted_at,
+    `SELECT u.id, u.email, u.first_name AS nombres, u.last_name AS apellidos,
+            u.document_number AS numero_documento, u.position AS puesto,
+            u.mobile_phone AS celular, u.avatar_url, u.is_active as activo,
+            u.is_staff AS staff, u.is_superuser AS super_usuario,
+            u.hire_date AS fecha_ingreso, u.created_at, u.updated_at, u.deleted_at,
             t.id as equipo_id, t.name as equipo_nombre
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
@@ -112,8 +116,8 @@ async function emailExiste(email, excluirId = null) {
 
 async function documentoExiste(numero, excluirId = null) {
   const sql = excluirId
-    ? `SELECT 1 FROM users WHERE numero_documento = $1 AND id != $2`
-    : `SELECT 1 FROM users WHERE numero_documento = $1`;
+    ? `SELECT 1 FROM users WHERE document_number = $1 AND id != $2`
+    : `SELECT 1 FROM users WHERE document_number = $1`;
   const params = excluirId ? [numero, excluirId] : [numero];
   return consultarUno(sql, params);
 }
@@ -124,10 +128,10 @@ async function crearUsuario(datos) {
     await client.query('BEGIN');
 
     const { rows: [usuario] } = await client.query(
-      `INSERT INTO users (email, password_hash, nombres, apellidos, numero_documento, puesto,
-                          celular, avatar_url, team_id, fecha_ingreso, enabled, staff, super_usuario)
+      `INSERT INTO users (email, password_hash, first_name, last_name, document_number, position,
+                          mobile_phone, avatar_url, team_id, hire_date, is_active, is_staff, is_superuser)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-       RETURNING id, email, nombres, apellidos, enabled as activo, created_at`,
+       RETURNING id, email, first_name AS nombres, last_name AS apellidos, is_active as activo, created_at`,
       [
         datos.email,
         '$placeholder$',
@@ -140,15 +144,15 @@ async function crearUsuario(datos) {
 
     for (const areaId of (datos.areas || [])) {
       await client.query(
-        `INSERT INTO user_areas (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        `INSERT INTO user_area (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
         [usuario.id, areaId]
       );
     }
 
     for (const grupoCodigo of (datos.grupos || [])) {
       await client.query(
-        `INSERT INTO user_group_members (user_id, group_id)
-         SELECT $1, id FROM user_groups WHERE codigo = $2 ON CONFLICT DO NOTHING`,
+        `INSERT INTO user_profile (user_id, profile_id)
+         SELECT $1, id FROM profiles WHERE code = $2 ON CONFLICT DO NOTHING`,
         [usuario.id, grupoCodigo]
       );
     }
@@ -173,17 +177,17 @@ async function actualizarUsuario(id, datos) {
     let idx = 1;
 
     const mapeados = {
-      nombres: datos.nombres,
-      apellidos: datos.apellidos,
-      numero_documento: datos.numero_documento,
-      puesto: datos.puesto,
-      celular: datos.celular,
+      first_name: datos.nombres,
+      last_name: datos.apellidos,
+      document_number: datos.numero_documento,
+      position: datos.puesto,
+      mobile_phone: datos.celular,
       avatar_url: datos.avatar_url,
       team_id: datos.equipo_id,
-      fecha_ingreso: datos.fecha_ingreso,
-      enabled: datos.activo,
-      staff: datos.staff,
-      super_usuario: datos.super_usuario,
+      hire_date: datos.fecha_ingreso,
+      is_active: datos.activo,
+      is_staff: datos.staff,
+      is_superuser: datos.super_usuario,
     };
 
     for (const [campo, valor] of Object.entries(mapeados)) {
@@ -203,21 +207,21 @@ async function actualizarUsuario(id, datos) {
     }
 
     if (datos.areas) {
-      await client.query(`DELETE FROM user_areas WHERE user_id = $1`, [id]);
+      await client.query(`DELETE FROM user_area WHERE user_id = $1`, [id]);
       for (const areaId of datos.areas) {
         await client.query(
-          `INSERT INTO user_areas (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          `INSERT INTO user_area (user_id, area_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
           [id, areaId]
         );
       }
     }
 
     if (datos.grupos) {
-      await client.query(`DELETE FROM user_group_members WHERE user_id = $1`, [id]);
+      await client.query(`DELETE FROM user_profile WHERE user_id = $1`, [id]);
       for (const grupoCodigo of datos.grupos) {
         await client.query(
-          `INSERT INTO user_group_members (user_id, group_id)
-           SELECT $1, id FROM user_groups WHERE codigo = $2 ON CONFLICT DO NOTHING`,
+          `INSERT INTO user_profile (user_id, profile_id)
+           SELECT $1, id FROM profiles WHERE code = $2 ON CONFLICT DO NOTHING`,
           [id, grupoCodigo]
         );
       }
@@ -236,13 +240,13 @@ async function actualizarUsuario(id, datos) {
 async function toggleActivo(id, email) {
   const { rows: [usuario] } = await pool.query(
     `UPDATE users
-     SET enabled = NOT enabled,
-         deleted_at = CASE WHEN enabled THEN NOW() ELSE NULL END,
-         deleted_by = CASE WHEN enabled THEN $2 ELSE NULL END,
+     SET is_active = NOT is_active,
+         deleted_at = CASE WHEN is_active THEN NOW() ELSE NULL END,
+         deleted_by = CASE WHEN is_active THEN $2 ELSE NULL END,
          updated_at = NOW(),
          updated_by = $2
      WHERE id = $1
-     RETURNING id, enabled as activo, deleted_at`,
+     RETURNING id, is_active as activo, deleted_at`,
     [id, email || null]
   );
   return usuario;

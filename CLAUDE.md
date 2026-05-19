@@ -113,30 +113,38 @@ Los tokens exactos (colores, tipografía, layout, badges) están en `.ai/context
 
 ## ⚠️ Regla crítica — Base de datos
 
-**La fuente de verdad del schema es `.ai/db/setup_schema.sql`.** Siempre refleja el estado completo y final de todas las tablas, índices y constraints.
+**La fuente de verdad del schema es `.ai/db/schema.sql` + `.ai/db/data.sql`.** Juntos reflejan el estado completo y final de todas las tablas, índices, constraints y datos iniciales.
+
+### Convenciones del schema (no negociables)
+
+- **Idioma:** todos los identificadores (tablas, columnas, constraints, índices) en **inglés**. Los *valores* de datos pueden quedar en español (contenido de negocio).
+- **Auditoría tiered:** bloque estándar al final de cada tabla = `created_at`, `created_by` (`VARCHAR(50)` `DEFAULT 'admin'`), `updated_at` (nullable), `updated_by`, `deleted_at`, `deleted_by`, `is_active`. No todas las tablas llevan el bloque completo (tablas puente, tokens y logs llevan menos). Detalle por tabla en `.ai/db/schema.md`.
+- **PKs:** UUID `gen_random_uuid()` en entidades; las tablas puente usan **PK compuesta** sin `id` surrogate.
+- **Layout:** constraints e índices inline / junto a cada `CREATE TABLE` (estilo terso).
 
 ### Convención de migraciones
 
 | Situación | Acción |
 |-----------|--------|
-| Nueva BD desde cero | `setup_schema.sql` + `setup_seeds.sql` |
+| Nueva BD desde cero | `schema.sql` + `data.sql` |
 | BD existente con datos | Aplicar solo la migración incremental |
-| Después de cualquier cambio de schema | Actualizar `setup_schema.sql` Y `schema.md` |
+| Después de cualquier cambio de schema | Actualizar `schema.sql` y `schema.md` |
 
 ### Archivos
 
-- **`.ai/db/setup_schema.sql`** — DDL completo (todas las tablas). Siempre actualizado.
-- **`.ai/db/setup_seeds.sql`** — Seeds iniciales.
-- **`.ai/db/schema.md`** — Documentación del schema. Debe coincidir con `setup_schema.sql`.
-- **`.ai/db/migrations_archive/`** — Migraciones incrementales (001 en adelante). Aquí van todas las migraciones futuras.
+- **`.ai/db/schema.sql`** — DDL completo (31 tablas, índices, constraints), identificadores en inglés. Siempre actualizado.
+- **`.ai/db/data.sql`** — Solo datos: catálogos/seeds + usuario admin. Sin DDL. Se ejecuta **después** de `schema.sql`.
+- **`.ai/db/schema.md`** — Documentación del schema. Debe coincidir con `schema.sql`.
+- **`.ai/db/migrations_archive/`** — Historial de migraciones incrementales (001–021), solo referencia.
+- **`.ai/db/setup_schema.sql` / `setup_seeds.sql`** — ⚠️ Legacy/obsoletos, reemplazados por `schema.sql` + `data.sql`. Pendientes de borrar.
 
 ### Cómo agregar un cambio de schema
 
-1. Crear `.ai/db/migrations_archive/NNN_nombre_descriptivo.sql` (solo el delta: ALTER, CREATE, etc.)
-2. Actualizar `.ai/db/setup_schema.sql` incorporando el cambio
+1. Crear `.ai/db/migrations_archive/YYYYMMDDHHMMSS_description.sql` (solo el delta: ALTER, CREATE, etc.)
+2. Actualizar `.ai/db/schema.sql` incorporando el cambio
 3. Actualizar `.ai/db/schema.md` con la tabla/columna afectada
 
-**Nunca** modificar `setup_schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
+**Nunca** modificar `schema.sql` sin crear primero la migración correspondiente si la BD ya tiene datos.
 
 ---
 

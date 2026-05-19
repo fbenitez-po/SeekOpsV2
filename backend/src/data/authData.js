@@ -2,7 +2,7 @@ const { consultarUno, consultar } = require('../config/database');
 
 async function buscarUsuarioPorEmail(email) {
   return consultarUno(
-    `SELECT u.id, u.email, u.password_hash, u.nombres, u.apellidos, u.avatar_url, u.enabled as activo
+    `SELECT u.id, u.email, u.password_hash, u.first_name AS nombres, u.last_name AS apellidos, u.avatar_url, u.is_active as activo
      FROM users u WHERE u.email = $1`,
     [email]
   );
@@ -10,16 +10,16 @@ async function buscarUsuarioPorEmail(email) {
 
 async function buscarUsuarioPorId(id) {
   return consultarUno(
-    `SELECT id, email, nombres, apellidos, avatar_url, enabled as activo FROM users WHERE id = $1`,
+    `SELECT id, email, first_name AS nombres, last_name AS apellidos, avatar_url, is_active as activo FROM users WHERE id = $1`,
     [id]
   );
 }
 
 async function obtenerRolesDelUsuario(usuarioId) {
   const filas = await consultar(
-    `SELECT ug.codigo FROM user_groups ug
-     JOIN user_group_members ugm ON ugm.group_id = ug.id
-     WHERE ugm.user_id = $1 AND ug.enabled = true`,
+    `SELECT p.code AS codigo FROM profiles p
+     JOIN user_profile up ON up.profile_id = p.id
+     WHERE up.user_id = $1 AND p.is_active = true`,
     [usuarioId]
   );
   return filas.map((f) => f.codigo);
@@ -27,10 +27,10 @@ async function obtenerRolesDelUsuario(usuarioId) {
 
 async function obtenerProyectosDelUsuario(usuarioId) {
   return consultar(
-    `SELECT p.id, p.nombre, pu.rol
+    `SELECT p.id, p.name AS nombre, pu.role AS rol
      FROM projects p
-     JOIN project_users pu ON pu.project_id = p.id
-     WHERE pu.user_id = $1 AND p.enabled = true`,
+     JOIN project_user pu ON pu.project_id = p.id
+     WHERE pu.user_id = $1 AND p.is_active = true`,
     [usuarioId]
   );
 }

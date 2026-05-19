@@ -12,10 +12,10 @@ router.get('/', async (_req, res, next) => {
     const anioActual = ahora.getFullYear();
 
     const filas = await consultar(
-      `SELECT id, mes, anio, esta_cerrado, updated_at
-       FROM periodos
-       WHERE (anio < $1) OR (anio = $1 AND mes <= $2)
-       ORDER BY anio DESC, mes DESC`,
+      `SELECT id, month AS mes, year AS anio, is_closed AS esta_cerrado, updated_at
+       FROM periods
+       WHERE (year < $1) OR (year = $1 AND month <= $2)
+       ORDER BY year DESC, month DESC`,
       [anioActual, mesActual]
     );
     res.json(filas);
@@ -29,10 +29,10 @@ router.patch('/:id/toggle', async (req, res, next) => {
   try {
     const { id } = req.params;
     const filas = await consultar(
-      `UPDATE periodos
-       SET esta_cerrado = NOT esta_cerrado, updated_at = NOW()
+      `UPDATE periods
+       SET is_closed = NOT is_closed, updated_at = NOW()
        WHERE id = $1
-       RETURNING id, mes, anio, esta_cerrado, updated_at`,
+       RETURNING id, month AS mes, year AS anio, is_closed AS esta_cerrado, updated_at`,
       [id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Periodo no encontrado' });

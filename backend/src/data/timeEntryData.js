@@ -10,7 +10,7 @@ async function listarEntradas({ usuarioId, roles, proyectosIds, filtros }) {
   } else if (roles.includes('GESTOR')) {
     // entradas de proyectos donde es gestor
     params.push(usuarioId);
-    condiciones.push(`(te.user_id = $${idx++} OR p.gestor_id = $${idx - 1})`);
+    condiciones.push(`(te.user_id = $${idx++} OR p.manager_id = $${idx - 1})`);
   } else {
     params.push(usuarioId);
     condiciones.push(`te.user_id = $${idx++}`);
@@ -18,12 +18,12 @@ async function listarEntradas({ usuarioId, roles, proyectosIds, filtros }) {
 
   if (filtros.estado) {
     params.push(filtros.estado);
-    condiciones.push(`te.estado = $${idx++}`);
+    condiciones.push(`te.status = $${idx++}`);
   }
 
   if (filtros.semana) {
     params.push(filtros.semana);
-    condiciones.push(`te.semana = $${idx++}`);
+    condiciones.push(`te.week = $${idx++}`);
   }
 
   if (filtros.usuario_id && roles.includes('ADMIN')) {
@@ -42,8 +42,8 @@ async function listarEntradas({ usuarioId, roles, proyectosIds, filtros }) {
 
   params.push(limite, offset);
   const sql = `
-    SELECT te.id, te.semana, te.estado, te.created_at as fecha_carga,
-           u.id as usuario_id, u.nombres, u.apellidos
+    SELECT te.id, te.week AS semana, te.status AS estado, te.created_at as fecha_carga,
+           u.id as usuario_id, u.first_name AS nombres, u.last_name AS apellidos
     FROM time_entries te
     JOIN users u ON u.id = te.user_id
     LEFT JOIN time_entry_lines tel ON tel.time_entry_id = te.id
@@ -75,7 +75,7 @@ async function obtenerLineasDeEntrada(entradaId) {
   return consultar(
     `SELECT tel.id, tel.project_id, tel.income_category_id as categoria_ingreso_id,
             tel.hours as horas, tel.extra_hours as horas_extra, tel.comment as comentario,
-            p.nombre as proyecto_nombre, p.code as proyecto_codigo,
+            p.name as proyecto_nombre, p.code as proyecto_codigo,
             ic.name as categoria_nombre
      FROM time_entry_lines tel
      JOIN projects p ON p.id = tel.project_id
@@ -89,9 +89,9 @@ async function obtenerAprobacionesDeEntrada(entradaId) {
   return consultar(
     `SELECT tea.id, tea.action as accion, tea.comment as comentario,
             tea.suggested_hours as sugerencia_horas, tea.suggested_extra_hours as sugerencia_extras,
-            tea.rejection_reason as razon_rechazo, tea.allow_resubmit as permitir_reenvio,
+            tea.rejection_reason as razon_rechazo, tea.can_resubmit as permitir_reenvio,
             tea.created_at as fecha,
-            u.id as realizado_por_id, u.nombres, u.apellidos
+            u.id as realizado_por_id, u.first_name AS nombres, u.last_name AS apellidos
      FROM time_entry_approvals tea
      LEFT JOIN users u ON u.email = tea.created_by
      WHERE tea.time_entry_id = $1
@@ -102,9 +102,9 @@ async function obtenerAprobacionesDeEntrada(entradaId) {
 
 async function buscarEntradaPorId(id) {
   return consultarUno(
-    `SELECT te.id, te.semana, te.estado, te.user_id,
+    `SELECT te.id, te.week AS semana, te.status AS estado, te.user_id,
             te.created_at as fecha_carga, te.updated_at as actualizado_en,
-            u.nombres, u.apellidos
+            u.first_name AS nombres, u.last_name AS apellidos
      FROM time_entries te JOIN users u ON u.id = te.user_id
      WHERE te.id = $1`,
     [id]
@@ -113,23 +113,23 @@ async function buscarEntradaPorId(id) {
 
 async function verificarProyectoAsignado(usuarioId, proyectoId) {
   return consultarUno(
-    `SELECT 1 FROM project_users WHERE user_id = $1 AND project_id = $2
+    `SELECT 1 FROM project_user WHERE user_id = $1 AND project_id = $2
      UNION
-     SELECT 1 FROM projects WHERE id = $2 AND gestor_id = $1`,
+     SELECT 1 FROM projects WHERE id = $2 AND manager_id = $1`,
     [usuarioId, proyectoId]
   );
 }
 
 async function verificarEntradaExistente(usuarioId, semana) {
   return consultarUno(
-    `SELECT id FROM time_entries WHERE user_id = $1 AND semana = $2 AND estado IN ('PENDIENTE','APROBADO')`,
+    `SELECT id FROM time_entries WHERE user_id = $1 AND week = $2 AND status IN ('PENDIENTE','APROBADO')`,
     [usuarioId, semana]
   );
 }
 
 async function esGestorDelProyecto(usuarioId, proyectoId) {
   return consultarUno(
-    `SELECT 1 FROM projects WHERE id = $1 AND gestor_id = $2`,
+    `SELECT 1 FROM projects WHERE id = $1 AND manager_id = $2`,
     [proyectoId, usuarioId]
   );
 }
@@ -147,8 +147,8 @@ async function crearEntrada({ usuarioId, usuarioEmail, semana, estado, lineas })
     await client.query('BEGIN');
 
     const { rows: [entrada] } = await client.query(
-      `INSERT INTO time_entries (user_id, semana, estado, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4) RETURNING id, semana, estado, created_at`,
+      `INSERT INTO time_entries (user_id, week, status, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $4) RETURNING id, week AS semana, status AS estado, created_at`,
       [usuarioId, semana, estado, usuarioEmail || null]
     );
 
@@ -196,8 +196,8 @@ async function actualizarLineasEntrada(entradaId, lineas, usuarioId, usuarioEmai
     }
 
     const { rows: [entrada] } = await client.query(
-      `UPDATE time_entries SET estado = 'PENDIENTE', updated_at = NOW(), updated_by = $1
-       WHERE id = $2 RETURNING id, semana, estado, updated_at`,
+      `UPDATE time_entries SET status = 'PENDIENTE', updated_at = NOW(), updated_by = $1
+       WHERE id = $2 RETURNING id, week AS semana, status AS estado, updated_at`,
       [usuarioEmail || null, entradaId]
     );
 
@@ -224,14 +224,14 @@ async function registrarAprobacion({ entradaId, accion, usuarioId, usuarioEmail,
     }
 
     await client.query(
-      `UPDATE time_entries SET estado = $1, updated_at = NOW(), updated_by = $2 WHERE id = $3`,
+      `UPDATE time_entries SET status = $1, updated_at = NOW(), updated_by = $2 WHERE id = $3`,
       [nuevoEstado, usuarioEmail || null, entradaId]
     );
 
     await client.query(
       `INSERT INTO time_entry_approvals
        (time_entry_id, action, comment, suggested_hours, suggested_extra_hours,
-        rejection_reason, allow_resubmit, created_by)
+        rejection_reason, can_resubmit, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         entradaId, nuevoEstado,
@@ -255,42 +255,42 @@ async function registrarAprobacion({ entradaId, accion, usuarioId, usuarioEmail,
 }
 
 async function obtenerFechaIngreso(usuarioId) {
-  return consultarUno('SELECT fecha_ingreso FROM users WHERE id = $1', [usuarioId]);
+  return consultarUno('SELECT hire_date AS fecha_ingreso FROM users WHERE id = $1', [usuarioId]);
 }
 
 async function listarSemanasConCarga(usuarioId) {
-  return consultar('SELECT DISTINCT semana FROM time_entries WHERE user_id = $1', [usuarioId]);
+  return consultar('SELECT DISTINCT week AS semana FROM time_entries WHERE user_id = $1', [usuarioId]);
 }
 
 async function obtenerDatosSeekersSinCarga(gestorId) {
   return consultar(
     `SELECT
        u.id as user_id,
-       u.nombres,
-       u.apellidos,
+       u.first_name AS nombres,
+       u.last_name AS apellidos,
        u.email,
-       u.fecha_ingreso,
+       u.hire_date AS fecha_ingreso,
        COALESCE(
-         (SELECT json_agg(json_build_object('id', p3.id, 'nombre', p3.nombre))
+         (SELECT json_agg(json_build_object('id', p3.id, 'nombre', p3.name))
           FROM projects p3
-          JOIN project_users pu3 ON pu3.project_id = p3.id
-          WHERE p3.gestor_id = $1 AND pu3.user_id = u.id AND pu3.enabled = true AND pu3.rol = 'SEEKER'),
+          JOIN project_user pu3 ON pu3.project_id = p3.id
+          WHERE p3.manager_id = $1 AND pu3.user_id = u.id AND pu3.is_active = true AND pu3.role = 'SEEKER'),
          '[]'::json
        ) as mis_proyectos,
        COALESCE(
          json_agg(
            json_build_object(
-             'semana', te.semana,
+             'semana', te.week,
              'en_mis_proyectos', EXISTS(
                SELECT 1 FROM time_entry_lines tel
                JOIN projects p2 ON p2.id = tel.project_id
-               WHERE tel.time_entry_id = te.id AND p2.gestor_id = $1
+               WHERE tel.time_entry_id = te.id AND p2.manager_id = $1
              ),
              'proyectos_otros', (
-               SELECT json_agg(p_o.nombre ORDER BY p_o.nombre)
+               SELECT json_agg(p_o.name ORDER BY p_o.name)
                FROM time_entry_lines tel_o
                JOIN projects p_o ON p_o.id = tel_o.project_id
-               WHERE tel_o.time_entry_id = te.id AND p_o.gestor_id != $1
+               WHERE tel_o.time_entry_id = te.id AND p_o.manager_id != $1
              )
            )
          ) FILTER (WHERE te.id IS NOT NULL),
@@ -299,25 +299,25 @@ async function obtenerDatosSeekersSinCarga(gestorId) {
      FROM (
        SELECT DISTINCT pu.user_id
        FROM projects p
-       JOIN project_users pu ON pu.project_id = p.id
-       WHERE p.gestor_id = $1 AND pu.enabled = true AND pu.rol = 'SEEKER'
+       JOIN project_user pu ON pu.project_id = p.id
+       WHERE p.manager_id = $1 AND pu.is_active = true AND pu.role = 'SEEKER'
      ) seekers
      JOIN users u ON u.id = seekers.user_id AND u.id != $1
-     LEFT JOIN time_entries te ON te.user_id = u.id AND te.estado != 'RECHAZADO'
-     GROUP BY u.id, u.nombres, u.apellidos, u.email, u.fecha_ingreso`,
+     LEFT JOIN time_entries te ON te.user_id = u.id AND te.status != 'RECHAZADO'
+     GROUP BY u.id, u.first_name, u.last_name, u.email, u.hire_date`,
     [gestorId]
   );
 }
 
 async function verificarSeekerDeGestor(gestorId, seekerId) {
   return consultarUno(
-    `SELECT u.nombres, u.apellidos, u.email,
-            g.nombres as gestor_nombres, g.apellidos as gestor_apellidos
+    `SELECT u.first_name AS nombres, u.last_name AS apellidos, u.email,
+            g.first_name as gestor_nombres, g.last_name as gestor_apellidos
      FROM projects p
-     JOIN project_users pu ON pu.project_id = p.id
+     JOIN project_user pu ON pu.project_id = p.id
      JOIN users u ON u.id = pu.user_id
      JOIN users g ON g.id = $1
-     WHERE p.gestor_id = $1 AND pu.user_id = $2 AND pu.enabled = true AND pu.rol = 'SEEKER'
+     WHERE p.manager_id = $1 AND pu.user_id = $2 AND pu.is_active = true AND pu.role = 'SEEKER'
      LIMIT 1`,
     [gestorId, seekerId]
   );

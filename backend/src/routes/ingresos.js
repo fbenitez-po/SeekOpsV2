@@ -12,23 +12,23 @@ router.get('/', async (req, res, next) => {
     let where = '';
     if (periodo_id) {
       params.push(periodo_id);
-      where = `WHERE i.periodo_id = $${params.length}`;
+      where = `WHERE i.period_id = $${params.length}`;
     }
 
     const filas = await consultar(
       `SELECT
          i.id,
-         i.monto,
+         i.amount AS monto,
          p.id   AS proyecto_id,
          p.code AS proyecto_code,
-         p.nombre AS proyecto_nombre,
-         pe.mes,
-         pe.anio
-       FROM ingresos i
-       JOIN projects p  ON p.id = i.proyecto_id
-       JOIN periodos pe ON pe.id = i.periodo_id
+         p.name AS proyecto_nombre,
+         pe.month AS mes,
+         pe.year AS anio
+       FROM revenues i
+       JOIN projects p  ON p.id = i.project_id
+       JOIN periods pe ON pe.id = i.period_id
        ${where}
-       ORDER BY pe.anio DESC, pe.mes DESC, p.code`,
+       ORDER BY pe.year DESC, pe.month DESC, p.code`,
       params
     );
     res.json(filas);
@@ -49,9 +49,9 @@ router.post('/', async (req, res, next) => {
     }
 
     const filas = await consultar(
-      `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by, updated_by)
+      `INSERT INTO revenues (project_id, period_id, amount, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $4)
-       RETURNING id, proyecto_id, periodo_id, monto`,
+       RETURNING id, project_id AS proyecto_id, period_id AS periodo_id, amount AS monto`,
       [proyecto_id, periodo_id, monto, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
@@ -73,10 +73,10 @@ router.put('/:id', async (req, res, next) => {
     }
 
     const filas = await consultar(
-      `UPDATE ingresos
-       SET monto = $1, updated_at = NOW(), updated_by = $2
+      `UPDATE revenues
+       SET amount = $1, updated_at = NOW(), updated_by = $2
        WHERE id = $3
-       RETURNING id, proyecto_id, periodo_id, monto`,
+       RETURNING id, project_id AS proyecto_id, period_id AS periodo_id, amount AS monto`,
       [monto, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Ingreso no encontrado' });
@@ -90,7 +90,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const filas = await consultar(
-      `DELETE FROM ingresos WHERE id = $1 RETURNING id`,
+      `DELETE FROM revenues WHERE id = $1 RETURNING id`,
       [req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Ingreso no encontrado' });
@@ -137,14 +137,14 @@ router.post('/importar', async (req, res, next) => {
       }
 
       // Buscar proyecto por code
-      const proyecto = await consultar(`SELECT id FROM projects WHERE code = $1 AND enabled = true`, [String(code)]);
+      const proyecto = await consultar(`SELECT id FROM projects WHERE code = $1 AND is_active = true`, [String(code)]);
       if (!proyecto.length) {
         resultados.errores.push({ fila, motivo: `Proyecto con código "${code}" no encontrado o inactivo` });
         continue;
       }
 
       // Buscar período
-      const periodo = await consultar(`SELECT id FROM periodos WHERE mes = $1 AND anio = $2`, [mes, anio]);
+      const periodo = await consultar(`SELECT id FROM periods WHERE month = $1 AND year = $2`, [mes, anio]);
       if (!periodo.length) {
         resultados.errores.push({ fila, motivo: `Período ${mes}/${anio} no existe en el sistema` });
         continue;
@@ -152,10 +152,10 @@ router.post('/importar', async (req, res, next) => {
 
       // Upsert
       const resultado = await consultar(
-        `INSERT INTO ingresos (proyecto_id, periodo_id, monto, created_by, updated_by)
+        `INSERT INTO revenues (project_id, period_id, amount, created_by, updated_by)
          VALUES ($1, $2, $3, $4, $4)
-         ON CONFLICT (proyecto_id, periodo_id)
-         DO UPDATE SET monto = EXCLUDED.monto, updated_at = NOW(), updated_by = $4
+         ON CONFLICT (project_id, period_id)
+         DO UPDATE SET amount = EXCLUDED.amount, updated_at = NOW(), updated_by = $4
          RETURNING (xmax = 0) AS es_nuevo`,
         [proyecto[0].id, periodo[0].id, ingreso, req.usuario.email || null]
       );

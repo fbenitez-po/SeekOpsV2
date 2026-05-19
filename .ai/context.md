@@ -108,6 +108,11 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
   - ✅ `projectData.listarProyectos`: Gestor no veía sus proyectos en el combo — faltaba condición `OR p.gestor_id = usuario`
   - ✅ `timeEntryData.verificarProyectoAsignado`: Gestor no podía guardar horas en sus proyectos — misma causa, se agregó UNION con `projects WHERE gestor_id`
   - ✅ `timeEntryData.listarEntradas`: Panel del gestor mostraba 0 entradas — usaba `te.usuario_id` (columna inexistente), corregido a `te.user_id`
+- **Adaptación backend al schema en inglés (2026-05-19):**
+  - ✅ Backend alineado con `schema.sql` + `data.sql` (identificadores en inglés). 13 archivos: 6 en `backend/src/data/` + 7 en `backend/src/routes/`
+  - ✅ Renombre solo del lado BD: 15 tablas (`user_groups→profiles`, `user_group_members→user_profile`, `user_areas→user_area`, `project_users→project_user`, `project_project_categories→project_project_category`, `periodos→periods`, `ingresos→revenues`, `gastos_admin→admin_expenses`, `costos_venta→sales_costs`, `costos_por_persona→personnel_costs`, `registros_comerciales→commercial_records`, `tipos_documento→document_types`) + ~50 columnas (`gestor_id→manager_id`, `enabled→is_active`, `semana→week`, `estado→status`, `allow_resubmit→can_resubmit`, etc.)
+  - ✅ **Decisión:** la capa API/DTO se mantiene en español vía alias SQL (`first_name AS nombres`, `is_active as activo`) y claves `datos.*`. Sin cambios en services, rutas, validadores ni frontend. Sin cambios funcionales (auditoría como email y roles vía `profiles.code` ya estaban así)
+  - ✅ Verificado end-to-end con docker-compose (db+backend+frontend): 17 GET 200, write paths (clientes, usuarios, proyectos, finanzas), 0 errores Postgres
 - **Documentación lista para desarrollo:**
   - ✅ `.ai/SPECIFICATION-SUMMARY.md` — Referencia técnica centralizada (campos, validaciones, endpoints)
   - ✅ Historias de usuario (Epic 00-03) con criterios de aceptación detallados
@@ -115,8 +120,8 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
   - ✅ 25+ previews HTML interactivos (shadcn/ui + Tailwind)
   
 - **Próximo paso:** 
-  1. ✅ Schema PostgreSQL completado (`.ai/db/schema.md`) — 27 tablas, fuente de verdad: `setup_schema.sql` + `setup_seeds.sql`
-  2. ✅ Schema SQL completo en `.ai/db/setup_schema.sql` (fuente de verdad) + historial en `.ai/db/migrations_archive/`
+  1. ✅ Schema PostgreSQL completado (`.ai/db/schema.md`) — 31 tablas, fuente de verdad: `schema.sql` + `data.sql` (en inglés, auditoría tiered)
+  2. ✅ Schema SQL completo en `.ai/db/schema.sql` (fuente de verdad) + historial en `.ai/db/migrations/`
   3. ✅ Specification Summary completado (`.ai/SPECIFICATION-SUMMARY.md`)
   4. ✅ Contratos REST completados (`.ai/api/contracts-rol.md`) — 35+ endpoints con request/response/errores/validaciones
   5. ✅ Mocks JSON completados (`.ai/api/mocks/`) — 6 archivos: auth, time-entries, users, clients, projects, config
@@ -140,18 +145,20 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
 
 - **Autenticación:** JWT (stateless)
 - **Sesiones:** Timeout a definir en código
-- **Soft delete:** Users, Clients, Projects — campo `enabled` (boolean). Las tablas con soft delete tienen además `deleted_at` y `deleted_by` (email del responsable).
-- **Auditoria:** Columnas `created_by` / `updated_by` en todas las tablas como `VARCHAR(255)` almacenando el **email** del usuario (sin FK). Migración 020 estandarizó: `activo → enabled`, `deactivated_at → deleted_at`, `created_by_user_id → created_by`, `nombre → name` en 6 tablas lookup. El JWT ahora incluye `email` y se propaga por toda la cadena route → service → data.
+- **Limpieza de BD (2026-05-18):** Se consolidó toda la BD en `.ai/db/schema.sql` (DDL) + `.ai/db/data.sql` (datos), reemplazando los `setup_*.sql` (legacy, pendientes de borrar). Tres pasadas: (1) **traducción** — todos los identificadores a inglés (`periodos→periods`, `ingresos→revenues`, `gastos_admin→admin_expenses`, `costos_venta→sales_costs`, `costos_por_persona→personnel_costs`, `tipos_documento→document_types`, `registros_comerciales→commercial_records`, `codigo→code`, `nombre→name`, `gestor_id→manager_id`, etc.; `ruc` se conserva; valores de datos quedan en español); (2) **auditoría tiered + renombres + PKs**; (3) **revert de layout** a inline terso. El backend aún usa los nombres viejos y se ajustará en un paso posterior (fuera de alcance de esta limpieza).
+- **Renombrado de tablas:** `user_groups→profiles`, `user_areas→user_area`, `user_group_members→user_profile` (su FK `group_id→profile_id`), `project_project_categories→project_project_category`, `project_users→project_user`. Las 4 tablas puente perdieron el `id` UUID y usan **PK compuesta**.
+- **Soft delete:** campo `is_active` (boolean, ex `enabled`). Las tablas con soft delete tienen además `deleted_at` y `deleted_by` (email del responsable).
+- **Auditoría tiered:** bloque estándar al final de cada tabla = `created_at TIMESTAMP NOT NULL DEFAULT NOW()`, `created_by VARCHAR(50) NOT NULL DEFAULT 'admin'`, `updated_at TIMESTAMP` (nullable), `updated_by VARCHAR(50)`, `deleted_at`, `deleted_by`, `is_active BOOLEAN NOT NULL DEFAULT true`. **No todas** lo llevan completo: catálogos/entidades/transaccionales (24) sí; tablas puente solo `created_at`+`created_by`; `project_user` agrega `updated_*`+`is_active`; `time_entry_approvals` (log) solo `created_at`+`created_by`; `refresh_tokens`/`password_reset_tokens` sin bloque. `created_by`/`updated_by` guardan el **email** (o `'admin'` por defecto), sin FK. El JWT incluye `email` y se propaga route → service → data.
 - **Email:** SMTP integrado con nodemailer (`emailService.js`). Dos tipos de email: bienvenida (link activación 48h) y reset de contraseña (link 1h). Si SMTP no está configurado, el link se imprime en consola (dev mode).
 - **Activación de cuenta:** Nuevos usuarios no tienen contraseña. Al crearlos, se genera un token (tabla `password_reset_tokens`, válido 48h) y se envía email de bienvenida con link a `/activar-cuenta?token=...`. El endpoint de activación reutiliza `POST /api/auth/confirmar-reset`.
 - **Acceso a proyectos del Gestor:** Un Gestor tiene acceso a todos los proyectos donde figura como `gestor_id` en la tabla `projects`, independientemente de si tiene fila en `project_users`. Esta regla aplica en tres puntos del backend: listar proyectos disponibles, verificar acceso al guardar horas, y listar time entries del panel. Los tres puntos fueron corregidos en `projectData.js` y `timeEntryData.js` (2026-04-24).
-- **Áreas de usuario (M2M):** El campo `area_id` fue eliminado de `users`. Reemplazado por tabla `user_areas` (M2M). Un usuario debe tener al menos un área (validado en aplicación y route). El selector en UI es del mismo estilo toggle que los grupos.
+- **Áreas de usuario (M2M):** El campo `area_id` fue eliminado de `users`. Reemplazado por tabla `user_area` (M2M, ex `user_areas`, PK compuesta `(user_id, area_id)`). Un usuario debe tener al menos un área (validado en aplicación y route). El selector en UI es del mismo estilo toggle que los perfiles.
 - **Área de proyecto (opcional):** Los proyectos tienen un campo `area_id` nullable. En UI se controla con un checkbox "Este proyecto aplica a un área específica" que habilita un Select para elegir el área. Si el checkbox está desmarcado, se envía `null`.
-- **Proyecciones de horas:** Tabla `hour_projections`. El gestor registra rangos de horas proyectadas para un usuario en un proyecto (fecha_inicio, fecha_fin, horas_proyectadas en NUMERIC 0.5). `categoria_id` es FK opcional a `client_categories`. Alertas en Home del Gestor. Endpoint: `GET /projections/alertas`.
-- **Módulo Finanzas:** Tablas `periodos`, `ingresos`, `gastos_admin`, `costos_venta`, `costos_por_persona`. Los períodos son mensuales con estado abierto/cerrado. Los ingresos se registran por (proyecto, período). Los costos por persona incluyen remuneración, días hábiles y horas por día.
-- **Módulo Comercial:** Tablas `tipos_documento` y `registros_comerciales`. Los registros comerciales vinculan propuestas/contratos a proyectos y responsables, con precio, moneda, tipo de documento y estado de facturación.
-- **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients`. `razon_social` es el identificador principal (NOT NULL). `client_category_id` es nullable.
-- **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects`. Se agregaron `fecha_inicio_real` y `fecha_fin_real` para calcular desviaciones.
+- **Proyecciones de horas:** Tabla `hour_projections`. El gestor registra rangos de horas proyectadas para un usuario en un proyecto (`start_date`, `end_date`, `projected_hours` en NUMERIC múltiplos de 0.5). `work_category_id` es FK opcional a `work_categories`. Alertas en Home del Gestor. Endpoint: `GET /projections/alertas`.
+- **Módulo Finanzas:** Tablas `periods`, `revenues`, `admin_expenses`, `sales_costs`, `personnel_costs`. Los períodos son mensuales con estado abierto/cerrado (`is_closed`). Los ingresos se registran por (`project_id`, `period_id`). `personnel_costs` incluye `compensation`, `business_days` y `hours_per_day`.
+- **Módulo Comercial:** Tablas `document_types` y `commercial_records`. Los registros comerciales vinculan propuestas/contratos a proyectos y responsables (`owner_id`), con `price`, `currency`, `document_type_id`, `has_contract` y `is_billed`.
+- **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients`. `legal_name` (ex `razon_social`) es el identificador principal (NOT NULL). La FK `client_category_id` fue eliminada (migración 021).
+- **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects`. Se agregaron `actual_start_date` y `actual_end_date` (ex `fecha_inicio_real`/`fecha_fin_real`) para calcular desviaciones.
 
 ---
 
@@ -302,9 +309,9 @@ Ver: `.ai/stories/README.md`
 | `.ai/api/mocks/clients.json` | Mocks de clientes ✅ |
 | `.ai/api/mocks/projects.json` | Mocks de proyectos ✅ |
 | `.ai/api/mocks/config.json` | Mocks de tablas de configuración/lookup ✅ |
-| `.ai/db/setup_schema.sql` | **Fuente de verdad del schema** — DDL completo y actualizado |
-| `.ai/db/setup_seeds.sql` | Seeds iniciales (catálogos + usuario admin) |
-| `.ai/db/schema.md` | Documentación del schema (debe coincidir con `setup_schema.sql`) |
+| `.ai/db/schema.sql` | **Fuente de verdad del schema** — DDL completo y actualizado |
+| `.ai/db/data.sql` | Seeds iniciales (catálogos + usuario admin) |
+| `.ai/db/schema.md` | Documentación del schema (debe coincidir con `schema.sql`) |
 | `.ai/db/migrations_archive/` | Historial de migraciones incrementales (001 en adelante) |
 | `.ai/pendientes.md` | Decisiones bloqueantes (8 cerradas ✅) |
 | `WORKFLOW.md` | Checklist por etapa |

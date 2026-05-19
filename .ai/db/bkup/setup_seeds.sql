@@ -17,9 +17,9 @@ INSERT INTO income_categories (codigo, name, descripcion) VALUES
   ('MANTENIMIENTO', 'Mantenimiento', ''),
   ('SOPORTE',       'Soporte',       '');
 
--- ── client_categories ────────────────────────────────────────
+-- ── work_categories ──────────────────────────────────────────
 
-INSERT INTO client_categories (codigo, name) VALUES
+INSERT INTO work_categories (codigo, name) VALUES
   ('ESTRATEGIA',             'Estrategia'),
   ('GESTORES_GESTION',       'Gestores - Gestión y planeamiento'),
   ('UX_RESEARCH',            'User Experience - Research'),
@@ -41,13 +41,13 @@ INSERT INTO client_categories (codigo, name) VALUES
 
 -- ── service_types ────────────────────────────────────────────
 
-INSERT INTO service_types (codigo, nombre) VALUES
+INSERT INTO service_types (codigo, name) VALUES
   ('PROYECTO',            'Proyecto'),
   ('SERVICIO_RECURRENTE', 'Servicio recurrente');
 
 -- ── client_segmentations ─────────────────────────────────────
 
-INSERT INTO client_segmentations (codigo, nombre) VALUES
+INSERT INTO client_segmentations (codigo, name) VALUES
   ('CUENTA_CLAVE',         'Cuenta Clave'),
   ('CUENTA_INTERNACIONAL', 'Cuenta Internacional'),
   ('CUENTA_DESARROLLO',    'Cuenta Desarrollo'),
@@ -58,7 +58,7 @@ INSERT INTO client_segmentations (codigo, nombre) VALUES
 
 -- ── client_sectors ───────────────────────────────────────────
 
-INSERT INTO client_sectors (codigo, nombre) VALUES
+INSERT INTO client_sectors (codigo, name) VALUES
   ('CONSULTORIA',          'Consultoría'),
   ('BANCA_FINANCIERO',     'Banca y Servicios Financieros'),
   ('TECNOLOGIA',           'Tecnología'),
@@ -124,7 +124,7 @@ INSERT INTO areas (codigo, name) VALUES
 
 -- ── project_segmentation ─────────────────────────────────────
 
-INSERT INTO project_segmentation (codigo, nombre) VALUES
+INSERT INTO project_segmentation (codigo, name) VALUES
   ('I001',         'I001 - Redes Sociales'),
   ('I002',         'I002 - Diseño y Desarrollo de Producto'),
   ('I002_DIGITAL', 'I002 - Diseño y Desarrollo Digital de Producto'),
@@ -137,7 +137,7 @@ INSERT INTO project_segmentation (codigo, nombre) VALUES
 
 -- ── project_categories ───────────────────────────────────────
 
-INSERT INTO project_categories (codigo, nombre) VALUES
+INSERT INTO project_categories (codigo, name) VALUES
   ('DESIGN_PARTNERSHIP_SQUAD',    'Design Partnership Squad'),
   ('DEV_PARTNERSHIP_SQUAD',       'Development Partnership Squad'),
   ('INVESTIGACION_RETO',          'Investigacion de reto'),
@@ -175,7 +175,7 @@ INSERT INTO project_categories (codigo, nombre) VALUES
 
 -- ── productivity_layers ──────────────────────────────────────
 
-INSERT INTO productivity_layers (codigo, nombre) VALUES
+INSERT INTO productivity_layers (codigo, name) VALUES
   ('OPERATIONAL_BACKBONE', 'Operational Backbone'),
   ('CULTURE_BUILDERS',     'Culture Builders'),
   ('GROWTH_LEAPS',         'Growth Leaps');
@@ -200,7 +200,7 @@ BEGIN
   INSERT INTO users (
     email, password_hash, nombres, apellidos,
     numero_documento, puesto, team_id, fecha_ingreso,
-    activo, staff, super_usuario
+    enabled, staff, super_usuario
   ) VALUES (
     'admin@seekglobal.co',
     '$2a$10$k7CkE/Pwe48IjA.zsQdfAOUJRImHuxUsqXjx318MM9y79wVxxxJeC',

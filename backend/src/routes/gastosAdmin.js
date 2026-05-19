@@ -12,14 +12,15 @@ router.get('/', async (req, res, next) => {
     let where = '';
     if (periodo_id) {
       params.push(periodo_id);
-      where = `WHERE g.periodo_id = $${params.length}`;
+      where = `WHERE g.period_id = $${params.length}`;
     }
     const filas = await consultar(
-      `SELECT g.id, g.codigo, g.descripcion, g.monto, pe.mes, pe.anio, g.periodo_id
-       FROM gastos_admin g
-       JOIN periodos pe ON pe.id = g.periodo_id
+      `SELECT g.id, g.code AS codigo, g.description AS descripcion, g.amount AS monto,
+              pe.month AS mes, pe.year AS anio, g.period_id AS periodo_id
+       FROM admin_expenses g
+       JOIN periods pe ON pe.id = g.period_id
        ${where}
-       ORDER BY pe.anio DESC, pe.mes DESC, g.codigo`,
+       ORDER BY pe.year DESC, pe.month DESC, g.code`,
       params
     );
     res.json(filas);
@@ -32,9 +33,10 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const filas = await consultar(
-      `SELECT g.id, g.codigo, g.descripcion, g.monto, g.periodo_id, pe.mes, pe.anio
-       FROM gastos_admin g
-       JOIN periodos pe ON pe.id = g.periodo_id
+      `SELECT g.id, g.code AS codigo, g.description AS descripcion, g.amount AS monto,
+              g.period_id AS periodo_id, pe.month AS mes, pe.year AS anio
+       FROM admin_expenses g
+       JOIN periods pe ON pe.id = g.period_id
        WHERE g.id = $1`,
       [req.params.id]
     );
@@ -56,9 +58,9 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'El monto no puede ser negativo' });
     }
     const filas = await consultar(
-      `INSERT INTO gastos_admin (periodo_id, codigo, descripcion, monto, created_by, updated_by)
+      `INSERT INTO admin_expenses (period_id, code, description, amount, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $5, $5)
-       RETURNING id, periodo_id, codigo, descripcion, monto`,
+       RETURNING id, period_id AS periodo_id, code AS codigo, description AS descripcion, amount AS monto`,
       [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
@@ -78,11 +80,11 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'El monto no puede ser negativo' });
     }
     const filas = await consultar(
-      `UPDATE gastos_admin
-       SET periodo_id = $1, codigo = $2, descripcion = $3, monto = $4,
+      `UPDATE admin_expenses
+       SET period_id = $1, code = $2, description = $3, amount = $4,
            updated_at = NOW(), updated_by = $5
        WHERE id = $6
-       RETURNING id, periodo_id, codigo, descripcion, monto`,
+       RETURNING id, period_id AS periodo_id, code AS codigo, description AS descripcion, amount AS monto`,
       [periodo_id, codigo.trim(), descripcion?.trim() || null, monto, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Gasto no encontrado' });
@@ -96,7 +98,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const filas = await consultar(
-      `DELETE FROM gastos_admin WHERE id = $1 RETURNING id`,
+      `DELETE FROM admin_expenses WHERE id = $1 RETURNING id`,
       [req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Gasto no encontrado' });

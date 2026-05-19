@@ -7,11 +7,11 @@ async function listarClientes(filtros) {
 
   if (filtros.activo !== undefined) {
     params.push(filtros.activo === 'true');
-    condiciones.push(`c.enabled = $${idx++}`);
+    condiciones.push(`c.is_active = $${idx++}`);
   }
   if (filtros.search) {
     params.push(`%${filtros.search}%`);
-    condiciones.push(`(c.razon_social ILIKE $${idx} OR c.razon_comercial ILIKE $${idx} OR c.ruc ILIKE $${idx++})`);
+    condiciones.push(`(c.legal_name ILIKE $${idx} OR c.trade_name ILIKE $${idx} OR c.ruc ILIKE $${idx++})`);
   }
   if (filtros.segmentacion_id) {
     params.push(filtros.segmentacion_id);
@@ -23,9 +23,10 @@ async function listarClientes(filtros) {
   const offset = ((parseInt(filtros.page) || 1) - 1) * limite;
 
   const sql = `
-    SELECT c.id, c.razon_social, c.razon_comercial, c.ruc,
-           c.nombre_contacto, c.email_contacto, c.telefono, c.direccion,
-           c.enabled as activo, c.created_at,
+    SELECT c.id, c.legal_name AS razon_social, c.trade_name AS razon_comercial, c.ruc,
+           c.contact_name AS nombre_contacto, c.contact_email AS email_contacto,
+           c.phone AS telefono, c.address AS direccion,
+           c.is_active as activo, c.created_at,
            s.id as seg_id, s.name as seg_nombre,
            sec.id as sec_id, sec.name as sec_nombre,
            (SELECT COUNT(*) FROM projects p WHERE p.client_id = c.id) as proyectos_count
@@ -33,7 +34,7 @@ async function listarClientes(filtros) {
     LEFT JOIN client_segmentations s ON s.id = c.segmentation_id
     LEFT JOIN client_sectors sec ON sec.id = c.sector_id
     ${where}
-    ORDER BY c.razon_social
+    ORDER BY c.legal_name
     LIMIT $${params.length + 1} OFFSET $${params.length + 2}
   `;
 
@@ -47,9 +48,10 @@ async function listarClientes(filtros) {
 
 async function buscarClientePorId(id) {
   return consultarUno(
-    `SELECT c.id, c.razon_social, c.razon_comercial, c.ruc,
-            c.nombre_contacto, c.email_contacto, c.telefono, c.direccion,
-            c.enabled as activo, c.created_at, c.updated_at,
+    `SELECT c.id, c.legal_name AS razon_social, c.trade_name AS razon_comercial, c.ruc,
+            c.contact_name AS nombre_contacto, c.contact_email AS email_contacto,
+            c.phone AS telefono, c.address AS direccion,
+            c.is_active as activo, c.created_at, c.updated_at,
             s.id as seg_id, s.name as seg_nombre,
             sec.id as sec_id, sec.name as sec_nombre
      FROM clients c
@@ -62,7 +64,7 @@ async function buscarClientePorId(id) {
 
 async function obtenerProyectosDeCliente(clienteId) {
   return consultar(
-    `SELECT id, nombre, code as codigo, enabled as activo FROM projects WHERE client_id = $1 ORDER BY nombre`,
+    `SELECT id, name AS nombre, code as codigo, is_active as activo FROM projects WHERE client_id = $1 ORDER BY name`,
     [clienteId]
   );
 }
@@ -76,12 +78,12 @@ async function rucExiste(ruc, excluirId = null) {
 
 async function crearCliente(datos, email) {
   const { rows: [cliente] } = await pool.query(
-    `INSERT INTO clients (razon_social, razon_comercial, ruc, nombre_contacto,
-                          email_contacto, telefono, direccion,
-                          segmentation_id, sector_id, enabled,
+    `INSERT INTO clients (legal_name, trade_name, ruc, contact_name,
+                          contact_email, phone, address,
+                          segmentation_id, sector_id, is_active,
                           created_by, updated_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11)
-     RETURNING id, razon_social, ruc, enabled as activo, created_at`,
+     RETURNING id, legal_name AS razon_social, ruc, is_active as activo, created_at`,
     [
       datos.razon_social, datos.razon_comercial || null,
       datos.ruc, datos.nombre_contacto || null, datos.email_contacto || null,
@@ -100,16 +102,16 @@ async function actualizarCliente(id, datos, email) {
   let idx = 1;
 
   const mapeados = {
-    razon_social: datos.razon_social,
-    razon_comercial: datos.razon_comercial,
+    legal_name: datos.razon_social,
+    trade_name: datos.razon_comercial,
     ruc: datos.ruc,
-    nombre_contacto: datos.nombre_contacto,
-    email_contacto: datos.email_contacto,
-    telefono: datos.telefono,
-    direccion: datos.direccion,
+    contact_name: datos.nombre_contacto,
+    contact_email: datos.email_contacto,
+    phone: datos.telefono,
+    address: datos.direccion,
     segmentation_id: datos.segmentacion_id,
     sector_id: datos.sector_id,
-    enabled: datos.activo,
+    is_active: datos.activo,
   };
 
   for (const [campo, valor] of Object.entries(mapeados)) {
@@ -124,7 +126,7 @@ async function actualizarCliente(id, datos, email) {
   params.push(email || null, id);
 
   const { rows: [cliente] } = await pool.query(
-    `UPDATE clients SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, razon_social, updated_at`,
+    `UPDATE clients SET ${campos.join(', ')} WHERE id = $${idx} RETURNING id, legal_name AS razon_social, updated_at`,
     params
   );
   return cliente;
@@ -133,13 +135,13 @@ async function actualizarCliente(id, datos, email) {
 async function toggleActivo(id, email) {
   const { rows: [cliente] } = await pool.query(
     `UPDATE clients
-     SET enabled = NOT enabled,
-         deleted_at = CASE WHEN enabled THEN NOW() ELSE NULL END,
-         deleted_by = CASE WHEN enabled THEN $2 ELSE NULL END,
+     SET is_active = NOT is_active,
+         deleted_at = CASE WHEN is_active THEN NOW() ELSE NULL END,
+         deleted_by = CASE WHEN is_active THEN $2 ELSE NULL END,
          updated_at = NOW(),
          updated_by = $2
      WHERE id = $1
-     RETURNING id, enabled as activo, updated_at`,
+     RETURNING id, is_active as activo, updated_at`,
     [id, email || null]
   );
   return cliente;

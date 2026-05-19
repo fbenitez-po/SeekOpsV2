@@ -10,17 +10,17 @@ const HORAS_USADAS_SUBQUERY = `
     FROM time_entries te
     JOIN time_entry_lines tel ON tel.time_entry_id = te.id
     WHERE te.user_id = c.user_id
-      AND te.estado = 'APROBADO'
+      AND te.status = 'APROBADO'
       AND EXTRACT(YEAR FROM to_date(
-        (2000 + right(te.semana, 2)::int)::text ||
-        lpad(split_part(substring(te.semana from 2), '/', 1), 3, '0'),
+        (2000 + right(te.week, 2)::int)::text ||
+        lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
         'IYYYIW'
-      )) = pe.anio
+      )) = pe.year
       AND EXTRACT(MONTH FROM to_date(
-        (2000 + right(te.semana, 2)::int)::text ||
-        lpad(split_part(substring(te.semana from 2), '/', 1), 3, '0'),
+        (2000 + right(te.week, 2)::int)::text ||
+        lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
         'IYYYIW'
-      )) = pe.mes
+      )) = pe.month
   ), 0)`;
 
 // GET /costos-por-persona?periodo_id=...
@@ -31,18 +31,20 @@ router.get('/', async (req, res, next) => {
     let where = '';
     if (periodo_id) {
       params.push(periodo_id);
-      where = `WHERE c.periodo_id = $${params.length}`;
+      where = `WHERE c.period_id = $${params.length}`;
     }
     const filas = await consultar(
-      `SELECT c.id, c.periodo_id, c.user_id, c.remuneracion, c.dias_habiles, c.horas_por_dia,
-              pe.mes, pe.anio,
-              u.nombres, u.apellidos, u.email,
+      `SELECT c.id, c.period_id AS periodo_id, c.user_id,
+              c.compensation AS remuneracion, c.business_days AS dias_habiles,
+              c.hours_per_day AS horas_por_dia,
+              pe.month AS mes, pe.year AS anio,
+              u.first_name AS nombres, u.last_name AS apellidos, u.email,
               ${HORAS_USADAS_SUBQUERY} AS horas_usadas
-       FROM costos_por_persona c
-       JOIN periodos pe ON pe.id = c.periodo_id
+       FROM personnel_costs c
+       JOIN periods pe ON pe.id = c.period_id
        JOIN users u     ON u.id  = c.user_id
        ${where}
-       ORDER BY pe.anio DESC, pe.mes DESC, u.apellidos, u.nombres`,
+       ORDER BY pe.year DESC, pe.month DESC, u.last_name, u.first_name`,
       params
     );
     res.json(filas);
@@ -55,12 +57,14 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const filas = await consultar(
-      `SELECT c.id, c.periodo_id, c.user_id, c.remuneracion, c.dias_habiles, c.horas_por_dia,
-              pe.mes, pe.anio,
-              u.nombres, u.apellidos, u.email,
+      `SELECT c.id, c.period_id AS periodo_id, c.user_id,
+              c.compensation AS remuneracion, c.business_days AS dias_habiles,
+              c.hours_per_day AS horas_por_dia,
+              pe.month AS mes, pe.year AS anio,
+              u.first_name AS nombres, u.last_name AS apellidos, u.email,
               ${HORAS_USADAS_SUBQUERY} AS horas_usadas
-       FROM costos_por_persona c
-       JOIN periodos pe ON pe.id = c.periodo_id
+       FROM personnel_costs c
+       JOIN periods pe ON pe.id = c.period_id
        JOIN users u     ON u.id  = c.user_id
        WHERE c.id = $1`,
       [req.params.id]
@@ -85,9 +89,9 @@ router.post('/', async (req, res, next) => {
     if (horas <= 0) return res.status(400).json({ error: 'Las horas por día deben ser mayores a 0' });
 
     const filas = await consultar(
-      `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by, updated_by)
+      `INSERT INTO personnel_costs (period_id, user_id, compensation, business_days, hours_per_day, created_by, updated_by)
        VALUES ($1, $2, $3, $4, $5, $6, $6)
-       RETURNING id, periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia`,
+       RETURNING id, period_id AS periodo_id, user_id, compensation AS remuneracion, business_days AS dias_habiles, hours_per_day AS horas_por_dia`,
       [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null]
     );
     res.status(201).json(filas[0]);
@@ -110,11 +114,11 @@ router.put('/:id', async (req, res, next) => {
     if (horas <= 0) return res.status(400).json({ error: 'Las horas por día deben ser mayores a 0' });
 
     const filas = await consultar(
-      `UPDATE costos_por_persona
-       SET periodo_id = $1, user_id = $2, remuneracion = $3, dias_habiles = $4, horas_por_dia = $5,
+      `UPDATE personnel_costs
+       SET period_id = $1, user_id = $2, compensation = $3, business_days = $4, hours_per_day = $5,
            updated_at = NOW(), updated_by = $6
        WHERE id = $7
-       RETURNING id, periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia`,
+       RETURNING id, period_id AS periodo_id, user_id, compensation AS remuneracion, business_days AS dias_habiles, hours_per_day AS horas_por_dia`,
       [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null, req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Registro no encontrado' });
@@ -129,7 +133,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const filas = await consultar(
-      `DELETE FROM costos_por_persona WHERE id = $1 RETURNING id`,
+      `DELETE FROM personnel_costs WHERE id = $1 RETURNING id`,
       [req.params.id]
     );
     if (!filas.length) return res.status(404).json({ error: 'Registro no encontrado' });
@@ -160,12 +164,12 @@ router.post('/importar', async (req, res, next) => {
       const horas = horas_por_dia !== undefined && horas_por_dia !== null ? Number(horas_por_dia) : 8;
       try {
         await consultar(
-          `INSERT INTO costos_por_persona (periodo_id, user_id, remuneracion, dias_habiles, horas_por_dia, created_by, updated_by)
+          `INSERT INTO personnel_costs (period_id, user_id, compensation, business_days, hours_per_day, created_by, updated_by)
            VALUES ($1, $2, $3, $4, $5, $6, $6)
-           ON CONFLICT (periodo_id, user_id) DO UPDATE
-             SET remuneracion = EXCLUDED.remuneracion,
-                 dias_habiles = EXCLUDED.dias_habiles,
-                 horas_por_dia = EXCLUDED.horas_por_dia,
+           ON CONFLICT (period_id, user_id) DO UPDATE
+             SET compensation = EXCLUDED.compensation,
+                 business_days = EXCLUDED.business_days,
+                 hours_per_day = EXCLUDED.hours_per_day,
                  updated_at = NOW(),
                  updated_by = EXCLUDED.updated_by`,
           [periodo_id, user_id, Number(remuneracion), Number(dias_habiles), horas, req.usuario.email || null]
