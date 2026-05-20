@@ -84,7 +84,7 @@ FROM dblink('dbname=seekops_old user=postgres',
    JOIN masters_extensioncategory ec ON ec.id = pce.extensioncategory_id'
 ) AS src(code varchar, cat_name varchar)
 JOIN projects proj ON proj.code = src.code
-JOIN project_categories pc ON pc.name = src.cat_name
+JOIN project_categories pc ON pc.name = trim(regexp_replace(src.cat_name, '\s+', ' ', 'g'))
 ON CONFLICT DO NOTHING;
 
 -- Miembros de proyecto (M2M)
