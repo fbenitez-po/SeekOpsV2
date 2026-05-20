@@ -353,13 +353,13 @@ model project_user {
 model projects {
   id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code                     String                     @unique @db.VarChar(20)
-  name                     String                     @db.VarChar(100)
+  name                     String                     @db.VarChar(200)
   client_id                String                     @db.Uuid
-  project_segmentation_id  String                     @db.Uuid
+  project_segmentation_id  String?                    @db.Uuid
   productivity_layer_id    String?                    @db.Uuid
   service_type_id          String?                    @db.Uuid
   area_id                  String?                    @db.Uuid
-  manager_id               String                     @db.Uuid
+  manager_id               String?                    @db.Uuid
   start_date               DateTime?                  @db.Date
   end_date                 DateTime?                  @db.Date
   actual_start_date        DateTime?                  @db.Date
@@ -377,9 +377,9 @@ model projects {
   project_user             project_user[]
   areas                    areas?                     @relation(fields: [area_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   clients                  clients                    @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users                    users                      @relation(fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                    users?                     @relation(fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   productivity_layers      productivity_layers?       @relation(fields: [productivity_layer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  project_segmentation     project_segmentation       @relation(fields: [project_segmentation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project_segmentation     project_segmentation?      @relation(fields: [project_segmentation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_types            service_types?             @relation(fields: [service_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   revenues                 revenues[]
   time_entry_lines         time_entry_lines[]
@@ -572,14 +572,14 @@ model users {
   id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email                 String                 @unique @db.VarChar(255)
   password_hash         String                 @default("$placeholder$") @db.VarChar(255)
-  document_number       String                 @unique @db.VarChar(20)
+  document_number       String?                @unique @db.VarChar(20)
   first_name            String                 @db.VarChar(100)
   last_name             String                 @db.VarChar(100)
-  position              String                 @db.VarChar(100)
+  position              String?                @db.VarChar(100)
   mobile_phone          String?                @db.VarChar(20)
   avatar_url            String?                @db.VarChar(500)
-  team_id               String                 @db.Uuid
-  hire_date             DateTime               @db.Date
+  team_id               String?                @db.Uuid
+  hire_date             DateTime?              @db.Date
   is_staff              Boolean                @default(false)
   is_superuser          Boolean                @default(false)
   created_at            DateTime               @default(now()) @db.Timestamp(6)
@@ -599,7 +599,7 @@ model users {
   time_entries          time_entries[]
   user_area             user_area[]
   user_profile          user_profile[]
-  teams                 teams                  @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teams                 teams?                 @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([document_number], map: "idx_users_document_number")
   @@index([email], map: "idx_users_email")

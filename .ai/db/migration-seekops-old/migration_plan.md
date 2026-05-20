@@ -8,7 +8,7 @@ Dos bases de datos PostgreSQL en WSL Ubuntu (conexión: `wsl -d Ubuntu -u postgr
 
 La migración usa la extensión `dblink` para leer `seekops_old` directamente desde `seekops` en cada script. Todos los scripts son idempotentes (`ON CONFLICT DO NOTHING`).
 
-**Scripts en:** `.ai/db/migrations_archive/`
+**Scripts en:** `.ai/db/migration-seekops-old/`
 
 ---
 
@@ -317,8 +317,8 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `.ai/db/data.sql` | Seeds: catálogos + usuario admin |
 | `.ai/db/schema.md` | Documentación del schema |
 | `.ai/db/migration_plan.md` | Este archivo |
-| `.ai/db/migrations_archive/migration_02_users.sql` | Script Paso 2 |
-| `.ai/db/migrations_archive/migration_03_clients.sql` | Script Paso 3 |
-| `.ai/db/migrations_archive/migration_04_projects.sql` | Script Paso 4 |
-| `.ai/db/migrations_archive/migration_05_hour_projections.sql` | Script Paso 5 |
-| `.ai/db/migrations_archive/migration_06_commercial_records.sql` | Script Paso 6 |
+| `.ai/db/migration-seekops-old/migration_02_users.sql` | Script Paso 2 |
+| `.ai/db/migration-seekops-old/migration_03_clients.sql` | Script Paso 3 |
+| `.ai/db/migration-seekops-old/migration_04_projects.sql` | Script Paso 4 |
+| `.ai/db/migration-seekops-old/migration_05_hour_projections.sql` | Script Paso 5 |
+| `.ai/db/migration-seekops-old/migration_06_commercial_records.sql` | Script Paso 6 |

@@ -7,10 +7,11 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   await prisma.income_categories.createMany({
     data: [
-      { code: 'CONSULTORIA',   name: 'Consultoría',   description: '' },
-      { code: 'DESARROLLO',    name: 'Desarrollo',    description: '' },
-      { code: 'MANTENIMIENTO', name: 'Mantenimiento', description: '' },
-      { code: 'SOPORTE',       name: 'Soporte',       description: '' },
+      { code: 'RECLUTAMIENTO', name: 'Reclutamiento', description: '' },
+      { code: 'CAPACITACION',  name: 'Capacitación',  description: '' },
+      { code: 'COMERCIAL',     name: 'Comercial',     description: '' },
+      { code: 'AREA',          name: 'Área',          description: '' },
+      { code: 'CULTURA',       name: 'Cultura',       description: '' },
     ],
     skipDuplicates: true,
   });
