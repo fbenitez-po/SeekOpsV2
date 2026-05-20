@@ -2,6 +2,7 @@ import request from 'supertest';
 import { Pool } from 'pg';
 import app from '../../src/app';
 import { setupTestAdmin, cleanupTestAdmin, getAdminToken } from '../helpers/auth';
+import { apiPath } from '../helpers/api';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -11,7 +12,6 @@ let createdClientId: string;
 beforeAll(async () => {
   await setupTestAdmin();
   token = await getAdminToken();
-  // Clean up any client left from a previous run
   await pool.query("DELETE FROM clients WHERE ruc = '20123456789'");
 });
 afterAll(async () => {
@@ -28,7 +28,7 @@ function auth() {
 
 describe('GET /clients', () => {
   it('returns paginated list with Spanish keys', async () => {
-    const res = await request(app).get('/clients').set(auth());
+    const res = await request(app).get(apiPath('/clients')).set(auth());
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('data');
@@ -40,7 +40,7 @@ describe('GET /clients', () => {
   });
 
   it('returns 401 without token', async () => {
-    const res = await request(app).get('/clients');
+    const res = await request(app).get(apiPath('/clients'));
     expect(res.status).toBe(401);
     expect(res.body).toHaveProperty('error');
   });
@@ -48,13 +48,15 @@ describe('GET /clients', () => {
 
 describe('POST /clients', () => {
   it('creates a client and returns Spanish keys', async () => {
-    // Get a valid segmentacion_id
-    const configRes = await request(app).get('/config/segmentaciones').set(auth());
+    const configRes = await request(app).get(apiPath('/config/segmentaciones')).set(auth());
     const segmentacionId = configRes.body[0]?.id;
-    if (!segmentacionId) { console.warn('No segmentaciones seeded — skipping create test'); return; }
+    if (!segmentacionId) {
+      console.warn('No segmentaciones seeded — skipping create test');
+      return;
+    }
 
     const res = await request(app)
-      .post('/clients')
+      .post(apiPath('/clients'))
       .set(auth())
       .send({
         razon_social: 'Cliente Test SA',
@@ -70,10 +72,7 @@ describe('POST /clients', () => {
   });
 
   it('returns 400 on missing razon_social', async () => {
-    const res = await request(app)
-      .post('/clients')
-      .set(auth())
-      .send({ ruc: '20111111111' });
+    const res = await request(app).post(apiPath('/clients')).set(auth()).send({ ruc: '20111111111' });
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('error');
@@ -82,8 +81,10 @@ describe('POST /clients', () => {
 
 describe('GET /clients/:id', () => {
   it('returns client with Spanish keys including proyectos', async () => {
-    if (!createdClientId) { return; }
-    const res = await request(app).get(`/clients/${createdClientId}`).set(auth());
+    if (!createdClientId) {
+      return;
+    }
+    const res = await request(app).get(apiPath(`/clients/${createdClientId}`)).set(auth());
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('razon_social');
@@ -95,7 +96,7 @@ describe('GET /clients/:id', () => {
 
   it('returns 404 for non-existent client', async () => {
     const res = await request(app)
-      .get('/clients/00000000-0000-0000-0000-000000000000')
+      .get(apiPath('/clients/00000000-0000-0000-0000-000000000000'))
       .set(auth());
 
     expect(res.status).toBe(404);
@@ -105,9 +106,11 @@ describe('GET /clients/:id', () => {
 
 describe('PATCH /clients/:id/toggle-activo', () => {
   it('toggles is_active and returns activo key', async () => {
-    if (!createdClientId) { return; }
+    if (!createdClientId) {
+      return;
+    }
     const res = await request(app)
-      .patch(`/clients/${createdClientId}/toggle-activo`)
+      .patch(apiPath(`/clients/${createdClientId}/toggle-activo`))
       .set(auth());
 
     expect(res.status).toBe(200);

@@ -9,7 +9,11 @@
     "start": "node dist/index.js",
     "db:reset": "prisma migrate reset --force && prisma db seed",
     "test": "jest --runInBand --forceExit",
-    "test:coverage": "jest --runInBand --forceExit --coverage"
+    "test:coverage": "jest --runInBand --forceExit --coverage",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\""
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -25,6 +29,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -34,16 +39,20 @@
     "@types/nodemailer": "^8.0.0",
     "@types/supertest": "^7.2.0",
     "@types/uuid": "^10.0.0",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
     "jest": "^29.7.0",
     "nodemon": "^3.1.4",
+    "prettier": "^3.8.3",
     "prisma": "^7.8.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.4.10",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.4"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "node_modules/.bin/tsx prisma/seed.ts"
   },
   "jest": {
     "testEnvironment": "node",
@@ -58,6 +67,21 @@
     "testMatch": [
       "**/tests/**/*.test.js",
       "**/tests/**/*.test.ts"
-    ]
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/generated/**",
+      "!src/**/*.d.ts",
+      "!src/index.ts",
+      "!src/app.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 35,
+        "functions": 30,
+        "branches": 25,
+        "statements": 35
+      }
+    }
   }
 }

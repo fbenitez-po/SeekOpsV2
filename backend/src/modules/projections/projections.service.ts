@@ -1,4 +1,4 @@
-import { AppError } from '../../shared/http/errorHandler';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/http/errorHandler';
 import * as repo from './projections.repository';
 import * as mapper from './projections.mapper';
 import type { CreateProjectionInput, UpdateProjectionInput } from './projections.schema';
@@ -14,13 +14,13 @@ export async function list(filters: Record<string, string>, userId: string, role
 
 export async function create(body: CreateProjectionInput, userId: string, email: string | null, roles: string[]) {
   if (new Date(body.fecha_fin) < new Date(body.fecha_inicio)) {
-    throw new AppError('fecha_fin debe ser mayor o igual a fecha_inicio', 400);
+    throw new ValidationError('fecha_fin debe ser mayor o igual a fecha_inicio');
   }
 
   if (!roles.includes('ADMIN')) {
     const managerId = await repo.findProjectManagerId(body.project_id);
     if (!managerId || managerId !== userId) {
-      throw new AppError('No tenés permisos para proyectar horas en este proyecto', 403);
+      throw new ForbiddenError('No tenés permisos para proyectar horas en este proyecto');
     }
   }
 
@@ -36,14 +36,14 @@ export async function update(
   roles: string[],
 ) {
   const existing = await repo.findById(id);
-  if (!existing) throw new AppError('Proyección no encontrada', 404);
+  if (!existing) throw new NotFoundError('Proyección no encontrada');
 
   if (!roles.includes('ADMIN') && existing.projects.manager_id !== userId) {
-    throw new AppError('No tenés permisos para modificar esta proyección', 403);
+    throw new ForbiddenError('No tenés permisos para modificar esta proyección');
   }
 
   if (body.fecha_inicio && body.fecha_fin && new Date(body.fecha_fin) < new Date(body.fecha_inicio)) {
-    throw new AppError('fecha_fin debe ser mayor o igual a fecha_inicio', 400);
+    throw new ValidationError('fecha_fin debe ser mayor o igual a fecha_inicio');
   }
 
   const updated = await repo.update(id, body, email);
@@ -52,10 +52,10 @@ export async function update(
 
 export async function remove(id: string, userId: string, roles: string[]) {
   const existing = await repo.findById(id);
-  if (!existing) throw new AppError('Proyección no encontrada', 404);
+  if (!existing) throw new NotFoundError('Proyección no encontrada');
 
   if (!roles.includes('ADMIN') && existing.projects.manager_id !== userId) {
-    throw new AppError('No tenés permisos para eliminar esta proyección', 403);
+    throw new ForbiddenError('No tenés permisos para eliminar esta proyección');
   }
 
   await repo.remove(id);

@@ -1,4 +1,8 @@
-import { AppError } from '../../shared/http/errorHandler';
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from '../../shared/http/errorHandler';
 import * as repo from './timeEntries.repository';
 import * as mapper from './timeEntries.mapper';
 import type {
@@ -62,7 +66,7 @@ export async function list(
 
 export async function getById(id: string, userId: string, roles: string[]) {
   const entry = await repo.findById(id);
-  if (!entry) throw new AppError('Registro no encontrado', 404);
+  if (!entry) throw new NotFoundError('Registro no encontrado');
 
   const isOwner = entry.user_id === userId;
   const isAdmin = roles.includes('ADMIN');
@@ -71,7 +75,7 @@ export async function getById(id: string, userId: string, roles: string[]) {
     const projectId = await repo.findFirstLineProjectId(id);
     if (projectId) {
       const isManager = await repo.isProjectManager(userId, projectId);
-      if (!isManager) throw new AppError('No tenés permiso para ver este registro', 403);
+      if (!isManager) throw new ForbiddenError('No tenés permiso para ver este registro');
     }
   }
 
@@ -82,17 +86,17 @@ export async function getById(id: string, userId: string, roles: string[]) {
 export async function create(body: CreateTimeEntryInput, userId: string, email: string | null, roles: string[]) {
   const combos = body.lineas.map((l) => `${l.proyecto_id}:${l.categoria_ingreso_id ?? 'null'}`);
   if (new Set(combos).size !== combos.length) {
-    throw new AppError('No se puede repetir la misma combinación de proyecto y categoría en una carga', 400);
+    throw new ValidationError('No se puede repetir la misma combinación de proyecto y categoría en una carga');
   }
 
   const existing = await repo.findExistingEntry(userId, body.semana);
   if (existing) {
-    throw new AppError(`Ya existe un registro para la semana ${body.semana} en estado PENDIENTE o APROBADO`, 400);
+    throw new ValidationError(`Ya existe un registro para la semana ${body.semana} en estado PENDIENTE o APROBADO`);
   }
 
   for (const linea of body.lineas) {
     const assigned = await repo.isUserAssignedToProject(userId, linea.proyecto_id);
-    if (!assigned) throw new AppError('No tenés acceso al proyecto indicado', 403);
+    if (!assigned) throw new ForbiddenError('No tenés acceso al proyecto indicado');
   }
 
   const isOnlyGestor = roles.includes('GESTOR') && !roles.includes('SEEKER');
@@ -104,9 +108,9 @@ export async function create(body: CreateTimeEntryInput, userId: string, email: 
 
 export async function adjust(id: string, body: AdjustTimeEntryInput, userId: string, email: string | null) {
   const entry = await repo.findById(id);
-  if (!entry) throw new AppError('Registro no encontrado', 404);
-  if (entry.user_id !== userId) throw new AppError('Solo el dueño del registro puede editarlo', 403);
-  if (entry.status !== 'PENDIENTE') throw new AppError('Solo se pueden editar registros en estado PENDIENTE', 403);
+  if (!entry) throw new NotFoundError('Registro no encontrado');
+  if (entry.user_id !== userId) throw new ForbiddenError('Solo el dueño del registro puede editarlo');
+  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden editar registros en estado PENDIENTE');
 
   const updated = await repo.updateLines(id, body.lineas, email);
   return mapper.buildTimeEntryDetail(updated, []);
@@ -114,14 +118,14 @@ export async function adjust(id: string, body: AdjustTimeEntryInput, userId: str
 
 export async function approve(id: string, userId: string, email: string | null, roles: string[]) {
   const entry = await repo.findById(id);
-  if (!entry) throw new AppError('Registro no encontrado', 404);
-  if (entry.status !== 'PENDIENTE') throw new AppError('Solo se pueden aprobar registros en estado PENDIENTE', 403);
+  if (!entry) throw new NotFoundError('Registro no encontrado');
+  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden aprobar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
     const projectId = await repo.findFirstLineProjectId(id);
-    if (!projectId) throw new AppError('Registro no encontrado', 404);
+    if (!projectId) throw new NotFoundError('Registro no encontrado');
     const isManager = await repo.isProjectManager(userId, projectId);
-    if (!isManager) throw new AppError('Solo el gestor del proyecto o un administrador puede aprobar', 403);
+    if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
   await repo.recordApproval({ entryId: id, action: 'APROBAR', email, data: {} });
@@ -136,13 +140,13 @@ export async function observe(
   roles: string[],
 ) {
   const entry = await repo.findById(id);
-  if (!entry) throw new AppError('Registro no encontrado', 404);
-  if (entry.status !== 'PENDIENTE') throw new AppError('Solo se pueden aprobar registros en estado PENDIENTE', 403);
+  if (!entry) throw new NotFoundError('Registro no encontrado');
+  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden aprobar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
     const projectId = await repo.findFirstLineProjectId(id);
     const isManager = projectId ? await repo.isProjectManager(userId, projectId) : false;
-    if (!isManager) throw new AppError('Solo el gestor del proyecto o un administrador puede aprobar', 403);
+    if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
   await repo.recordApproval({ entryId: id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
@@ -162,13 +166,13 @@ export async function reject(
   roles: string[],
 ) {
   const entry = await repo.findById(id);
-  if (!entry) throw new AppError('Registro no encontrado', 404);
-  if (entry.status !== 'PENDIENTE') throw new AppError('Solo se pueden rechazar registros en estado PENDIENTE', 403);
+  if (!entry) throw new NotFoundError('Registro no encontrado');
+  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden rechazar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
     const projectId = await repo.findFirstLineProjectId(id);
     const isManager = projectId ? await repo.isProjectManager(userId, projectId) : false;
-    if (!isManager) throw new AppError('Solo el gestor del proyecto o un administrador puede rechazar', 403);
+    if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede rechazar');
   }
 
   await repo.recordApproval({ entryId: id, action: 'RECHAZAR', email, data: body });
@@ -201,7 +205,7 @@ export async function getMissingWeeks(userId: string) {
 
 export async function getSeekersWithMissingLoad(userId: string, roles: string[]) {
   if (!roles.includes('GESTOR') && !roles.includes('ADMIN')) {
-    throw new AppError('Solo el gestor puede ver esta información', 403);
+    throw new ForbiddenError('Solo el gestor puede ver esta información');
   }
 
   const seekers = await repo.findSeekersWithLoadData(userId);
@@ -260,11 +264,11 @@ export async function getSeekersWithMissingLoad(userId: string, roles: string[])
 
 export async function sendReminder(managerId: string, seekerId: string, roles: string[]) {
   if (!roles.includes('GESTOR') && !roles.includes('ADMIN')) {
-    throw new AppError('Solo el gestor puede enviar recordatorios', 403);
+    throw new ForbiddenError('Solo el gestor puede enviar recordatorios');
   }
 
   const seeker = await repo.findSeekerOfManager(managerId, seekerId);
-  if (!seeker) throw new AppError('El usuario no pertenece a tu equipo', 403);
+  if (!seeker) throw new ForbiddenError('El usuario no pertenece a tu equipo');
 
   await sendHoursReminder(
     seeker.email,

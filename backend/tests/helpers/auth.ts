@@ -2,6 +2,7 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import app from '../../src/app';
+import { apiPath } from './api';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -38,7 +39,7 @@ export async function cleanupTestAdmin(): Promise<void> {
 
 export async function getAdminToken(): Promise<string> {
   const res = await request(app)
-    .post('/auth/login')
+    .post(apiPath('/auth/login'))
     .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
   return res.body.access_token as string;
 }

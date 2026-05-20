@@ -4,6 +4,10 @@
 > **Generado:** 24 de Abril 2026  
 > **Basado en:** SPECIFICATION-SUMMARY.md + DB Schema + Historias de Usuario
 
+> ⚠️ **Prefijo de API (2026-05-20):** Todas las rutas listadas abajo (excepto `/health`) se sirven bajo `env.API_PREFIX`, default **`/api/v1`** (configurable por env). Ej.: `POST /auth/login` se invoca como `POST /api/v1/auth/login`. Verbos anglicizados desde el refactor de backend: `/aprobar→/approve`, `/observar→/observe`, `/rechazar→/reject`, `/importar→/import`, `/tipos-documento→/document-types` (ver `.ai/context.md` → "Refactor backend TypeScript + Prisma + modular").
+
+> ℹ️ **Errores de validación:** además de `{ error: string }`, los 400 por validación de Zod incluyen un campo aditivo `details: [{ field, message }]` con todos los issues. Los consumidores que leen `error` siguen funcionando.
+
 ---
 
 ## Índice de Endpoints

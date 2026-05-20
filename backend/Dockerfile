@@ -16,5 +16,5 @@ RUN npm run build
 
 EXPOSE 3000
 
-# Apply pending migrations, then start
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js"]
+# Apply pending migrations, seed initial data, then start
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node_modules/.bin/tsx prisma/seed.ts && node dist/index.js"]

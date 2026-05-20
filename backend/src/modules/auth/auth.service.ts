@@ -1,7 +1,12 @@
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { AppError } from '../../shared/http/errorHandler';
+import {
+  AppError,
+  ForbiddenError,
+  UnauthorizedError,
+  ValidationError,
+} from '../../shared/http/errorHandler';
 import { env } from '../../shared/config/env';
 import * as repo from './auth.repository';
 import { sendPasswordReset } from '../../shared/services/email.service';
@@ -16,11 +21,11 @@ function generateRefreshToken(payload: object): string {
 
 export async function login(email: string, password: string) {
   const user = await repo.findUserByEmail(email);
-  if (!user) throw new AppError('Credenciales inválidas', 401);
-  if (!user.activo) throw new AppError('Usuario inactivo. Contactá al administrador.', 403);
+  if (!user) throw new UnauthorizedError('Credenciales inválidas');
+  if (!user.activo) throw new ForbiddenError('Usuario inactivo. Contactá al administrador.');
 
   const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) throw new AppError('Credenciales inválidas', 401);
+  if (!valid) throw new UnauthorizedError('Credenciales inválidas');
 
   const roles = await repo.getUserRoles(user.id);
   const proyectos = await repo.getUserProjects(user.id);
@@ -58,18 +63,18 @@ export async function refreshAccessToken(refreshToken: string) {
   try {
     payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { usuario_id: string };
   } catch {
-    throw new AppError('Refresh token inválido o expirado', 401);
+    throw new UnauthorizedError('Refresh token inválido o expirado');
   }
 
   const stored = await repo.findRefreshToken(refreshToken);
-  if (!stored) throw new AppError('Refresh token inválido o expirado', 401);
+  if (!stored) throw new UnauthorizedError('Refresh token inválido o expirado');
   if (new Date(stored.expires_at) < new Date()) {
     await repo.deleteRefreshToken(refreshToken);
-    throw new AppError('Refresh token inválido o expirado', 401);
+    throw new UnauthorizedError('Refresh token inválido o expirado');
   }
 
   const user = await repo.findUserById(payload.usuario_id);
-  if (!user) throw new AppError('Refresh token inválido o expirado', 401);
+  if (!user) throw new UnauthorizedError('Refresh token inválido o expirado');
 
   const roles = await repo.getUserRoles(payload.usuario_id);
   const proyectos = await repo.getUserProjects(payload.usuario_id);
@@ -95,7 +100,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
 }
 
 export async function confirmPasswordReset(token: string, newPassword: string, confirmPassword: string): Promise<void> {
-  if (newPassword !== confirmPassword) throw new AppError('Las contraseñas no coinciden', 400);
+  if (newPassword !== confirmPassword) throw new ValidationError('Las contraseñas no coinciden');
 
   const record = await repo.findPasswordResetToken(token);
   if (!record || new Date(record.expires_at) < new Date()) {

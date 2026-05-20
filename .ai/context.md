@@ -123,6 +123,15 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
   - ✅ Impacto frontend: solo `frontend/src/services/api.js` (cero cambios en componentes)
   - ✅ Suite de tests de contrato (13 tests supertest): body+status verificados pre/post refactor
   - ✅ Módulos migrados: clients, config, users, projects, timeEntries, projections, finance (periods, revenues, adminExpenses, salesCosts, personnelCosts), commercial, auth
+- **Calidad y consistencia backend (2026-05-20):**
+  - ✅ **Context path / versionado API:** todas las rutas de negocio se montan bajo `env.API_PREFIX` (default `/api/v1`). `/health` queda fuera del prefijo (path estable para load balancers). Frontend `baseURL` default actualizado a `/api/v1` y proxy de Vite ya no reescribe el path. Sin cambio en shapes de respuesta.
+  - ✅ **Jerarquía de errores semántica:** `AppError` + subclases `ValidationError(400, details?)`, `UnauthorizedError(401)`, `ForbiddenError(403)`, `NotFoundError(404)`, `ConflictError(409)`. `errorHandler` solo loguea 5xx + errores no operacionales. `notFoundHandler` agregado para rutas inexistentes. Migrados ~40 `throw new AppError(msg, status)` a subclases (sin cambios en status codes).
+  - ✅ **Validación completa:** `validateParams` agregado a `shared/middlewares/validate.ts`; los 3 validators ahora devuelven **todos** los issues de Zod como `details: [{ field, message }]` (aditivo a `{ error }` — no rompe consumidores). `IdParamSchema` en `shared/schemas/common.ts`.
+  - ✅ **Patrón estándar aplicado a TODOS los módulos:** `commercial`, `auth` (sin controller/schema), `config` (solo routes+repo), y los 5 de finanzas (`periods`, `revenues`, `adminExpenses`, `salesCosts`, `personnelCosts`) ahora siguen `routes (declarativo) + controller + service + schema + repository`. La validación inline y los `res.status(404|400)` se eliminaron de las rutas; reglas como "monto/precio no negativo", "no encontrado" o los bucles `/import` viven en el service.
+  - ✅ **ESLint + Prettier:** flat config (`eslint.config.mjs`) con `typescript-eslint` recommended + `eslint-config-prettier`. Scripts `lint`, `lint:fix`, `format`, `format:check`. `npm run lint` = 0 errores.
+  - ✅ **Tests unitarios de servicios:** 6 suites / 27 tests (clients, users, periods, adminExpenses, revenues, personnelCosts) con `jest.mock` del repository. Verifican reglas de negocio (unicidad, NotFound, `/import` de revenues con todos los caminos de error, resiliencia per-row en personnelCosts). `coverageThreshold` inicial agregado.
+  - ✅ **Contract tests:** helper `tests/helpers/api.ts` con `apiPath()` que usa `env.API_PREFIX`; tests existentes (auth, clients) ya no hardcodean el prefijo.
+  - ✅ **Verificación:** `prisma generate && tsc` OK · `npm run lint` 0 errores · `npx jest tests/unit` 27/27 passing.
 - **Documentación lista para desarrollo:**
   - ✅ `.ai/SPECIFICATION-SUMMARY.md` — Referencia técnica centralizada (campos, validaciones, endpoints)
   - ✅ Historias de usuario (Epic 00-03) con criterios de aceptación detallados
@@ -151,6 +160,37 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
 
 ---
 
+## Infraestructura / Deploy
+
+### Docker startup (backend)
+
+El CMD del Dockerfile ejecuta en secuencia:
+```
+prisma migrate deploy → tsx prisma/seed.ts → node dist/index.js
+```
+- `tsx` se llama con ruta explícita (`node_modules/.bin/tsx`) — Prisma ejecuta el seed vía `sh -c` sin agregar `node_modules/.bin` al PATH.
+- El seed es idempotente (`createMany skipDuplicates: true`) — re-runs seguros.
+- El seed usa `PrismaPg` con `connectionString: process.env.DATABASE_URL` (mismo patrón que `src/shared/db/prisma.ts`). **No** usa `new PrismaClient()` sin adapter — Prisma 7 lo requiere.
+
+### Nginx proxy (frontend)
+
+`proxy_pass` **sin** trailing slash para preservar la URI completa:
+```nginx
+location /api/ {
+    proxy_pass http://backend:3000;   # ← sin barra al final
+```
+Con barra (`proxy_pass http://backend:3000/`), Nginx reemplaza `/api/` por `/` y el backend recibe `/v1/auth/login` en lugar de `/api/v1/auth/login` → 404.
+
+### Prisma client — import correcto
+
+El generador `provider = "prisma-client"` (Prisma 7) no genera `index.ts`. Entry point es `client.ts`:
+```typescript
+import { PrismaClient } from '../src/generated/prisma/client';  // ✓
+import { PrismaClient } from '../src/generated/prisma';          // ✗ MODULE_NOT_FOUND
+```
+
+---
+
 ## Decisiones de arquitectura
 
 - **Autenticación:** JWT (stateless)
@@ -169,6 +209,9 @@ El flujo correcto es siempre **Story → Schema → API → Código**. Si se det
 - **Módulo Comercial:** Tablas `document_types` y `commercial_records`. Los registros comerciales vinculan propuestas/contratos a proyectos y responsables (`owner_id`), con `price`, `currency`, `document_type_id`, `has_contract` y `is_billed`.
 - **Clientes — campo nombre eliminado:** El campo `nombre` fue eliminado de `clients`. `legal_name` (ex `razon_social`) es el identificador principal (NOT NULL). La FK `client_category_id` fue eliminada (migración 021).
 - **Proyectos — descripcion eliminada:** El campo `descripcion` fue eliminado de `projects`. Se agregaron `actual_start_date` y `actual_end_date` (ex `fecha_inicio_real`/`fecha_fin_real`) para calcular desviaciones.
+- **Context path / versionado de API (2026-05-20):** Todas las rutas de negocio se montan bajo `env.API_PREFIX` (default `/api/v1`, configurable por env — ej. `/seekops/api/v1` detrás de un gateway compartido). `/health` queda en la raíz por convención de operación. Frontend coordina con `VITE_API_URL || '/api/v1'`.
+- **Patrón estándar de módulo (2026-05-20):** Todo módulo en `backend/src/modules/<dominio>/` sigue: `routes.ts` declarativo (middlewares + `ctrl.*`) → `controller.ts` (handlers finos `req → service → res`) → `service.ts` (reglas de negocio + errores semánticos) → `repository.ts` (acceso a Prisma) → `schema.ts` (Zod, solo si hay inputs) → `mapper.ts` (DB → DTO, solo si hay transformación). El `controller` y el `service` se omiten únicamente cuando no aportan (ej: GETs de catálogos sin lógica; pero hoy todos los módulos los tienen).
+- **Jerarquía de errores (2026-05-20):** `AppError` con subclases `ValidationError(400)` — soporta `details: [{ field, message }]` — `UnauthorizedError(401)`, `ForbiddenError(403)`, `NotFoundError(404)`, `ConflictError(409)`. El `errorHandler` solo loguea 5xx + errores no operacionales. `notFoundHandler` para rutas inexistentes. Los servicios `throw` la subclase apropiada; las rutas no devuelven errores con `res.status(...).json(...)` directamente.
 
 ---
 

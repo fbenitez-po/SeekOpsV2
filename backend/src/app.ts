@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './shared/config/env';
-import { errorHandler } from './shared/http/errorHandler';
+import { errorHandler, notFoundHandler } from './shared/http/errorHandler';
 import clientRoutes from './modules/clients/clients.routes';
 import configRoutes from './modules/config/config.routes';
 import userRoutes from './modules/users/users.routes';
@@ -21,22 +21,27 @@ const app = express();
 app.use(cors({ origin: env.FRONTEND_URL }));
 app.use(express.json());
 
-app.use('/auth', authRoutes);
-app.use('/time-entries', timeEntryRoutes);
-app.use('/users', userRoutes);
-app.use('/clients', clientRoutes);
-app.use('/projects', projectRoutes);
-app.use('/config', configRoutes);
-app.use('/projections', projectionRoutes);
-app.use('/periods', periodsRoutes);
-app.use('/revenues', revenuesRoutes);
-app.use('/admin-expenses', adminExpensesRoutes);
-app.use('/sales-costs', salesCostsRoutes);
-app.use('/personnel-costs', personnelCostsRoutes);
-app.use('/commercial', commercialRoutes);
-
 app.get('/health', (_req, res) => res.json({ estado: 'ok' }));
 
+const api = express.Router();
+
+api.use('/auth', authRoutes);
+api.use('/time-entries', timeEntryRoutes);
+api.use('/users', userRoutes);
+api.use('/clients', clientRoutes);
+api.use('/projects', projectRoutes);
+api.use('/config', configRoutes);
+api.use('/projections', projectionRoutes);
+api.use('/periods', periodsRoutes);
+api.use('/revenues', revenuesRoutes);
+api.use('/admin-expenses', adminExpensesRoutes);
+api.use('/sales-costs', salesCostsRoutes);
+api.use('/personnel-costs', personnelCostsRoutes);
+api.use('/commercial', commercialRoutes);
+
+app.use(env.API_PREFIX, api);
+
+app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;

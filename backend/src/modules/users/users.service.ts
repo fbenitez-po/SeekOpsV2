@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { AppError } from '../../shared/http/errorHandler';
+import { NotFoundError, ValidationError } from '../../shared/http/errorHandler';
 import * as repo from './users.repository';
 import * as mapper from './users.mapper';
 import type { CreateUserInput, UpdateUserInput, ListUsersQuery } from './users.schema';
@@ -16,21 +16,21 @@ export async function list(query: ListUsersQuery) {
 
 export async function getById(id: string) {
   const user = await repo.findById(id);
-  if (!user) throw new AppError('Usuario no encontrado', 404);
+  if (!user) throw new NotFoundError('Usuario no encontrado');
   return mapper.toUserDetail(user as Parameters<typeof mapper.toUserDetail>[0]);
 }
 
 export async function create(data: CreateUserInput) {
   if (await repo.existsByEmail(data.email)) {
-    throw new AppError('El email ya está registrado en el sistema', 400);
+    throw new ValidationError('El email ya está registrado en el sistema');
   }
   if (await repo.existsByDocument(data.numero_documento)) {
-    throw new AppError('El número de documento ya está registrado', 400);
+    throw new ValidationError('El número de documento ya está registrado');
   }
 
   const hireDate = new Date(data.fecha_ingreso);
   if (hireDate > new Date()) {
-    throw new AppError('La fecha de ingreso no puede ser una fecha futura', 400);
+    throw new ValidationError('La fecha de ingreso no puede ser una fecha futura');
   }
 
   const user = await repo.create(data);
@@ -45,13 +45,13 @@ export async function create(data: CreateUserInput) {
 
 export async function update(id: string, data: UpdateUserInput) {
   const exists = await repo.findById(id);
-  if (!exists) throw new AppError('Usuario no encontrado', 404);
+  if (!exists) throw new NotFoundError('Usuario no encontrado');
 
   if (data.numero_documento && (await repo.existsByDocument(data.numero_documento, id))) {
-    throw new AppError('El número de documento ya está en uso por otro usuario', 400);
+    throw new ValidationError('El número de documento ya está en uso por otro usuario');
   }
   if (data.areas !== undefined && data.areas.length === 0) {
-    throw new AppError('Debe seleccionar al menos un área', 400);
+    throw new ValidationError('Debe seleccionar al menos un área');
   }
 
   const updated = await repo.update(id, data);
@@ -60,7 +60,7 @@ export async function update(id: string, data: UpdateUserInput) {
 
 export async function toggleActive(id: string, updatedBy: string | null) {
   const exists = await repo.findById(id);
-  if (!exists) throw new AppError('Usuario no encontrado', 404);
+  if (!exists) throw new NotFoundError('Usuario no encontrado');
 
   const result = await repo.toggleActive(id, updatedBy);
   return mapper.toToggleResult(result!);

@@ -1,22 +1,20 @@
 import { Router } from 'express';
 import { verifyToken } from '../../shared/middlewares/auth';
-import { asyncHandler } from '../../shared/http/asyncHandler';
-import * as repo from './config.repository';
+import * as ctrl from './config.controller';
 
 const router = Router();
-
 router.use(verifyToken);
 
-router.get('/equipos', asyncHandler(async (_req, res) => { res.json(await repo.getTeams()); }));
-router.get('/areas', asyncHandler(async (_req, res) => { res.json(await repo.getAreas()); }));
-router.get('/grupos', asyncHandler(async (_req, res) => { res.json(await repo.getProfiles()); }));
-router.get('/categorias-ingreso', asyncHandler(async (_req, res) => { res.json(await repo.getIncomeCategories()); }));
-router.get('/segmentaciones', asyncHandler(async (_req, res) => { res.json(await repo.getClientSegmentations()); }));
-router.get('/sectores', asyncHandler(async (_req, res) => { res.json(await repo.getClientSectors()); }));
-router.get('/segmentaciones-proyecto', asyncHandler(async (_req, res) => { res.json(await repo.getProjectSegmentations()); }));
-router.get('/categorias-proyecto', asyncHandler(async (_req, res) => { res.json(await repo.getProjectCategories()); }));
-router.get('/capas-productividad', asyncHandler(async (_req, res) => { res.json(await repo.getProductivityLayers()); }));
-router.get('/tipos-servicio', asyncHandler(async (_req, res) => { res.json(await repo.getServiceTypes()); }));
-router.get('/work-categories', asyncHandler(async (_req, res) => { res.json(await repo.getWorkCategories()); }));
+router.get('/equipos', ctrl.teams);
+router.get('/areas', ctrl.areas);
+router.get('/grupos', ctrl.profiles);
+router.get('/categorias-ingreso', ctrl.incomeCategories);
+router.get('/segmentaciones', ctrl.clientSegmentations);
+router.get('/sectores', ctrl.clientSectors);
+router.get('/segmentaciones-proyecto', ctrl.projectSegmentations);
+router.get('/categorias-proyecto', ctrl.projectCategories);
+router.get('/capas-productividad', ctrl.productivityLayers);
+router.get('/tipos-servicio', ctrl.serviceTypes);
+router.get('/work-categories', ctrl.workCategories);
 
 export default router;
