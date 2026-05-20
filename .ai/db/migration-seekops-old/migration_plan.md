@@ -144,7 +144,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `fiscal_address` | `address` | NULLIF si vacío |
 | `segmentation_id` (bigint old) | `segmentation_id` (UUID new) | JOIN `masters_segmentation` old → `client_segmentations` new **por nombre** |
 | `sector_id` (bigint old) | `sector_id` (UUID new) | JOIN `masters_sector` old → `client_sectors` new **por nombre** |
-| *(no existe)* | `is_active` | inferido: `CUENTA_EXCLUIDA` / `CUENTA_INACTIVA` → false, resto → true |
+| *(no existe)* | `is_active` | siempre `true` — el estado de segmentación no determina actividad |
 
 ---
 
@@ -303,7 +303,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
 | 1 | Crear script Paso 7 (horas trabajadas) | Alta |
-| 2 | Confirmar lógica is_active de clientes (CUENTA_EXCLUIDA/INACTIVA) | Media |
+| 2 | ~~Confirmar lógica is_active de clientes~~ — resuelto: todos migran como `true` | ✅ |
 | 3 | Completar `hire_date` manualmente para los 275 usuarios | Baja (post-MVP) |
 | 4 | Completar `manager_id` para los 152 proyectos sin gestor | Baja (post-MVP) |
 

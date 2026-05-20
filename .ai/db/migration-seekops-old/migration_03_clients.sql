@@ -3,7 +3,7 @@
 -- Origen: seekops_old (Django)
 -- Destino: seekops
 -- Requiere: migration_02_users.sql aplicado
--- Criterio is_active: CUENTA_EXCLUIDA y CUENTA_INACTIVA → false
+-- Criterio is_active: todos los clientes se migran como true
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS dblink;
@@ -21,7 +21,7 @@ SELECT
   NULLIF(c.fiscal_address, ''),
   cs.id,
   s.id,
-  CASE WHEN seg_code IN ('CUENTA_EXCLUIDA','CUENTA_INACTIVA') THEN false ELSE true END,
+  true,
   COALESCE(c.created_at, NOW()),
   'migration'
 FROM dblink('dbname=seekops_old user=postgres',
@@ -32,7 +32,7 @@ FROM dblink('dbname=seekops_old user=postgres',
        business_number varchar, fiscal_address varchar,
        sector_id bigint, segmentation_id bigint, created_at timestamptz)
 LEFT JOIN (
-  SELECT old.id AS old_id, n.id, n.code AS seg_code
+  SELECT old.id AS old_id, n.id
   FROM dblink('dbname=seekops_old user=postgres','SELECT id, name FROM masters_segmentation') AS old(id bigint, name varchar)
   JOIN client_segmentations n ON n.name = old.name
 ) cs ON cs.old_id = c.segmentation_id
