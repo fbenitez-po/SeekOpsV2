@@ -2,13 +2,20 @@
 
 ## Contexto
 
-Dos bases de datos PostgreSQL en WSL Ubuntu (conexión: `wsl -d Ubuntu -u postgres -- psql -d seekops`):
+Dos bases de datos PostgreSQL en el mismo servidor:
 - **seekops_old**: Django app legacy, 44 tablas, ~75k filas
 - **seekops** (nueva): schema normalizado custom, 31 tablas
 
-La migración usa la extensión `dblink` para leer `seekops_old` directamente desde `seekops` en cada script. Todos los scripts son idempotentes (`ON CONFLICT DO NOTHING`).
+La migración usa la extensión `dblink` para leer `seekops_old` directamente desde `seekops`. Todos los scripts son idempotentes (`ON CONFLICT DO NOTHING`).
 
-**Scripts en:** `.ai/db/migration-seekops-old/`
+**Cómo ejecutar:**
+```bash
+psql -U postgres -d seekops -f .ai/db/migration-seekops-old/migrate_seekops_old.sql
+```
+Si las bases están en Docker:
+```bash
+docker exec -i <container> psql -U postgres -d seekops < .ai/db/migration-seekops-old/migrate_seekops_old.sql
+```
 
 ---
 
@@ -31,15 +38,15 @@ La migración usa la extensión `dblink` para leer `seekops_old` directamente de
 | `document_types` | Catálogo | 1 | data.sql | ✅ | 7 |
 | `service_types` | Catálogo | 1 | data.sql | ✅ | 2 |
 | `periods` | Catálogo | 1 | data.sql | ✅ | pre-cargado Jan 2026→May 2028 |
-| `users` | Entidad | 2 | migration_02_users.sql | ✅ | 275 |
-| `user_area` | Relación (M2M) | 2 | migration_02_users.sql | ✅ | incluido en paso 2 |
-| `user_profile` | Relación (M2M) | 2 | migration_02_users.sql | ✅ | incluido en paso 2 |
-| `clients` | Entidad | 3 | migration_03_clients.sql | ✅ | 102 |
-| `projects` | Entidad | 4 | migration_04_projects.sql | ✅ | 490 |
-| `project_project_category` | Relación (M2M) | 4 | migration_04_projects.sql | ✅ | 372 |
-| `project_user` | Relación (M2M) | 4 | migration_04_projects.sql | ✅ | 1090 (role='SEEKER') |
-| `hour_projections` | Transaccional | 5 | migration_05_hour_projections.sql | ✅ | 2.563 (1.965 activas, 598 anuladas) |
-| `commercial_records` | Transaccional | 6 | migration_06_commercial_records.sql | ✅ | 677 (1 excluido: precio negativo) |
+| `users` | Entidad | 2 | migrate_seekops_old.sql | ✅ | 275 |
+| `user_area` | Relación (M2M) | 2 | migrate_seekops_old.sql | ✅ | incluido en paso 2 |
+| `user_profile` | Relación (M2M) | 2 | migrate_seekops_old.sql | ✅ | incluido en paso 2 |
+| `clients` | Entidad | 3 | migrate_seekops_old.sql | ✅ | 102 |
+| `projects` | Entidad | 4 | migrate_seekops_old.sql | ✅ | 490 |
+| `project_project_category` | Relación (M2M) | 4 | migrate_seekops_old.sql | ✅ | 372 |
+| `project_user` | Relación (M2M) | 4 | migrate_seekops_old.sql | ✅ | 1090 (role='SEEKER') |
+| `hour_projections` | Transaccional | 5 | migrate_seekops_old.sql | ✅ | 2.563 (1.965 activas, 598 anuladas) |
+| `commercial_records` | Transaccional | 6 | migrate_seekops_old.sql | ✅ | 677 (1 excluido: precio negativo) |
 | `time_entries` | Transaccional | 7 | pendiente | ❌ | — |
 | `time_entry_lines` | Transaccional | 7 | pendiente | ❌ | — |
 | `time_entry_approvals` | Log inmutable | 7 | pendiente | ❌ | — |
@@ -78,7 +85,7 @@ La migración usa la extensión `dblink` para leer `seekops_old` directamente de
 
 ## Paso 2 — Usuarios ✅
 
-**Script:** `migration_02_users.sql`
+**Script:** `migrate_seekops_old.sql` (paso 2)
 
 **Tablas populadas en seekops:** `users`, `user_area`, `user_profile`
 
@@ -128,7 +135,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 
 ## Paso 3 — Clientes ✅
 
-**Script:** `migration_03_clients.sql`
+**Script:** `migrate_seekops_old.sql` (paso 3)
 
 **Tablas populadas en seekops:** `clients`
 
@@ -150,7 +157,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 
 ## Paso 4 — Proyectos ✅
 
-**Script:** `migration_04_projects.sql`
+**Script:** `migrate_seekops_old.sql` (paso 4)
 
 **Tablas populadas en seekops:** `projects`, `project_project_category`, `project_user`
 
@@ -192,7 +199,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 
 ## Paso 5 — Proyecciones de horas ✅
 
-**Script:** `migration_05_hour_projections.sql`
+**Script:** `migrate_seekops_old.sql` (paso 5)
 
 **Tablas populadas en seekops:** `hour_projections`
 
@@ -220,7 +227,7 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 
 ## Paso 6 — Registros comerciales ✅
 
-**Script:** `migration_06_commercial_records.sql`
+**Script:** `migrate_seekops_old.sql` (paso 6)
 
 **Tablas populadas en seekops:** `commercial_records`
 
@@ -316,9 +323,5 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `.ai/db/schema.sql` | DDL completo de seekops (fuente de verdad) |
 | `.ai/db/data.sql` | Seeds: catálogos + usuario admin |
 | `.ai/db/schema.md` | Documentación del schema |
-| `.ai/db/migration_plan.md` | Este archivo |
-| `.ai/db/migration-seekops-old/migration_02_users.sql` | Script Paso 2 |
-| `.ai/db/migration-seekops-old/migration_03_clients.sql` | Script Paso 3 |
-| `.ai/db/migration-seekops-old/migration_04_projects.sql` | Script Paso 4 |
-| `.ai/db/migration-seekops-old/migration_05_hour_projections.sql` | Script Paso 5 |
-| `.ai/db/migration-seekops-old/migration_06_commercial_records.sql` | Script Paso 6 |
+| `.ai/db/migration-seekops-old/migration_plan.md` | Este archivo |
+| `.ai/db/migration-seekops-old/migrate_seekops_old.sql` | Script unificado pasos 2-6 |
