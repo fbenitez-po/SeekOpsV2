@@ -2,26 +2,27 @@
 
 ---
 
-## US-201: Ver horas pendientes de aprobación del equipo
+## US-201: Ver solicitudes de horas pendientes por proyecto
 
 ### Historia de usuario
 
-Como Gestor, quiero ver todas las horas del equipo que están pendientes de mi aprobación, para revisar y procesar a tiempo.
+Como Gestor, quiero ver las solicitudes de horas pendientes de aprobación de los seekers en mis proyectos, para revisarlas y procesarlas a tiempo.
 
 ### Criterios de aceptación
 
-- **Given** estoy en el home **When** hago clic en "Horas pendientes" **Then** veo lista de horas con estado "Pendiente" de todos los seekers asignados a mis proyectos
+- **Given** estoy en la bandeja del gestor **When** la cargo **Then** veo una solicitud por cada combinación (seeker × semana × proyecto) donde el proyecto es mío y hay líneas en estado PENDIENTE
 
-- **Given** veo la lista **When** aplico filtro por "Proyecto" **Then** veo solo horas de ese proyecto
+- **Given** veo la lista **When** aplico filtro por "Proyecto" **Then** veo solo solicitudes de ese proyecto
 
-- **Given** veo la lista **When** aplico filtro por "Seeker" **Then** veo solo horas de ese empleado
+- **Given** veo la lista **When** aplico filtro por "Seeker" **Then** veo solo solicitudes de ese empleado
 
-- **Given** veo la lista **When** hago clic en una fila **Then** veo detalle: semana, proyecto, seeker, horas, horas extra, comentario del seeker
+- **Given** una entrada tiene dos proyectos distintos con gestores distintos **When** cada gestor ve la bandeja **Then** cada uno solo ve su solicitud (la del otro proyecto no aparece)
 
 ### Supuestos y riesgos
 
-- Un gestor solo ve horas de sus proyectos asignados
-- Si el gestor es Seeker en otro proyecto, sus propias horas aparecen en esta lista cuando estén pendientes
+- La unidad de aprobación es la **solicitud** = (seeker × semana × proyecto). Un gestor nunca puede aprobar horas de un proyecto que no gestiona.
+- El estado por línea (`time_entry_lines.status`) es la fuente de verdad; `time_entries.status` es un rollup derivado.
+- Si el gestor es Seeker en sus propios proyectos, sus horas propias aparecen en su bandeja cuando estén PENDIENTE.
 
 ### Estado
 
@@ -29,26 +30,26 @@ Como Gestor, quiero ver todas las horas del equipo que están pendientes de mi a
 
 ---
 
-## US-005: Aprobar horas de un seeker
+## US-005: Aprobar horas de un seeker por proyecto
 
 ### Historia de usuario
 
-Como Gestor, quiero aprobar las horas registradas por un seeker, para confirmar que son correctas.
+Como Gestor, quiero aprobar las horas registradas por un seeker en mis proyectos, para confirmar que son correctas.
 
 ### Criterios de aceptación
 
-- **Given** estoy viendo horas pendientes **When** hago clic en "Aprobar" en una fila **Then** se abre modal de confirmación
+- **Given** estoy viendo una solicitud pendiente **When** hago clic en "Aprobar" **Then** se aprueba el bloque de líneas de ese proyecto para esa semana (sin afectar otros proyectos de la misma semana)
 
-- **Given** confirmo la aprobación **When** hago clic en "Sí, aprobar" **Then** el estado cambia a "Aprobado" y desaparece de pendientes
+- **Given** confirmo la aprobación **When** hago clic en "Sí, aprobar" **Then** las líneas de ese proyecto cambian a APROBADO, la solicitud desaparece de mi bandeja pendiente
 
-- **Given** he aprobado horas **When** visualizo el historial **Then** aparecen con estado "Aprobado" y fecha de aprobación
+- **Given** un seeker tiene dos proyectos en la misma semana **When** apruebo uno **Then** el otro permanece PENDIENTE hasta que su gestor lo procese
 
-- **Given** he aprobado horas **When** el seeker las visualiza **Then** aparecen con estado "Aprobado"
+- **Given** he aprobado el bloque completo de proyectos de una semana **When** el seeker visualiza esa semana **Then** el rollup de la semana muestra "Aprobado"
 
 ### Supuestos y riesgos
 
-- Una vez aprobadas, las horas no se pueden desaprobar (son definitivas)
-- El seeker recibe un email notificándole que sus horas fueron aprobadas
+- La aprobación es por proyecto dentro de una entrada semanal, usando `proyecto_id` en el body del request.
+- Una vez aprobadas, las líneas no se pueden desaprobar (son definitivas).
 
 ### Estado
 
@@ -70,12 +71,12 @@ Como Gestor, quiero señalar un error en las horas del seeker y pedir correcció
 
 - **Given** observé horas **When** el seeker las visualiza **Then** aparecen con estado "Observado" y el comentario visible
 
-- **Given** el seeker ajustó las horas **When** regresan a pendientes **Then** recibo un email notificándome que hay horas ajustadas para revisar nuevamente
+- **Given** observé horas de un proyecto **When** el seeker las visualiza **Then** aparecen con estado APROBADO_CON_OBSERVACION y el comentario del gestor visible
 
 ### Supuestos y riesgos
 
-- La notificación al seeker se envía por email automáticamente
-- El ciclo observación → ajuste → re-aprobación puede repetirse varias veces
+- La observación aplica al bloque de líneas del proyecto indicado (no a toda la semana).
+- El ajuste de horas por observación lo controla el gestor al momento de observar (puede modificar horas y extras por línea).
 
 ### Estado
 
@@ -95,15 +96,17 @@ Como Gestor, quiero rechazar las horas si detecto un error fundamental que requi
 
 - **Given** escribo la razón **When** hago clic en "Rechazar" **Then** el estado cambia a "Rechazado"
 
-- **Given** rechacé horas **When** el seeker las visualiza **Then** aparecen como "Rechazado" con la razón visible y sin opción de editar
+- **Given** rechacé horas de un proyecto **When** el seeker las visualiza en Mis Horas **Then** el proyecto aparece como RECHAZADO dentro de la semana, con la razón visible y un botón "Re-cargar"
 
-- **Given** horas fueron rechazadas **When** el seeker quiere cargar nuevas horas **Then** puede crear una nueva entrada (la rechazada queda como histórico)
+- **Given** horas de un proyecto fueron rechazadas **When** el seeker vuelve a cargar ese proyecto para esa semana **Then** puede crear una nueva línea PENDIENTE — la rechazada queda como histórico (is_active=true, status=RECHAZADO)
+
+- **Given** el seeker intenta cargar un proyecto que ya tiene línea PENDIENTE o APROBADO **When** intenta enviar **Then** recibe error de duplicado y no puede enviarlo
 
 ### Supuestos y riesgos
 
-- El rechazo es definitivo y no reversible
-- El seeker recibe email notificándole que sus horas fueron rechazadas con la razón
-- Las horas rechazadas no cuentan para nómina (definición post-MVP)
+- El rechazo es definitivo; la línea rechazada NO se pone en is_active=false (no es baja lógica).
+- El guard de duplicados usa índice parcial `(time_entry_id, project_id) WHERE is_active=true AND status<>'RECHAZADO'` — permite re-carga post-rechazo.
+- Las horas rechazadas no cuentan para nómina (finanzas suma solo APROBADO y APROBADO_CON_OBSERVACION por línea).
 
 ### Estado
 
@@ -121,16 +124,14 @@ Como Gestor, quiero registrar mis propias horas trabajadas en mi proyecto asigna
 
 - **Given** estoy autenticado como Gestor **When** accedo al formulario de carga de horas **Then** veo mis proyectos asignados como Seeker (además de aquellos donde soy Gestor)
 
-- **Given** cargo horas en un proyecto donde soy Seeker **When** guardo **Then** las horas se guardan con estado "Pendiente de aprobación"
+- **Given** cargo horas en un proyecto donde soy Seeker **When** guardo **Then** las horas se guardan con estado "Pendiente" — igual que cualquier otro seeker
 
-- **Given** soy Seeker Y Gestor en el mismo proyecto **When** mis horas llegan a la bandeja de pendientes **Then** puedo auto-aprobarlas (porque soy el gestor de ese proyecto)
-
-- **Given** me auto-aprobé **When** visualizo el historial **Then** aparecen con estado "Aprobado" y mi nombre como quien las aprobó
+- **Given** soy Seeker Y Gestor en el mismo proyecto **When** mis horas llegan a la bandeja de pendientes **Then** aparecen en mi propia bandeja como gestor y debo aprobarlas explícitamente (no hay auto-aprobación)
 
 ### Supuestos y riesgos
 
 - Un usuario puede tener múltiples roles en múltiples proyectos
-- La auto-aprobación es permitida (no es un conflicto)
+- La auto-aprobación **no está permitida** — todos los gestores también son seekers y deben aprobar sus propias horas manualmente (decisión 2026-05-21)
 
 ### Estado
 

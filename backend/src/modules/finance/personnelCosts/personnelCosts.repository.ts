@@ -25,14 +25,15 @@ export interface PersonnelCostSimpleDTO {
   horas_por_dia: number;
 }
 
-// Static SQL fragment for horas_usadas — no user input, safe to use Prisma.raw
+// Static SQL fragment for horas_usadas — counts per-line approved hours (APROBADO or APROBADO_CON_OBSERVACION)
 const horasUsadasFragment = Prisma.raw(`
   COALESCE((
     SELECT SUM(tel.hours + COALESCE(tel.extra_hours, 0))
     FROM time_entries te
     JOIN time_entry_lines tel ON tel.time_entry_id = te.id
     WHERE te.user_id = c.user_id
-      AND te.status = 'APROBADO'
+      AND tel.status IN ('APROBADO', 'APROBADO_CON_OBSERVACION')
+      AND tel.is_active = true
       AND EXTRACT(YEAR FROM to_date(
         (2000 + right(te.week, 2)::int)::text ||
         lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),

@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, Clock, Plus } from 'lucide-react';
+import { AlertTriangle, Clock, Plus, XCircle } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
+import { ESTADO_LABELS, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
@@ -15,35 +15,63 @@ const VARIANTE_ESTADO = {
   RECHAZADO: 'destructive',
 };
 
-function TarjetaEntrada({ entrada, onClick }) {
-  const lineas = entrada.lineas || [];
-  const proyectosUnicos = [...new Set(lineas.map((l) => l.proyecto?.nombre).filter(Boolean))];
-  const obs = entrada.estado === 'APROBADO_CON_OBSERVACION'
-    ? entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION')
-    : null;
+function agruparPorProyecto(lineas) {
+  const map = new Map();
+  for (const l of lineas ?? []) {
+    const pid = l.proyecto?.id;
+    if (!pid) continue;
+    if (!map.has(pid)) map.set(pid, { ...l.proyecto, estados: [] });
+    map.get(pid).estados.push(l.estado);
+  }
+  return [...map.values()].map((g) => {
+    const es = g.estados;
+    const estado = es.includes('PENDIENTE') ? 'PENDIENTE'
+      : es.includes('RECHAZADO') ? 'RECHAZADO'
+      : es.includes('APROBADO_CON_OBSERVACION') ? 'APROBADO_CON_OBSERVACION'
+      : 'APROBADO';
+    return { ...g, estado };
+  });
+}
+
+function TarjetaEntrada({ entrada, onRecargar }) {
+  const grupos = agruparPorProyecto(entrada.lineas);
+  const hayMixto = grupos.some((g) => g.estado !== grupos[0].estado);
 
   return (
-    <div
-      className="cursor-pointer rounded-md border px-3 py-2 hover:bg-muted/50 transition-colors"
-      onClick={() => onClick(entrada)}
-    >
+    <div className="rounded-md border px-3 py-2 space-y-2">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium leading-snug truncate">
             {formatearRangoDeSemana(semanaADomingo(entrada.semana)) || entrada.semana}
           </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {proyectosUnicos.length > 0 ? proyectosUnicos.join(' · ') + ' · ' : ''}
+          <p className="text-xs text-muted-foreground">
             {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
           </p>
-          {obs?.comentario && (
-            <p className="text-xs text-teal-700 mt-0.5 border-l-2 border-teal-300 pl-2 truncate">{obs.comentario}</p>
-          )}
         </div>
         <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 text-xs">
           {ESTADO_LABELS[entrada.estado]}
         </Badge>
       </div>
+
+      {(hayMixto || grupos.length > 1) && (
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
+          {grupos.map((g) => (
+            <div key={g.id} className="flex items-center gap-1">
+              <Badge variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
+                {g.codigo ?? g.nombre}
+              </Badge>
+              {g.estado === 'RECHAZADO' && onRecargar && (
+                <button
+                  onClick={() => onRecargar(entrada.semana, g.id)}
+                  className="text-xs text-destructive underline underline-offset-2 hover:text-destructive/80"
+                >
+                  Re-cargar
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -61,6 +89,11 @@ export default function HomeSeeker() {
     queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE' }).then((r) => r.data),
   });
 
+  const { data: rechazadas } = useQuery({
+    queryKey: ['time-entries', 'RECHAZADO'],
+    queryFn: () => timeEntryApi.listar({ estado: 'RECHAZADO' }).then((r) => r.data),
+  });
+
   const { data: aprobadas } = useQuery({
     queryKey: ['time-entries', 'APROBADO_CON_OBSERVACION'],
     queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION' }).then((r) => r.data),
@@ -71,8 +104,8 @@ export default function HomeSeeker() {
     queryFn: () => timeEntryApi.listar({ limit: 3 }).then((r) => r.data),
   });
 
-  function manejarClickEntrada(_entrada) {
-    // Las entradas aprobadas con observación son de solo lectura — sin acción al hacer clic
+  function handleRecargar(semana, proyectoId) {
+    navigate('/seeker/cargar', { state: { semana, proyectoId } });
   }
 
   return (
@@ -90,6 +123,7 @@ export default function HomeSeeker() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
+          {/* Semanas sin cargar */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -127,6 +161,7 @@ export default function HomeSeeker() {
             </CardContent>
           </Card>
 
+          {/* Pendientes de aprobación */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -142,7 +177,7 @@ export default function HomeSeeker() {
               ) : (
                 <div className="space-y-2">
                   {pendientes?.data?.slice(0, 2).map((e) => (
-                    <TarjetaEntrada key={e.id} entrada={e} onClick={manejarClickEntrada} />
+                    <TarjetaEntrada key={e.id} entrada={e} onRecargar={handleRecargar} />
                   ))}
                   {pendientes?.data?.length > 2 && (
                     <button
@@ -157,26 +192,28 @@ export default function HomeSeeker() {
             </CardContent>
           </Card>
 
+          {/* Proyectos rechazados */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                Aprobadas con observación
+                <XCircle className="h-4 w-4 text-destructive" />
+                Proyectos rechazados
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {!aprobadas || aprobadas?.data?.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tienes horas aprobadas con observación</p>
+              {!rechazadas || rechazadas?.data?.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sin proyectos rechazados</p>
               ) : (
                 <div className="space-y-2">
-                  {aprobadas?.data?.slice(0, 2).map((e) => (
-                    <TarjetaEntrada key={e.id} entrada={e} onClick={manejarClickEntrada} />
+                  {rechazadas?.data?.slice(0, 2).map((e) => (
+                    <TarjetaEntrada key={e.id} entrada={e} onRecargar={handleRecargar} />
                   ))}
-                  {aprobadas?.data?.length > 2 && (
+                  {rechazadas?.data?.length > 2 && (
                     <button
                       onClick={() => navigate('/seeker/mis-horas')}
                       className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
                     >
-                      Ver {aprobadas.data.length - 2} más →
+                      Ver {rechazadas.data.length - 2} más →
                     </button>
                   )}
                 </div>
@@ -185,6 +222,31 @@ export default function HomeSeeker() {
           </Card>
         </div>
 
+        {/* Aprobadas con observación */}
+        {aprobadas?.data?.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Aprobadas con observación</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {aprobadas.data.slice(0, 3).map((e) => (
+                  <TarjetaEntrada key={e.id} entrada={e} />
+                ))}
+                {aprobadas.data.length > 3 && (
+                  <button
+                    onClick={() => navigate('/seeker/mis-horas')}
+                    className="w-full pt-1 text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
+                  >
+                    Ver {aprobadas.data.length - 3} más →
+                  </button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Historial reciente */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Historial reciente</CardTitle>
@@ -195,7 +257,7 @@ export default function HomeSeeker() {
             ) : (
               <div className="space-y-2">
                 {historico?.data?.map((e) => (
-                  <TarjetaEntrada key={e.id} entrada={e} onClick={manejarClickEntrada} />
+                  <TarjetaEntrada key={e.id} entrada={e} onRecargar={handleRecargar} />
                 ))}
                 <button
                   onClick={() => navigate('/seeker/mis-horas')}

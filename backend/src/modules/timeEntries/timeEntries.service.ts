@@ -7,9 +7,9 @@ import * as repo from './timeEntries.repository';
 import * as mapper from './timeEntries.mapper';
 import type {
   CreateTimeEntryInput,
-  AdjustTimeEntryInput,
   ApproveWithObservationInput,
   RejectInput,
+  ApproveInput,
 } from './timeEntries.schema';
 
 import { sendHoursReminder } from '../../shared/services/email.service';
@@ -54,7 +54,7 @@ export async function list(
   const entradasConDetalle = await Promise.all(
     entries.map(async (e) => {
       const approvals = await repo.findApprovals(e.id);
-      return mapper.buildTimeEntryDetail(e, approvals);
+      return mapper.buildTimeEntryDetail(e, approvals, userId, roles);
     }),
   );
 
@@ -72,64 +72,56 @@ export async function getById(id: string, userId: string, roles: string[]) {
   const isAdmin = roles.includes('ADMIN');
 
   if (!isOwner && !isAdmin) {
-    const projectId = await repo.findFirstLineProjectId(id);
-    if (projectId) {
-      const isManager = await repo.isProjectManager(userId, projectId);
-      if (!isManager) throw new ForbiddenError('No tenés permiso para ver este registro');
-    }
+    const isManager = entry.time_entry_lines.some(
+      (l) => (l.projects as any).manager_id === userId,
+    );
+    if (!isManager) throw new ForbiddenError('No tenés permiso para ver este registro');
   }
 
   const approvals = await repo.findApprovals(id);
-  return mapper.buildTimeEntryDetail(entry, approvals);
+  return mapper.buildTimeEntryDetail(entry, approvals, userId, roles);
 }
 
-export async function create(body: CreateTimeEntryInput, userId: string, email: string | null, roles: string[]) {
+export async function create(body: CreateTimeEntryInput, userId: string, email: string | null) {
   const combos = body.lineas.map((l) => `${l.proyecto_id}:${l.categoria_ingreso_id ?? 'null'}`);
   if (new Set(combos).size !== combos.length) {
     throw new ValidationError('No se puede repetir la misma combinación de proyecto y categoría en una carga');
   }
 
-  const existing = await repo.findExistingEntry(userId, body.semana);
-  if (existing) {
-    throw new ValidationError(`Ya existe un registro para la semana ${body.semana} en estado PENDIENTE o APROBADO`);
-  }
-
   for (const linea of body.lineas) {
     const assigned = await repo.isUserAssignedToProject(userId, linea.proyecto_id);
     if (!assigned) throw new ForbiddenError('No tenés acceso al proyecto indicado');
+
+    // Check per-project uniqueness: block if active non-rejected line already exists
+    const existing = await repo.findExistingLineForProject(userId, body.semana, linea.proyecto_id);
+    if (existing) {
+      throw new ValidationError(
+        `Ya existe una carga activa (${existing.status}) para la semana ${body.semana} en ese proyecto`,
+      );
+    }
   }
 
-  const isOnlyGestor = roles.includes('GESTOR') && !roles.includes('SEEKER');
-  const status = isOnlyGestor ? 'APROBADO' : 'PENDIENTE';
-
-  const entry = await repo.create({ userId, email, week: body.semana, status, lineas: body.lineas });
-  return mapper.buildTimeEntryDetail(entry, []);
+  const entry = await repo.create({ userId, email, week: body.semana, lineas: body.lineas });
+  return mapper.buildTimeEntryDetail(entry, [], userId, []);
 }
 
-export async function adjust(id: string, body: AdjustTimeEntryInput, userId: string, email: string | null) {
+export async function approve(id: string, body: ApproveInput, userId: string, email: string | null, roles: string[]) {
   const entry = await repo.findById(id);
   if (!entry) throw new NotFoundError('Registro no encontrado');
-  if (entry.user_id !== userId) throw new ForbiddenError('Solo el dueño del registro puede editarlo');
-  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden editar registros en estado PENDIENTE');
-
-  const updated = await repo.updateLines(id, body.lineas, email);
-  return mapper.buildTimeEntryDetail(updated, []);
-}
-
-export async function approve(id: string, userId: string, email: string | null, roles: string[]) {
-  const entry = await repo.findById(id);
-  if (!entry) throw new NotFoundError('Registro no encontrado');
-  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden aprobar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
-    const projectId = await repo.findFirstLineProjectId(id);
-    if (!projectId) throw new NotFoundError('Registro no encontrado');
-    const isManager = await repo.isProjectManager(userId, projectId);
+    const isManager = await repo.isProjectManager(userId, body.proyecto_id);
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
-  await repo.recordApproval({ entryId: id, action: 'APROBAR', email, data: {} });
-  return { id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
+  const lines = await repo.getLinesForProject(id, body.proyecto_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  if (lines.every((l) => l.status !== 'PENDIENTE')) {
+    throw new ForbiddenError('No hay líneas pendientes para aprobar en este proyecto');
+  }
+
+  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, action: 'APROBAR', email, data: {} });
+  return { id, proyecto_id: body.proyecto_id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
 export async function observe(
@@ -141,17 +133,22 @@ export async function observe(
 ) {
   const entry = await repo.findById(id);
   if (!entry) throw new NotFoundError('Registro no encontrado');
-  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden aprobar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
-    const projectId = await repo.findFirstLineProjectId(id);
-    const isManager = projectId ? await repo.isProjectManager(userId, projectId) : false;
+    const isManager = await repo.isProjectManager(userId, body.proyecto_id);
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
-  await repo.recordApproval({ entryId: id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
+  const lines = await repo.getLinesForProject(id, body.proyecto_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  if (lines.every((l) => l.status !== 'PENDIENTE')) {
+    throw new ForbiddenError('No hay líneas pendientes para aprobar en este proyecto');
+  }
+
+  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
   return {
     id,
+    proyecto_id: body.proyecto_id,
     estado: 'APROBADO_CON_OBSERVACION',
     aprobado_en: new Date().toISOString(),
     comentario_observacion: body.comentario_observacion,
@@ -167,16 +164,27 @@ export async function reject(
 ) {
   const entry = await repo.findById(id);
   if (!entry) throw new NotFoundError('Registro no encontrado');
-  if (entry.status !== 'PENDIENTE') throw new ForbiddenError('Solo se pueden rechazar registros en estado PENDIENTE');
 
   if (!roles.includes('ADMIN')) {
-    const projectId = await repo.findFirstLineProjectId(id);
-    const isManager = projectId ? await repo.isProjectManager(userId, projectId) : false;
+    const isManager = await repo.isProjectManager(userId, body.proyecto_id);
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede rechazar');
   }
 
-  await repo.recordApproval({ entryId: id, action: 'RECHAZAR', email, data: body });
-  return { id, estado: 'RECHAZADO', rechazado_en: new Date().toISOString(), ...body };
+  const lines = await repo.getLinesForProject(id, body.proyecto_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  if (lines.every((l) => l.status !== 'PENDIENTE')) {
+    throw new ForbiddenError('No hay líneas pendientes para rechazar en este proyecto');
+  }
+
+  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, action: 'RECHAZAR', email, data: body });
+  return {
+    id,
+    proyecto_id: body.proyecto_id,
+    estado: 'RECHAZADO',
+    rechazado_en: new Date().toISOString(),
+    razon_rechazo: body.razon_rechazo,
+    permitir_reenvio: body.permitir_reenvio ?? false,
+  };
 }
 
 export async function getMissingWeeks(userId: string) {

@@ -329,39 +329,49 @@ CREATE INDEX IF NOT EXISTS idx_time_entries_status    ON time_entries(status);
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_week ON time_entries(user_id, week);
 
 CREATE TABLE IF NOT EXISTS time_entry_lines (
-  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  time_entry_id      UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
-  project_id         UUID NOT NULL REFERENCES projects(id),
-  income_category_id UUID REFERENCES income_categories(id),
+  id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  time_entry_id      UUID         NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
+  project_id         UUID         NOT NULL REFERENCES projects(id),
+  income_category_id UUID         REFERENCES income_categories(id),
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,
-  created_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by         VARCHAR(50) NOT NULL DEFAULT 'admin',
+  status             VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',
+  reviewed_by        VARCHAR(50),
+  reviewed_at        TIMESTAMP,
+  created_at         TIMESTAMP    NOT NULL DEFAULT NOW(),
+  created_by         VARCHAR(50)  NOT NULL DEFAULT 'admin',
   updated_at         TIMESTAMP,
   updated_by         VARCHAR(50),
   deleted_at         TIMESTAMP,
   deleted_by         VARCHAR(50),
-  is_active          BOOLEAN     NOT NULL DEFAULT true,
+  is_active          BOOLEAN      NOT NULL DEFAULT true,
   CONSTRAINT check_hours_range       CHECK (hours >= 0 AND MOD(hours, 0.5) = 0),
   CONSTRAINT check_extra_hours_range CHECK (extra_hours >= 0 AND extra_hours <= 8 AND MOD(extra_hours, 0.5) = 0)
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_time_entry_id ON time_entry_lines(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_lines(project_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_lines_status        ON time_entry_lines(status);
+-- Permite re-carga post-rechazo: solo una línea activa no-rechazada por (entry, proyecto)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_time_entry_lines_entry_project_active
+  ON time_entry_lines(time_entry_id, project_id)
+  WHERE (is_active = true AND status <> 'RECHAZADO');
 
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  time_entry_id         UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
-  action                VARCHAR(50) NOT NULL,
+  id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  time_entry_id         UUID         NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
+  project_id            UUID         REFERENCES projects(id),
+  action                VARCHAR(50)  NOT NULL,
   comment               TEXT,
   suggested_hours       NUMERIC(6,1),
   suggested_extra_hours NUMERIC(4,1),
   rejection_reason      TEXT,
-  can_resubmit          BOOLEAN DEFAULT true,
-  created_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by            VARCHAR(50) NOT NULL DEFAULT 'admin'
+  can_resubmit          BOOLEAN      DEFAULT true,
+  created_at            TIMESTAMP    NOT NULL DEFAULT NOW(),
+  created_by            VARCHAR(50)  NOT NULL DEFAULT 'admin'
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_action        ON time_entry_approvals(action);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);

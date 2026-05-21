@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, X, ArrowLeft } from 'lucide-react';
 import { timeEntryApi, projectApi, configApi } from '../../services/api';
@@ -14,6 +14,7 @@ import {
   formatearDiaMes,
   obtenerDomingoBase,
   obtenerFeriadosSemana,
+  semanaADomingo,
 } from '../../lib/utils';
 
 function obtenerDomingo(offset = 0) {
@@ -34,10 +35,23 @@ function nuevaLinea(proyectoId) {
   };
 }
 
+function calcularOffset(semanaStr) {
+  const targetDomingo = semanaADomingo(semanaStr);
+  if (!targetDomingo) return -1;
+  const base = obtenerDomingoBase();
+  const diffMs = targetDomingo.getTime() - base.getTime();
+  return Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
+}
+
 export default function CargarHoras() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
-  const [offsetSemana, setOffsetSemana] = useState(-1);
+
+  const recarga = location.state ?? null;
+  const initialOffset = recarga?.semana ? calcularOffset(recarga.semana) : -1;
+
+  const [offsetSemana, setOffsetSemana] = useState(initialOffset);
   // Array de líneas: [{ _key, proyecto_id, horas, horas_extra, mostrarExtras, comentario, categoria_ingreso_id }]
   const [lineas, setLineas] = useState([]);
   const [error, setError] = useState('');
@@ -58,6 +72,18 @@ export default function CargarHoras() {
     queryKey: ['categorias-ingreso'],
     queryFn: () => configApi.categoriasIngreso().then((r) => r.data),
   });
+
+  // Pre-select rejected project when navigated from MisHoras/HomeSeeker
+  useEffect(() => {
+    if (!recarga?.proyectoId || !proyectos?.length) return;
+    const existe = proyectos.find((p) => p.id === recarga.proyectoId);
+    if (existe) {
+      setLineas((prev) => {
+        if (prev.some((l) => l.proyecto_id === recarga.proyectoId)) return prev;
+        return [nuevaLinea(recarga.proyectoId)];
+      });
+    }
+  }, [proyectos, recarga?.proyectoId]);
 
   const mutation = useMutation({
     mutationFn: (payload) => timeEntryApi.crear(payload),
@@ -132,6 +158,12 @@ export default function CargarHoras() {
           <h1 className="text-2xl font-bold">Cargar horas</h1>
           <p className="text-muted-foreground">Registra las horas trabajadas para la semana seleccionada</p>
         </div>
+
+        {recarga?.semana && (
+          <div className="max-w-2xl rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+            Re-cargando proyecto rechazado para la semana <span className="font-semibold">{recarga.semana}</span>. Solo se enviará este proyecto.
+          </div>
+        )}
 
         <form onSubmit={manejarSubmit} className="max-w-2xl">
           <div className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100">

@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, RotateCcw } from 'lucide-react';
 import { timeEntryApi, projectApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { ESTADO_LABELS, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
@@ -25,6 +26,120 @@ function labelSemana(semana) {
   const domingo = semanaADomingo(semana);
   const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
   return nro ? `Semana ${nro} · ${rango}` : rango;
+}
+
+function rollupEstado(lineas) {
+  const estados = lineas.map((l) => l.estado);
+  if (estados.includes('PENDIENTE')) return 'PENDIENTE';
+  if (estados.includes('RECHAZADO')) return 'RECHAZADO';
+  if (estados.includes('APROBADO_CON_OBSERVACION')) return 'APROBADO_CON_OBSERVACION';
+  return 'APROBADO';
+}
+
+function agruparPorProyecto(lineas) {
+  const map = new Map();
+  for (const l of lineas) {
+    const pid = l.proyecto?.id;
+    if (!pid) continue;
+    if (!map.has(pid)) {
+      map.set(pid, {
+        proyecto_id: pid,
+        proyecto_nombre: l.proyecto.nombre,
+        proyecto_codigo: l.proyecto.codigo,
+        lineas: [],
+      });
+    }
+    map.get(pid).lineas.push(l);
+  }
+  return [...map.values()].map((g) => ({
+    ...g,
+    estado: rollupEstado(g.lineas),
+    horas: g.lineas.reduce((s, l) => s + l.horas, 0),
+    horas_extra: g.lineas.reduce((s, l) => s + l.horas_extra, 0),
+  }));
+}
+
+function FilaSemana({ entrada, onRecargar }) {
+  const [expandida, setExpandida] = useState(false);
+  const proyectosPorEntrada = useMemo(() => agruparPorProyecto(entrada.lineas ?? []), [entrada.lineas]);
+  const hayRechazado = proyectosPorEntrada.some((p) => p.estado === 'RECHAZADO');
+
+  return (
+    <>
+      <tr
+        className="hover:bg-slate-50 transition-colors cursor-pointer"
+        onClick={() => setExpandida((v) => !v)}
+      >
+        <td className="px-6 py-3.5 w-6">
+          {expandida
+            ? <ChevronDown className="h-4 w-4 text-slate-400" />
+            : <ChevronRight className="h-4 w-4 text-slate-400" />}
+        </td>
+        <td className="px-3 py-3.5">
+          <span className="font-medium text-slate-700">Semana {nroSemana(entrada.semana)}</span>
+          <span className="block text-xs text-slate-400 mt-0.5">
+            {formatearRangoDeSemana(semanaADomingo(entrada.semana))}
+          </span>
+        </td>
+        <td className="px-6 py-3.5 text-slate-600">
+          <div className="flex flex-wrap gap-1">
+            {proyectosPorEntrada.map((g) => (
+              <Badge key={g.proyecto_id} variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
+                {g.proyecto_codigo ?? g.proyecto_nombre}
+              </Badge>
+            ))}
+          </div>
+        </td>
+        <td className="px-6 py-3.5 text-right font-medium text-slate-700">{entrada.total_horas}</td>
+        <td className="px-6 py-3.5 text-right text-slate-600">{entrada.total_extras > 0 ? entrada.total_extras : 0}</td>
+        <td className="px-6 py-3.5">
+          <div className="flex items-center gap-2">
+            <Badge variant={VARIANTE_ESTADO[entrada.estado]}>
+              {ESTADO_LABELS[entrada.estado]}
+            </Badge>
+            {hayRechazado && (
+              <span className="text-xs text-destructive font-medium">Tiene rechazos</span>
+            )}
+          </div>
+        </td>
+      </tr>
+
+      {expandida && proyectosPorEntrada.map((g) => (
+        <tr key={g.proyecto_id} className="bg-slate-50 border-l-2 border-l-slate-200">
+          <td className="px-6 py-2.5" />
+          <td className="px-3 py-2.5">
+            <span className="text-xs text-slate-400 uppercase tracking-wide">Proyecto</span>
+          </td>
+          <td className="px-6 py-2.5">
+            <span className="text-sm font-medium text-slate-700">{g.proyecto_nombre}</span>
+            {g.proyecto_codigo && (
+              <span className="ml-2 text-xs text-slate-400">{g.proyecto_codigo}</span>
+            )}
+          </td>
+          <td className="px-6 py-2.5 text-right text-sm text-slate-700">{g.horas}</td>
+          <td className="px-6 py-2.5 text-right text-sm text-slate-600">{g.horas_extra > 0 ? g.horas_extra : 0}</td>
+          <td className="px-6 py-2.5">
+            <div className="flex items-center gap-2">
+              <Badge variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
+                {ESTADO_LABELS[g.estado]}
+              </Badge>
+              {g.estado === 'RECHAZADO' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 text-xs px-2 gap-1"
+                  onClick={(e) => { e.stopPropagation(); onRecargar(entrada.semana, g.proyecto_id); }}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Re-cargar
+                </Button>
+              )}
+            </div>
+          </td>
+        </tr>
+      ))}
+    </>
+  );
 }
 
 export default function MisHoras() {
@@ -79,6 +194,10 @@ export default function MisHoras() {
   }, [filas, filtroEstado, filtroProyecto, filtroSemana]);
 
   const hayFiltros = filtroEstado || filtroProyecto || filtroSemana;
+
+  function handleRecargar(semana, proyectoId) {
+    navigate('/seeker/cargar', { state: { semana, proyectoId } });
+  }
 
   return (
     <Layout>
@@ -161,33 +280,17 @@ export default function MisHoras() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100">
-                      <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Semana</th>
+                      <th className="px-6 py-3 w-6" />
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Semana</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Proyectos</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Horas trabajadas</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Fuera de horario</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Horas</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Extras</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filasFiltradas.map((f) => (
-                      <tr key={f.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-3.5">
-                          <span className="font-medium text-slate-700">Semana {nroSemana(f.semana)}</span>
-                          <span className="block text-xs text-slate-400 mt-0.5">
-                            {formatearRangoDeSemana(semanaADomingo(f.semana))}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5 text-slate-600 max-w-xs">
-                          {f._proyectos.length > 0 ? f._proyectos.join(', ') : <span className="text-slate-400">—</span>}
-                        </td>
-                        <td className="px-6 py-3.5 text-right font-medium text-slate-700">{f.total_horas}</td>
-                        <td className="px-6 py-3.5 text-right text-slate-600">{f.total_extras > 0 ? f.total_extras : 0}</td>
-                        <td className="px-6 py-3.5">
-                          <Badge variant={VARIANTE_ESTADO[f.estado]}>
-                            {ESTADO_LABELS[f.estado]}
-                          </Badge>
-                        </td>
-                      </tr>
+                      <FilaSemana key={f.id} entrada={f} onRecargar={handleRecargar} />
                     ))}
                   </tbody>
                 </table>

@@ -82,22 +82,23 @@ Como Seeker, quiero ver al ingresar al home cuáles semanas no he cargado desde 
 
 ### Historia de usuario
 
-Como Seeker, quiero ver todas mis horas registradas, para hacer seguimiento de lo que he cargado.
+Como Seeker, quiero ver todas mis horas registradas con el estado por proyecto, para hacer seguimiento de lo que he cargado.
 
 ### Criterios de aceptación
 
-- **Given** estoy en el home **When** hago clic en "Mis horas" **Then** veo una lista con todas mis cargas: semana, proyecto, horas, estado, fecha de carga
+- **Given** estoy en el home **When** hago clic en "Mis horas" **Then** veo una lista de semanas con: semana, proyectos (badges de color), horas totales, estado rollup de la semana
 
-- **Given** veo el historial **When** aplico filtro por "Proyecto" **Then** la lista se filtra solo a ese proyecto
+- **Given** hago clic en una fila de semana **When** se expande **Then** veo una sub-fila por proyecto con su estado individual (PENDIENTE/APROBADO/APROBADO_CON_OBSERVACION/RECHAZADO)
 
-- **Given** veo el historial **When** aplico filtro por "Estado" (Pendiente/Aprobado/Rechazado/Observado) **Then** la lista se filtra correctamente
+- **Given** veo el historial **When** aplico filtro por "Proyecto" **Then** la lista se filtra a semanas que contienen ese proyecto
 
-- **Given** veo horas con estado "Observado" **When** hago clic en una fila **Then** veo el comentario del gestor que observó las horas
+- **Given** veo el historial **When** aplico filtro por "Estado" **Then** la lista se filtra por el rollup de semana
 
-- **Given** veo horas con estado "Rechazado" **When** hago clic en una fila **Then** veo la razón del rechazo (sin opción de editar o cambiar)
+- **Given** expando una semana y veo un proyecto con estado "Rechazado" **When** hago clic en "Re-cargar" **Then** me redirige al formulario de carga pre-seleccionando esa semana y ese proyecto
 
 ### Supuestos y riesgos
 
+- El estado por proyecto se deriva de `time_entry_lines.status`; el rollup de semana se calcula en el frontend con la misma precedencia que el backend: PENDIENTE > RECHAZADO > APROBADO_CON_OBSERVACION > APROBADO.
 - Se asume que hay suficientes datos para justificar paginación (opción: mostrar últimas 20, cargar más)
 
 ### Estado
@@ -106,36 +107,27 @@ Como Seeker, quiero ver todas mis horas registradas, para hacer seguimiento de l
 
 ---
 
-## US-003: Ajustar horas observadas
+## US-003: Re-cargar un proyecto rechazado
 
 ### Historia de usuario
 
-Como Seeker, quiero corregir mis horas cuando el gestor me envía una observación, para resolver el error.
+Como Seeker, quiero poder volver a cargar horas en un proyecto que me fue rechazado para esa semana, sin necesidad de recargar toda la semana.
 
 ### Criterios de aceptación
 
-**Acceso a Ajuste:**
-- **Given** tengo horas con estado "Observado" **When** hago clic en [Ajustar] **Then** me redirige a S-01-AJUSTAR-HORAS
-- **Given** abro formulario de ajuste **When** veo el contenido **Then** muestra: "Ajustando: [Proyecto] - [Semana]" como referencia
+- **Given** tengo un proyecto con estado RECHAZADO en una semana **When** hago clic en "Re-cargar" (en Mis Horas o en Home Seeker) **Then** me redirige al formulario de carga con esa semana y ese proyecto pre-seleccionados
 
-**Campos de Ajuste:**
-- **Given** estoy en formulario de ajuste **When** veo campos **Then** son editables: Horas | Horas extra | Comentario
-- **Given** edito Horas **When** ingreso valor > 24 ó < 0 **Then** muestro error: "Máximo 24 horas"
-- **Given** edito Horas extra **When** ingreso valor > 8 ó < 0 **Then** muestro error: "Máximo 8 horas extras"
-- **Given** edito Comentario **When** supero 500 caracteres **Then** valido límite
-- **Given** completo ajustes **When** hago clic [Guardar ajuste] **Then** PUT /time-entries/:id → Confirmación
+- **Given** estoy en el formulario de re-carga pre-seleccionado **When** veo el formulario **Then** aparece un banner ámbar indicando "Re-cargando proyecto rechazado para la semana X"
 
-**Post-Ajuste:**
-- **Given** he guardado el ajuste **When** redirijo a confirmación **Then** veo: "Horas ajustadas y reenviadas a aprobación"
-- **Given** he ajustado horas **When** vuelvo a historial **Then** veo AMBAS versiones: Original (tachada) + Ajustada (actual)
-- **Given** ajusté horas **When** el gestor lo revisa **Then** recibe email: "Horas ajustadas por [Seeker] - [Proyecto] [Semana]"
-- **Given** envío ajuste **When** vuelven a "Observado" por gestor **Then** puedo ajustar de nuevo (iterativo)
+- **Given** envío la re-carga **When** el backend la procesa **Then** se crea una nueva línea PENDIENTE para ese proyecto en esa semana (la rechazada queda como histórico con status=RECHAZADO)
+
+- **Given** tengo un proyecto PENDIENTE o APROBADO en una semana **When** intento cargar nuevamente ese proyecto para la misma semana **Then** recibo error de duplicado y no puedo enviarlo
 
 ### Supuestos y riesgos
 
-- Se asume que queda auditoria completa de cambios (quién cambió qué, cuándo)
-- El email se dispara automáticamente cuando se envía un ajuste
+- El seeker no puede editar horas cargadas (no hay PUT de ajuste). Si una observación modifica las horas, es el gestor quien las ajusta al momento de observar.
+- Esta historia reemplaza a la anterior US-003 (Ajustar horas observadas), que fue eliminada del sistema (2026-05-21).
 
 ### Estado
 
-✅ Lista para desarrollo
+✅ Implementada

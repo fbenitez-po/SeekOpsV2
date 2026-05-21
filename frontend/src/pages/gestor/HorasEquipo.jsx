@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, CheckCheck, X, Bell, CircleCheck, TriangleAlert } from 'lucide-react';
 import { timeEntryApi } from '../../services/api';
@@ -10,30 +10,43 @@ import { Textarea } from '../../components/ui/textarea';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { formatearFecha, ESTADO_LABELS } from '../../lib/utils';
+import useAuthStore from '../../store/authStore';
 
-function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
+const VARIANTE_ESTADO = {
+  PENDIENTE: 'warning',
+  APROBADO: 'success',
+  APROBADO_CON_OBSERVACION: 'success',
+  RECHAZADO: 'destructive',
+};
+
+function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
   const [comentario, setComentario] = useState('');
   const [lineas, setLineas] = useState(
-    entrada.lineas.map((l) => ({ id: l.id, horas: l.horas, horas_extra: l.horas_extra }))
+    solicitud.lineas.map((l) => ({ id: l.id, horas: l.horas, horas_extra: l.horas_extra })),
   );
 
   function actualizarLinea(idx, campo, valor) {
-    setLineas((prev) => prev.map((l, i) => i === idx ? { ...l, [campo]: valor === '' ? '' : Number(valor) } : l));
+    setLineas((prev) =>
+      prev.map((l, i) => (i === idx ? { ...l, [campo]: valor === '' ? '' : Number(valor) } : l)),
+    );
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-lg space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">Aprobar con observación</h2>
-        <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
-        <p className="text-sm text-muted-foreground">Las horas quedarán aprobadas con el comentario registrado.</p>
+        <p className="text-sm text-muted-foreground">
+          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {solicitud.semana} — {solicitud.proyecto_nombre}
+        </p>
 
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Horas por proyecto</Label>
+          <Label className="text-sm font-medium">Horas por línea</Label>
           <div className="rounded-md border divide-y">
-            {entrada.lineas.map((linea, idx) => (
+            {solicitud.lineas.map((linea, idx) => (
               <div key={linea.id} className="flex items-center gap-3 p-3">
-                <p className="flex-1 text-sm font-medium truncate">{linea.proyecto.nombre}</p>
+                <p className="flex-1 text-sm font-medium truncate">
+                  {linea.categoria_ingreso?.nombre ?? 'Sin categoría'}
+                </p>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground text-center">Horas</p>
@@ -67,12 +80,29 @@ function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
 
         <div className="space-y-2">
           <Label>Comentario de observación *</Label>
-          <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} placeholder="Indica qué observas sobre estas horas..." />
+          <Textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            rows={3}
+            placeholder="Indica qué observas sobre estas horas..."
+          />
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onCerrar}>Cancelar</Button>
-          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" disabled={!comentario} onClick={() => onConfirmar({ comentario_observacion: comentario, lineas })}>
+          <Button variant="outline" className="flex-1" onClick={onCerrar}>
+            Cancelar
+          </Button>
+          <Button
+            className="flex-1 bg-teal-600 hover:bg-teal-700"
+            disabled={!comentario}
+            onClick={() =>
+              onConfirmar({
+                proyecto_id: solicitud.proyecto_id,
+                comentario_observacion: comentario,
+                lineas,
+              })
+            }
+          >
             Aprobar con observación
           </Button>
         </div>
@@ -81,23 +111,39 @@ function ModalAprobarConObservacion({ entrada, onCerrar, onConfirmar }) {
   );
 }
 
-function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
+function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
   const [razon, setRazon] = useState('');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">Rechazar horas</h2>
-        <p className="text-sm text-muted-foreground">{entrada.usuario.nombres} {entrada.usuario.apellidos} — {entrada.semana}</p>
+        <p className="text-sm text-muted-foreground">
+          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {solicitud.semana} — {solicitud.proyecto_nombre}
+        </p>
 
         <div className="space-y-2">
           <Label>Razón del rechazo *</Label>
-          <Textarea value={razon} onChange={(e) => setRazon(e.target.value)} rows={3} placeholder="Explica por qué se rechazan estas horas..." />
+          <Textarea
+            value={razon}
+            onChange={(e) => setRazon(e.target.value)}
+            rows={3}
+            placeholder="Explica por qué se rechazan estas horas..."
+          />
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onCerrar}>Cancelar</Button>
-          <Button variant="destructive" className="flex-1" disabled={!razon} onClick={() => onConfirmar({ razon_rechazo: razon, permitir_reenvio: false })}>
+          <Button variant="outline" className="flex-1" onClick={onCerrar}>
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            disabled={!razon}
+            onClick={() =>
+              onConfirmar({ proyecto_id: solicitud.proyecto_id, razon_rechazo: razon, permitir_reenvio: true })
+            }
+          >
             Rechazar
           </Button>
         </div>
@@ -106,15 +152,49 @@ function ModalRechazar({ entrada, onCerrar, onConfirmar }) {
   );
 }
 
+/** Flatten entries into "solicitudes": one per (entry, project managed by this gestor) */
+function buildSolicitudes(entries, gestorId) {
+  const solicitudes = [];
+  for (const entrada of entries) {
+    const proyectoIds = new Set();
+    for (const linea of entrada.lineas) {
+      if (linea.proyecto.manager_id !== gestorId) continue;
+      if (proyectoIds.has(linea.proyecto.id)) continue;
+
+      const lineasDelProyecto = entrada.lineas.filter(
+        (l) => l.proyecto.id === linea.proyecto.id && l.estado === 'PENDIENTE',
+      );
+      if (lineasDelProyecto.length === 0) continue;
+
+      proyectoIds.add(linea.proyecto.id);
+      solicitudes.push({
+        id: entrada.id,
+        semana: entrada.semana,
+        fecha_carga: entrada.fecha_carga,
+        usuario: entrada.usuario,
+        proyecto_id: linea.proyecto.id,
+        proyecto_nombre: linea.proyecto.nombre,
+        lineas: lineasDelProyecto,
+        total_horas: lineasDelProyecto.reduce((s, l) => s + l.horas, 0),
+        total_extras: lineasDelProyecto.reduce((s, l) => s + l.horas_extra, 0),
+      });
+    }
+  }
+  return solicitudes;
+}
+
 export default function HorasEquipo() {
+  const { usuario } = useAuthStore();
+  const gestorId = usuario?.id;
   const queryClient = useQueryClient();
   const [modalAprobarConObs, setModalAprobarConObs] = useState(null);
   const [modalRechazar, setModalRechazar] = useState(null);
   const [recordatoriosEnviados, setRecordatoriosEnviados] = useState({});
 
+  // Fetch entries that have pending lines in gestor's projects (backend filters by line status)
   const { data, isLoading } = useQuery({
     queryKey: ['horas-equipo', 'PENDIENTE'],
-    queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 50 }).then((r) => r.data),
+    queryFn: () => timeEntryApi.listar({ estado: 'PENDIENTE', limit: 100 }).then((r) => r.data),
   });
 
   const { data: dataSeekers } = useQuery({
@@ -122,14 +202,13 @@ export default function HorasEquipo() {
     queryFn: () => timeEntryApi.seekersSinCarga().then((r) => r.data),
   });
 
-  const { data: dataAprobadas } = useQuery({
-    queryKey: ['horas-equipo', 'APROBADO_CON_OBSERVACION'],
-    queryFn: () => timeEntryApi.listar({ estado: 'APROBADO_CON_OBSERVACION', limit: 50 }).then((r) => r.data),
-  });
+  const entradas = data?.data ?? [];
+  const seekersSinCarga = dataSeekers?.data ?? [];
 
-  const entradas = data?.data || [];
-  const entradasAprobadas = dataAprobadas?.data || [];
-  const seekersSinCarga = dataSeekers?.data || [];
+  const solicitudes = useMemo(
+    () => buildSolicitudes(entradas, gestorId),
+    [entradas, gestorId],
+  );
 
   const mutRecordatorio = useMutation({
     mutationFn: (userId) => timeEntryApi.enviarRecordatorio(userId),
@@ -140,12 +219,11 @@ export default function HorasEquipo() {
 
   function recordatorioReciente(userId) {
     const enviado = recordatoriosEnviados[userId];
-    if (!enviado) return false;
-    return Date.now() - enviado < 24 * 60 * 60 * 1000;
+    return enviado ? Date.now() - enviado < 24 * 60 * 60 * 1000 : false;
   }
 
   const mutAprobar = useMutation({
-    mutationFn: (id) => timeEntryApi.aprobar(id),
+    mutationFn: ({ id, proyecto_id }) => timeEntryApi.aprobar(id, { proyecto_id }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['horas-equipo'] }),
   });
 
@@ -170,22 +248,25 @@ export default function HorasEquipo() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Mis equipos</h1>
-          <p className="text-muted-foreground">Aprueba o rechaza las horas de tu equipo</p>
+          <p className="text-muted-foreground">Aprueba o rechaza las horas de tu equipo por proyecto</p>
         </div>
 
+        {/* Seekers sin carga */}
         <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Seekers con carga pendiente ({seekersSinCarga.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {seekersSinCarga.length === 0 ? (
-                <div className="flex items-center gap-3 rounded-md border border-green-200 bg-green-50 px-4 py-3">
-                  <CircleCheck className="h-5 w-5 shrink-0 text-green-600" />
-                  <p className="text-sm font-medium text-green-800">Todo en orden — tu equipo está al día con las cargas</p>
-                </div>
-              ) : (
+          <CardHeader>
+            <CardTitle className="text-base">
+              Seekers con carga pendiente ({seekersSinCarga.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {seekersSinCarga.length === 0 ? (
+              <div className="flex items-center gap-3 rounded-md border border-green-200 bg-green-50 px-4 py-3">
+                <CircleCheck className="h-5 w-5 shrink-0 text-green-600" />
+                <p className="text-sm font-medium text-green-800">
+                  Todo en orden — tu equipo está al día con las cargas
+                </p>
+              </div>
+            ) : (
               <div className="space-y-3">
                 {seekersSinCarga.map((item) => {
                   const esCritico = item.severidad === 'CRITICO';
@@ -194,9 +275,7 @@ export default function HorasEquipo() {
                     <div
                       key={item.usuario.id}
                       className={`rounded-md border p-4 flex items-center justify-between gap-4 ${
-                        esCritico
-                          ? 'border-red-200 bg-red-50'
-                          : 'border-yellow-200 bg-yellow-50'
+                        esCritico ? 'border-red-200 bg-red-50' : 'border-yellow-200 bg-yellow-50'
                       }`}
                     >
                       <div className="space-y-1">
@@ -207,7 +286,12 @@ export default function HorasEquipo() {
                           <TriangleAlert className="h-3 w-3 shrink-0" />
                           {item.semanas_sin_carga} semana{item.semanas_sin_carga !== 1 ? 's' : ''} sin carga
                           {item.proyectos_pendientes?.length > 0 && (
-                            <> · Pendiente en: <span className="font-medium">{item.proyectos_pendientes.map((p) => p.nombre).join(', ')}</span></>
+                            <>
+                              {' '}· Pendiente en:{' '}
+                              <span className="font-medium">
+                                {item.proyectos_pendientes.map((p) => p.nombre).join(', ')}
+                              </span>
+                            </>
                           )}
                         </p>
                         {!esCritico && item.proyectos_otros?.length > 0 && (
@@ -215,7 +299,8 @@ export default function HorasEquipo() {
                             {item.proyectos_otros.map((p, i) => (
                               <span key={p.nombre}>
                                 {i > 0 && ' · '}
-                                Cargó {p.semanas} semana{p.semanas !== 1 ? 's' : ''} en: <span className="font-medium">{p.nombre}</span>
+                                Cargó {p.semanas} semana{p.semanas !== 1 ? 's' : ''} en:{' '}
+                                <span className="font-medium">{p.nombre}</span>
                               </span>
                             ))}
                           </p>
@@ -239,49 +324,55 @@ export default function HorasEquipo() {
                   );
                 })}
               </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
+        {/* Solicitudes pendientes */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Pendientes de aprobación ({entradas.length})
+              Solicitudes pendientes de aprobación ({solicitudes.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Cargando...</p>
-            ) : entradas.length === 0 ? (
+            ) : solicitudes.length === 0 ? (
               <p className="text-sm text-muted-foreground">No hay horas pendientes de aprobación</p>
             ) : (
               <div className="space-y-3">
-                {entradas.map((entrada) => (
-                  <div key={entrada.id} className="rounded-md border p-4">
+                {solicitudes.map((sol) => (
+                  <div key={`${sol.id}-${sol.proyecto_id}`} className="rounded-md border p-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <p className="font-medium">{entrada.usuario.nombres} {entrada.usuario.apellidos}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {entrada.semana} · {entrada.total_horas}h normales · {entrada.total_extras}h extras
+                        <p className="font-medium">
+                          {sol.usuario.nombres} {sol.usuario.apellidos}
                         </p>
-                        <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
+                        <p className="text-sm font-medium text-slate-700">{sol.proyecto_nombre}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {sol.semana} · {sol.total_horas}h normales
+                          {sol.total_extras > 0 ? ` · ${sol.total_extras}h extras` : ''}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{formatearFecha(sol.fecha_carga)}</p>
                         <div className="mt-2 space-y-1">
-                          {entrada.lineas.map((l) => (
+                          {sol.lineas.map((l) => (
                             <p key={l.id} className="text-xs text-muted-foreground">
-                              {l.proyecto.nombre}: {l.horas}h{l.horas_extra > 0 ? ` + ${l.horas_extra}h extras` : ''}
+                              {l.categoria_ingreso?.nombre ?? 'Sin categoría'}: {l.horas}h
+                              {l.horas_extra > 0 ? ` + ${l.horas_extra}h extras` : ''}
                               {l.comentario ? ` — ${l.comentario}` : ''}
                             </p>
                           ))}
                         </div>
                       </div>
-                      <Badge variant="warning">{ESTADO_LABELS[entrada.estado]}</Badge>
+                      <Badge variant="warning">{ESTADO_LABELS['PENDIENTE']}</Badge>
                     </div>
 
                     <div className="mt-3 flex gap-2">
                       <Button
                         size="sm"
                         className="gap-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => mutAprobar.mutate(entrada.id)}
+                        onClick={() => mutAprobar.mutate({ id: sol.id, proyecto_id: sol.proyecto_id })}
                         disabled={mutAprobar.isPending}
                       >
                         <Check className="h-3 w-3" /> Aprobar
@@ -290,7 +381,7 @@ export default function HorasEquipo() {
                         size="sm"
                         variant="outline"
                         className="gap-1 border-teal-300 text-teal-700 hover:bg-teal-50"
-                        onClick={() => setModalAprobarConObs(entrada)}
+                        onClick={() => setModalAprobarConObs(sol)}
                       >
                         <CheckCheck className="h-3 w-3" /> Aprobar con obs.
                       </Button>
@@ -298,7 +389,7 @@ export default function HorasEquipo() {
                         size="sm"
                         variant="outline"
                         className="gap-1 border-red-300 text-red-700 hover:bg-red-50"
-                        onClick={() => setModalRechazar(entrada)}
+                        onClick={() => setModalRechazar(sol)}
                       >
                         <X className="h-3 w-3" /> Rechazar
                       </Button>
@@ -309,47 +400,11 @@ export default function HorasEquipo() {
             )}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Aprobadas con observación ({entradasAprobadas.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {entradasAprobadas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hay entradas aprobadas con observación</p>
-            ) : (
-              <div className="space-y-3">
-                {entradasAprobadas.map((entrada) => {
-                  const obs = entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION');
-                  return (
-                    <div key={entrada.id} className="rounded-md border border-teal-200 bg-teal-50 p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium">{entrada.usuario.nombres} {entrada.usuario.apellidos}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {entrada.semana} · {entrada.total_horas}h normales · {entrada.total_extras}h extras
-                          </p>
-                          <p className="text-xs text-muted-foreground">{formatearFecha(entrada.fecha_carga)}</p>
-                          {obs?.comentario && (
-                            <p className="text-xs text-teal-700 mt-1">Obs: {obs.comentario}</p>
-                          )}
-                        </div>
-                        <Badge className="bg-teal-100 text-teal-800 shrink-0">Aprobado con obs.</Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {modalAprobarConObs && (
         <ModalAprobarConObservacion
-          entrada={modalAprobarConObs}
+          solicitud={modalAprobarConObs}
           onCerrar={() => setModalAprobarConObs(null)}
           onConfirmar={(datos) => mutAprobarConObs.mutate({ id: modalAprobarConObs.id, datos })}
         />
@@ -357,7 +412,7 @@ export default function HorasEquipo() {
 
       {modalRechazar && (
         <ModalRechazar
-          entrada={modalRechazar}
+          solicitud={modalRechazar}
           onCerrar={() => setModalRechazar(null)}
           onConfirmar={(datos) => mutRechazar.mutate({ id: modalRechazar.id, datos })}
         />

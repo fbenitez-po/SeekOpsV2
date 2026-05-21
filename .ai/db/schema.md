@@ -349,7 +349,9 @@ CREATE INDEX IF NOT EXISTS idx_time_entries_user_week ON time_entries(user_id, w
 
 ### time_entry_lines
 
-Líneas de detalle de cada carga. Una línea por proyecto. `hours`/`extra_hours` NUMERIC(x,1), múltiplos de 0.5.
+Líneas de detalle de cada carga. Una línea por proyecto+categoría. `hours`/`extra_hours` NUMERIC(x,1), múltiplos de 0.5.
+
+**`status`** es la fuente de verdad de aprobación (`PENDIENTE`/`APROBADO`/`APROBADO_CON_OBSERVACION`/`RECHAZADO`); `time_entries.status` es un rollup derivado. Una línea `RECHAZADO` puede coexistir con una nueva `PENDIENTE` del mismo proyecto (re-carga tras rechazo — no es baja lógica). El índice parcial único `idx_time_entry_lines_entry_project_active` garantiza al menos una línea activa no rechazada por (entry, project).
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_lines (
@@ -360,6 +362,9 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,
+  status             VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',  -- fuente de verdad de aprobación
+  reviewed_by        VARCHAR(50),   -- email del gestor que revisó
+  reviewed_at        TIMESTAMP,
   created_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by         VARCHAR(50) NOT NULL DEFAULT 'admin',
   updated_at         TIMESTAMP,
@@ -372,16 +377,21 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_time_entry_id ON time_entry_lines(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_lines(project_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_lines_status        ON time_entry_lines(status);
+CREATE UNIQUE INDEX idx_time_entry_lines_entry_project_active
+  ON time_entry_lines(time_entry_id, project_id)
+  WHERE (is_active = true AND status <> 'RECHAZADO');
 ```
 
 ### time_entry_approvals
 
-Historial completo de acciones sobre un time entry (log inmutable: solo `created_at`/`created_by`). `can_resubmit` es booleano de negocio.
+Historial de acciones sobre un time entry, ahora con dimensión de proyecto (`project_id`). Log inmutable: solo `created_at`/`created_by`. `can_resubmit` es booleano de negocio.
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_id         UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
+  project_id            UUID REFERENCES projects(id),  -- proyecto afectado (nullable para historial)
   action                VARCHAR(50) NOT NULL,
   comment               TEXT,
   suggested_hours       NUMERIC(6,1),
@@ -392,6 +402,7 @@ CREATE TABLE IF NOT EXISTS time_entry_approvals (
   created_by            VARCHAR(50) NOT NULL DEFAULT 'admin'
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_action        ON time_entry_approvals(action);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);

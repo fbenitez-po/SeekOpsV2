@@ -23,17 +23,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
   try {
     res
       .status(201)
-      .json(await service.create(req.body, req.user!.usuario_id, req.user?.email ?? null, req.user!.roles));
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function adjust(req: Request, res: Response, next: NextFunction) {
-  try {
-    res.json(
-      await service.adjust(req.params['id'] as string, req.body, req.user!.usuario_id, req.user?.email ?? null),
-    );
+      .json(await service.create(req.body, req.user!.usuario_id, req.user?.email ?? null));
   } catch (err) {
     next(err);
   }
@@ -44,6 +34,7 @@ export async function approve(req: Request, res: Response, next: NextFunction) {
     res.json(
       await service.approve(
         req.params['id'] as string,
+        req.body,
         req.user!.usuario_id,
         req.user?.email ?? null,
         req.user!.roles,
