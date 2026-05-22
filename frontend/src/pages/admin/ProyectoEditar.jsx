@@ -82,6 +82,19 @@ export default function ProyectoEditar() {
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target?.value ?? e }));
 
+  const toggleArea = (checked) => {
+    setForm((f) => ({ ...f, tiene_area: checked, area_id: '', categorias_proyecto_ids: [] }));
+  };
+
+  const seleccionarArea = (id) => {
+    const idsArea = (categorias || []).filter((c) => c.esDeArea).map((c) => c.id);
+    setForm((f) => ({ ...f, area_id: id, categorias_proyecto_ids: idsArea }));
+  };
+
+  const categoriasFiltradas = (categorias || []).filter((c) =>
+    form?.tiene_area ? c.esDeArea : !c.esDeArea
+  );
+
   if (!form) return <Layout><p className="text-muted-foreground">Cargando...</p></Layout>;
 
   return (
@@ -127,17 +140,6 @@ export default function ProyectoEditar() {
                   <SelectContent>{(segmentaciones || []).map((s) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Categoría de ingreso</Label>
-                <MultiCheckbox
-                  opciones={categorias || []}
-                  seleccionados={form.categorias_proyecto_ids}
-                  onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
-                />
-                {form.categorias_proyecto_ids.length > 0 && (
-                  <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
-                )}
-              </div>
               <div className="space-y-2">
                 <Label>Tipo de servicio</Label>
                 <Select value={form.tipo_servicio_id} onValueChange={set('tipo_servicio_id')}>
@@ -156,29 +158,48 @@ export default function ProyectoEditar() {
               <div className="space-y-2"><Label>Fecha fin</Label><Input type="date" value={form.fecha_fin} onChange={set('fecha_fin')} /></div>
               <div className="space-y-2"><Label>Inicio real</Label><Input type="date" value={form.fecha_inicio_real} onChange={set('fecha_inicio_real')} /></div>
               <div className="space-y-2"><Label>Fin real</Label><Input type="date" value={form.fecha_fin_real} onChange={set('fecha_fin_real')} /></div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Área aplicable</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={form.tiene_area}
-                  onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
-                  className="h-4 w-4 rounded border"
-                  style={{ accentColor: '#0f172a' }}
-                />
-                <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
-              </label>
-              {form.tiene_area && (
-                <div className="space-y-2">
-                  <Label>Área *</Label>
-                  <Select value={form.area_id} onValueChange={set('area_id')}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger>
-                    <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
-                  </Select>
+              {/* Área — justo antes de categorías */}
+              <div className="md:col-span-2 pt-2 border-t border-[#e2e8f0] space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.tiene_area}
+                    onChange={(e) => toggleArea(e.target.checked)}
+                    className="h-4 w-4 rounded border"
+                    style={{ accentColor: '#0f172a' }}
+                  />
+                  <span className="text-sm font-medium">Este proyecto aplica a un área específica</span>
+                </label>
+                {form.tiene_area && (
+                  <div className="space-y-2 max-w-xs">
+                    <Label>Área *</Label>
+                    <Select value={form.area_id} onValueChange={seleccionarArea}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger>
+                      <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {/* Categoría de ingreso — filtrada según si es área o no */}
+              {(!form.tiene_area || form.area_id) && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Categoría de ingreso</Label>
+                  <MultiCheckbox
+                    opciones={categoriasFiltradas}
+                    seleccionados={form.categorias_proyecto_ids}
+                    onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
+                  />
+                  {form.categorias_proyecto_ids.length > 0 && (
+                    <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
+                  )}
+                </div>
+              )}
+              {form.tiene_area && !form.area_id && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Categoría de ingreso</Label>
+                  <p className="text-sm text-[#94a3b8]">Seleccioná un área primero</p>
                 </div>
               )}
             </CardContent>

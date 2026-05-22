@@ -3,7 +3,7 @@
 > PostgreSQL schema: tablas, columnas, relaciones, índices y decisiones.
 > **Fuente de verdad:** `.ai/db/schema.sql` (DDL) + `.ai/db/data.sql` (datos)
 > Identificadores en inglés. Auditoría tiered. Tablas puente con PK compuesta.
-> **Última actualización:** 18 de Mayo 2026
+> **Última actualización:** 22 de Mayo 2026
 
 ---
 
@@ -13,9 +13,9 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                        CONFIGURACIÓN                          │
 ├──────────────────────────────────────────────────────────────┤
-│ income_categories   work_categories     client_segmentations  │
-│ client_sectors      service_types       project_segmentation  │
-│ project_categories  productivity_layers teams   areas         │
+│ work_categories     client_segmentations  client_sectors       │
+│ service_types       project_segmentation  project_categories   │
+│ productivity_layers teams   areas                              │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
@@ -71,7 +71,7 @@ is_active  BOOLEAN     NOT NULL DEFAULT true
 
 | Tier | Tablas | Campos de auditoría |
 |------|--------|---------------------|
-| Completo (7 campos) | 11 catálogos + `users`, `profiles`, `clients`, `projects` + `time_entries`, `time_entry_lines`, `hour_projections`, `periods`, `revenues`, `admin_expenses`, `sales_costs`, `personnel_costs`, `commercial_records` (24 tablas) | bloque completo |
+| Completo (7 campos) | 10 catálogos + `users`, `profiles`, `clients`, `projects` + `time_entries`, `time_entry_lines`, `hour_projections`, `periods`, `revenues`, `admin_expenses`, `sales_costs`, `personnel_costs`, `commercial_records` (23 tablas) | bloque completo |
 | Puente mínimo | `user_area`, `user_profile`, `project_project_category` | solo `created_at`, `created_by` |
 | Puente con estado | `project_user` | `created_at`, `created_by`, `updated_at`, `updated_by`, `is_active` |
 | Log inmutable | `time_entry_approvals` | solo `created_at`, `created_by` |
@@ -83,36 +83,38 @@ is_active  BOOLEAN     NOT NULL DEFAULT true
 
 ## Tablas de Configuración
 
-Las 11 tablas de catálogo comparten la misma estructura (bloque de auditoría completo). Ejemplo:
+Las 10 tablas de catálogo comparten la misma estructura base (bloque de auditoría completo). `project_categories` tiene columna adicional `is_area_type`. `document_types` ver sección Comercial.
+
+> **Nota (2026-05-22):** `income_categories` fue **eliminada**. Sus 5 categorías de área fueron absorbidas por `project_categories` mediante el flag `is_area_type = true`. La tabla contaba como catálogo; el total de tablas pasó de 31 a **30**.
 
 ```sql
-CREATE TABLE IF NOT EXISTS income_categories (
+-- Ejemplo estructura catálogo estándar
+CREATE TABLE IF NOT EXISTS work_categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code        VARCHAR(50)  NOT NULL UNIQUE,
   name        VARCHAR(100) NOT NULL,
-  description TEXT,
-  created_at  TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by  VARCHAR(50) NOT NULL DEFAULT 'admin',
-  updated_at  TIMESTAMP,
-  updated_by  VARCHAR(50),
-  deleted_at  TIMESTAMP,
-  deleted_by  VARCHAR(50),
-  is_active   BOOLEAN     NOT NULL DEFAULT true
+  ...auditoría completa...
 );
-CREATE INDEX IF NOT EXISTS idx_income_categories_code ON income_categories(code);
-```
 
-Misma estructura (con su `idx_<tabla>_code`) para: `work_categories`, `service_types`, `client_segmentations`, `client_sectors`, `teams`, `areas`, `project_segmentation`, `project_categories`, `productivity_layers`. `document_types` ver sección Comercial.
+-- project_categories: tiene campo adicional
+CREATE TABLE IF NOT EXISTS project_categories (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code         VARCHAR(50)  NOT NULL UNIQUE,
+  name         VARCHAR(100) NOT NULL,
+  is_area_type BOOLEAN      NOT NULL DEFAULT false,   -- ← distingue categorías de área
+  ...auditoría completa...
+);
+CREATE INDEX IF NOT EXISTS idx_project_categories_is_area_type ON project_categories(is_area_type);
+```
 
 | Tabla | Descripción | Seeds |
 |-------|-------------|-------|
-| `income_categories` | Categorías de ingreso para `time_entry_lines` | CONSULTORIA, DESARROLLO, MANTENIMIENTO, SOPORTE |
-| `work_categories` | Tipos de trabajo (FK desde `hour_projections.work_category_id`). Renombrada desde `client_categories` (migr. 021) | 18: ESTRATEGIA, GESTORES_GESTION, UX_RESEARCH, UI, DEV_FRONTEND, SEO, DEV_BACKEND, DEV_QA, UX_PROTOTYPE, DISENIO_SOCIAL_MEDIA, APOYO, UI_PROTOTYPE, UX_TESTING, LIDERES_GESTION, PRODUCT_MANAGEMENT, CAPACITACIONES, PROPUESTAS_COMERCIALES, RECLUTAMIENTO |
+| `work_categories` | Tipos de trabajo (FK desde `hour_projections.work_category_id`) | 18: ESTRATEGIA, GESTORES_GESTION, UX_RESEARCH, UI, DEV_FRONTEND, SEO, DEV_BACKEND, DEV_QA, UX_PROTOTYPE, DISENIO_SOCIAL_MEDIA, APOYO, UI_PROTOTYPE, UX_TESTING, LIDERES_GESTION, PRODUCT_MANAGEMENT, CAPACITACIONES, PROPUESTAS_COMERCIALES, RECLUTAMIENTO |
 | `service_types` | Tipos de servicio del proyecto | PROYECTO, SERVICIO_RECURRENTE |
 | `client_segmentations` | Segmentación comercial del cliente | 7: CUENTA_CLAVE, CUENTA_INTERNACIONAL, CUENTA_DESARROLLO, CUENTA_CASUAL, CUENTA_INACTIVA, CUENTA_EXCLUIDA, NUEVOS_CLIENTES |
 | `client_sectors` | Sector económico del cliente | 33: CONSULTORIA, BANCA_FINANCIERO, TECNOLOGIA, … BELLEZA |
 | `project_segmentation` | Segmentación del proyecto | 8: I001…I008 |
-| `project_categories` | Categorías del proyecto (multi-select vía `project_project_category`) | 34: DESIGN_PARTNERSHIP_SQUAD … AREA |
+| `project_categories` | Categorías del proyecto (multi-select vía `project_project_category`). Las de `is_area_type=true` son las únicas válidas para proyectos de área en `time_entry_lines` | 35 total: 30 normales + 5 de área (`is_area_type=true`): RECLUTAMIENTO, CAPACITACION, COMERCIAL, AREA, CULTURA |
 | `productivity_layers` | Capa de productividad del proyecto | OPERATIONAL_BACKBONE, CULTURE_BUILDERS, GROWTH_LEAPS |
 | `teams` | Equipos de trabajo | 13: UI, UX, BRANDING, CLIENTE, DIRECTOR, SEO, OUTSOURCING, ADMINISTRATIVO, SOCIAL_MEDIA, ESTRATEGIA, PRODUCTO, DISENIO_EXPERIENCIA, TECNOLOGIA |
 | `areas` | Áreas funcionales de la empresa | 8: TALENTO_CULTURA, COMERCIAL, PRODUCTO, TECNOLOGIA, ESTRATEGIA, ADMINISTRACION, DISENIO_EXPERIENCIA, OUTSOURCING |
@@ -351,14 +353,18 @@ CREATE INDEX IF NOT EXISTS idx_time_entries_user_week ON time_entries(user_id, w
 
 Líneas de detalle de cada carga. Una línea por proyecto+categoría. `hours`/`extra_hours` NUMERIC(x,1), múltiplos de 0.5.
 
-**`status`** es la fuente de verdad de aprobación (`PENDIENTE`/`APROBADO`/`APROBADO_CON_OBSERVACION`/`RECHAZADO`); `time_entries.status` es un rollup derivado. Una línea `RECHAZADO` puede coexistir con una nueva `PENDIENTE` del mismo proyecto (re-carga tras rechazo — no es baja lógica). El índice parcial único `idx_time_entry_lines_entry_project_active` garantiza al menos una línea activa no rechazada por (entry, project).
+**`status`** es la fuente de verdad de aprobación (`PENDIENTE`/`APROBADO`/`APROBADO_CON_OBSERVACION`/`RECHAZADO`); `time_entries.status` es un rollup derivado. Una línea `RECHAZADO` puede coexistir con una nueva `PENDIENTE` del mismo proyecto (re-carga tras rechazo — no es baja lógica).
+
+`income_category_id` referencia `project_categories` (antes `income_categories`, eliminada en 2026-05-22). Solo aplica para proyectos de área; en proyectos normales es NULL. Dos índices parciales únicos garantizan la integridad:
+- Sin categoría (proyectos normales): `(time_entry_id, project_id) WHERE income_category_id IS NULL AND is_active AND status<>'RECHAZADO'`
+- Con categoría (proyectos de área): `(time_entry_id, project_id, income_category_id) WHERE income_category_id IS NOT NULL AND is_active AND status<>'RECHAZADO'`
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_lines (
   id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_id      UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
   project_id         UUID NOT NULL REFERENCES projects(id),
-  income_category_id UUID REFERENCES income_categories(id),
+  income_category_id UUID REFERENCES project_categories(id),   -- nullable; solo para proyectos de área
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,
@@ -378,9 +384,14 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_time_entry_id ON time_entry_lines(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_lines(project_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_status        ON time_entry_lines(status);
-CREATE UNIQUE INDEX idx_time_entry_lines_entry_project_active
+-- Proyectos normales (sin categoría): una sola línea activa no rechazada por (entry, project)
+CREATE UNIQUE INDEX idx_tel_entry_project_no_category
   ON time_entry_lines(time_entry_id, project_id)
-  WHERE (is_active = true AND status <> 'RECHAZADO');
+  WHERE (is_active = true AND status <> 'RECHAZADO' AND income_category_id IS NULL);
+-- Proyectos de área (con categoría): una sola línea activa no rechazada por (entry, project, categoría)
+CREATE UNIQUE INDEX idx_tel_entry_project_with_category
+  ON time_entry_lines(time_entry_id, project_id, income_category_id)
+  WHERE (is_active = true AND status <> 'RECHAZADO' AND income_category_id IS NOT NULL);
 ```
 
 ### time_entry_approvals
@@ -649,7 +660,7 @@ CREATE INDEX IF NOT EXISTS idx_commercial_records_record_date ON commercial_reco
 | projects | 1:N | commercial_records | FK project_id |
 | time_entries | 1:N | time_entry_lines | FK time_entry_id |
 | time_entries | 1:N | time_entry_approvals | FK time_entry_id |
-| time_entry_lines | N:0..1 | income_categories | FK income_category_id (nullable) |
+| time_entry_lines | N:0..1 | project_categories | FK income_category_id (nullable; solo proyectos de área) |
 | hour_projections | N:0..1 | work_categories | FK work_category_id (nullable) |
 | periods | 1:N | revenues | FK period_id |
 | periods | 1:N | admin_expenses | FK period_id |
@@ -706,11 +717,13 @@ Un Gestor tiene acceso a todos los proyectos donde figura como `manager_id`, ind
 | Grupo | Tablas |
 |-------|--------|
 | Configuración (11) | income_categories, work_categories, service_types, client_segmentations, client_sectors, project_segmentation, project_categories, productivity_layers, teams, areas, document_types |
+| Catálogos (10) | work_categories, service_types, client_segmentations, client_sectors, teams, areas, project_segmentation, project_categories, productivity_layers, document_types |
 | Core (4) | users, profiles, clients, projects |
 | Puente (4) | user_area, user_profile, project_project_category, project_user |
 | Transaccional (6) | time_entries, time_entry_lines, time_entry_approvals, refresh_tokens, password_reset_tokens, hour_projections |
 | Finanzas (5) | periods, revenues, admin_expenses, sales_costs, personnel_costs |
 | Comercial (1) | commercial_records |
+| **Total: 30 tablas** | *(income_categories eliminada en 2026-05-22)* | |
 | **Total** | **31 tablas** |
 
 > `document_types` se cuenta en Configuración (catálogo). Comercial = `commercial_records` (+ `document_types`).

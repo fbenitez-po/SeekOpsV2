@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, X, ArrowLeft } from 'lucide-react';
-import { timeEntryApi, projectApi, configApi } from '../../services/api';
+import { timeEntryApi, projectApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -66,11 +66,6 @@ export default function CargarHoras() {
   const { data: proyectos } = useQuery({
     queryKey: ['proyectos-asignados'],
     queryFn: () => projectApi.listar({ activo: true }).then((r) => r.data.data),
-  });
-
-  const { data: categorias } = useQuery({
-    queryKey: ['categorias-ingreso'],
-    queryFn: () => configApi.categoriasIngreso().then((r) => r.data),
   });
 
   // Pre-select rejected project when navigated from MisHoras/HomeSeeker
@@ -249,7 +244,7 @@ export default function CargarHoras() {
                       {/* Si hay múltiples líneas del mismo proyecto, muestra la categoría seleccionada como indicador */}
                       {esArea && cantLineasProyecto > 1 && linea.categoria_ingreso_id && (
                         <span className="ml-2 text-xs text-slate-500">
-                          ({(categorias || []).find((c) => c.id === linea.categoria_ingreso_id)?.nombre || 'sin categoría'})
+                          ({(proyecto.categorias_ingreso || []).find((c) => c.id === linea.categoria_ingreso_id)?.nombre || 'sin categoría'})
                         </span>
                       )}
                     </p>
@@ -274,7 +269,7 @@ export default function CargarHoras() {
                             <SelectValue placeholder="Selecciona categoría" />
                           </SelectTrigger>
                           <SelectContent>
-                            {(categorias || []).map((c) => (
+                            {(proyecto.categorias_ingreso || []).map((c) => (
                               <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
                             ))}
                           </SelectContent>

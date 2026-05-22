@@ -98,6 +98,7 @@ function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
             onClick={() =>
               onConfirmar({
                 proyecto_id: solicitud.proyecto_id,
+                categoria_ingreso_id: solicitud.categoria_id,
                 comentario_observacion: comentario,
                 lineas,
               })
@@ -141,7 +142,7 @@ function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
             className="flex-1"
             disabled={!razon}
             onClick={() =>
-              onConfirmar({ proyecto_id: solicitud.proyecto_id, razon_rechazo: razon, permitir_reenvio: true })
+              onConfirmar({ proyecto_id: solicitud.proyecto_id, categoria_ingreso_id: solicitud.categoria_id, razon_rechazo: razon, permitir_reenvio: true })
             }
           >
             Rechazar
@@ -152,21 +153,20 @@ function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
   );
 }
 
-/** Flatten entries into "solicitudes": one per (entry, project managed by this gestor) */
+/** Flatten entries into "solicitudes": one per (entry, project, category) for area projects,
+ *  one per (entry, project) for regular projects. */
 function buildSolicitudes(entries, gestorId) {
   const solicitudes = [];
   for (const entrada of entries) {
-    const proyectoIds = new Set();
+    const seen = new Set();
     for (const linea of entrada.lineas) {
       if (linea.proyecto.manager_id !== gestorId) continue;
-      if (proyectoIds.has(linea.proyecto.id)) continue;
+      if (linea.estado !== 'PENDIENTE') continue;
 
-      const lineasDelProyecto = entrada.lineas.filter(
-        (l) => l.proyecto.id === linea.proyecto.id && l.estado === 'PENDIENTE',
-      );
-      if (lineasDelProyecto.length === 0) continue;
+      const key = `${linea.proyecto.id}:${linea.categoria_ingreso?.id ?? ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-      proyectoIds.add(linea.proyecto.id);
       solicitudes.push({
         id: entrada.id,
         semana: entrada.semana,
@@ -174,9 +174,11 @@ function buildSolicitudes(entries, gestorId) {
         usuario: entrada.usuario,
         proyecto_id: linea.proyecto.id,
         proyecto_nombre: linea.proyecto.nombre,
-        lineas: lineasDelProyecto,
-        total_horas: lineasDelProyecto.reduce((s, l) => s + l.horas, 0),
-        total_extras: lineasDelProyecto.reduce((s, l) => s + l.horas_extra, 0),
+        categoria_id: linea.categoria_ingreso?.id ?? null,
+        categoria_nombre: linea.categoria_ingreso?.nombre ?? null,
+        lineas: [linea],
+        total_horas: linea.horas,
+        total_extras: linea.horas_extra,
       });
     }
   }
@@ -223,7 +225,8 @@ export default function HorasEquipo() {
   }
 
   const mutAprobar = useMutation({
-    mutationFn: ({ id, proyecto_id }) => timeEntryApi.aprobar(id, { proyecto_id }),
+    mutationFn: ({ id, proyecto_id, categoria_id }) =>
+      timeEntryApi.aprobar(id, { proyecto_id, categoria_ingreso_id: categoria_id }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['horas-equipo'] }),
   });
 
@@ -343,27 +346,28 @@ export default function HorasEquipo() {
             ) : (
               <div className="space-y-3">
                 {solicitudes.map((sol) => (
-                  <div key={`${sol.id}-${sol.proyecto_id}`} className="rounded-md border p-4">
+                  <div key={`${sol.id}-${sol.proyecto_id}-${sol.categoria_id ?? ''}`} className="rounded-md border p-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <p className="font-medium">
                           {sol.usuario.nombres} {sol.usuario.apellidos}
                         </p>
-                        <p className="text-sm font-medium text-slate-700">{sol.proyecto_nombre}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-slate-700">{sol.proyecto_nombre}</p>
+                          {sol.categoria_nombre && (
+                            <span className="text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5">
+                              {sol.categoria_nombre}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           {sol.semana} · {sol.total_horas}h normales
                           {sol.total_extras > 0 ? ` · ${sol.total_extras}h extras` : ''}
                         </p>
                         <p className="text-xs text-muted-foreground">{formatearFecha(sol.fecha_carga)}</p>
-                        <div className="mt-2 space-y-1">
-                          {sol.lineas.map((l) => (
-                            <p key={l.id} className="text-xs text-muted-foreground">
-                              {l.categoria_ingreso?.nombre ?? 'Sin categoría'}: {l.horas}h
-                              {l.horas_extra > 0 ? ` + ${l.horas_extra}h extras` : ''}
-                              {l.comentario ? ` — ${l.comentario}` : ''}
-                            </p>
-                          ))}
-                        </div>
+                        {sol.lineas[0]?.comentario && (
+                          <p className="text-xs text-muted-foreground mt-1">— {sol.lineas[0].comentario}</p>
+                        )}
                       </div>
                       <Badge variant="warning">{ESTADO_LABELS['PENDIENTE']}</Badge>
                     </div>
@@ -372,7 +376,7 @@ export default function HorasEquipo() {
                       <Button
                         size="sm"
                         className="gap-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => mutAprobar.mutate({ id: sol.id, proyecto_id: sol.proyecto_id })}
+                        onClick={() => mutAprobar.mutate({ id: sol.id, proyecto_id: sol.proyecto_id, categoria_id: sol.categoria_id })}
                         disabled={mutAprobar.isPending}
                       >
                         <Check className="h-3 w-3" /> Aprobar

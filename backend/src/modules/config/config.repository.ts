@@ -24,10 +24,6 @@ export async function getProfiles() {
   return rows.map((r) => ({ id: r.id, codigo: r.code, nombre: r.name }));
 }
 
-export async function getIncomeCategories() {
-  return lookup(await prisma.income_categories.findMany({ where: active, select: { id: true, name: true, is_active: true }, orderBy: byName }));
-}
-
 export async function getClientSegmentations() {
   return lookup(await prisma.client_segmentations.findMany({ where: active, select: { id: true, name: true, is_active: true }, orderBy: byName }));
 }
@@ -41,7 +37,12 @@ export async function getProjectSegmentations() {
 }
 
 export async function getProjectCategories() {
-  return lookup(await prisma.project_categories.findMany({ where: active, select: { id: true, name: true, is_active: true }, orderBy: byName }));
+  const rows = await prisma.project_categories.findMany({
+    where: active,
+    select: { id: true, name: true, is_active: true, is_area_type: true },
+    orderBy: byName,
+  });
+  return rows.map((r) => ({ id: r.id, nombre: r.name, activo: r.is_active, esDeArea: r.is_area_type }));
 }
 
 export async function getProductivityLayers() {

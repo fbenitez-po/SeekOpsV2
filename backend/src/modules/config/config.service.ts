@@ -3,7 +3,6 @@ import * as repo from './config.repository';
 export const teams = () => repo.getTeams();
 export const areas = () => repo.getAreas();
 export const profiles = () => repo.getProfiles();
-export const incomeCategories = () => repo.getIncomeCategories();
 export const clientSegmentations = () => repo.getClientSegmentations();
 export const clientSectors = () => repo.getClientSectors();
 export const projectSegmentations = () => repo.getProjectSegmentations();

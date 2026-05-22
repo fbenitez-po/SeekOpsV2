@@ -39,7 +39,7 @@ const entryIncludes = {
   time_entry_lines: {
     include: {
       projects: { select: { id: true, name: true, code: true, manager_id: true } },
-      income_categories: { select: { id: true, name: true } },
+      project_categories: { select: { id: true, name: true } },
     },
   },
 } as const;
@@ -155,9 +155,15 @@ export async function findApprovals(timeEntryId: string): Promise<ApprovalRow[]>
 export async function getLinesForProject(
   timeEntryId: string,
   projectId: string,
+  categoryId?: string | null,
 ): Promise<{ id: string; status: string; hours: any; extra_hours: any }[]> {
   return prisma.time_entry_lines.findMany({
-    where: { time_entry_id: timeEntryId, project_id: projectId, is_active: true },
+    where: {
+      time_entry_id: timeEntryId,
+      project_id: projectId,
+      is_active: true,
+      ...(categoryId !== undefined ? { income_category_id: categoryId } : {}),
+    },
     select: { id: true, status: true, hours: true, extra_hours: true },
   });
 }
@@ -175,13 +181,16 @@ export async function isUserAssignedToProject(userId: string, projectId: string)
 }
 
 /**
- * Returns existing line for (userId, week, projectId) that is active and NOT rejected.
+ * Returns existing line for (userId, week, projectId, categoryId) that is active and NOT rejected.
+ * For area projects (categoryId != null), uniqueness is per (project, category).
+ * For non-area projects (categoryId = null), uniqueness is per project only.
  * If only rejected lines exist, returns null (re-load allowed).
  */
 export async function findExistingLineForProject(
   userId: string,
   week: string,
   projectId: string,
+  categoryId: string | null,
 ): Promise<{ id: string; status: string } | null> {
   const entry = await prisma.time_entries.findFirst({
     where: { user_id: userId, week },
@@ -193,6 +202,7 @@ export async function findExistingLineForProject(
     where: {
       time_entry_id: entry.id,
       project_id: projectId,
+      income_category_id: categoryId ?? null,
       is_active: true,
       status: { not: 'RECHAZADO' },
     },
@@ -257,6 +267,7 @@ export async function create(
 export async function recordApproval(params: {
   entryId: string;
   projectId: string;
+  categoryId?: string | null;
   action: 'APROBAR' | 'APROBAR_CON_OBSERVACION' | 'RECHAZAR';
   email: string | null;
   data: Partial<ApproveWithObservationInput & RejectInput>;
@@ -287,13 +298,14 @@ export async function recordApproval(params: {
       }
     }
 
-    // Update status on all active lines of this project in this entry
+    // Update status on active lines of this project (scoped to category when provided)
     await tx.time_entry_lines.updateMany({
       where: {
         time_entry_id: params.entryId,
         project_id: params.projectId,
         is_active: true,
         status: 'PENDIENTE',
+        ...(params.categoryId !== undefined ? { income_category_id: params.categoryId } : {}),
       },
       data: {
         status: newLineStatus,

@@ -25,10 +25,12 @@ export const CreateTimeEntrySchema = z.object({
 
 export const ApproveSchema = z.object({
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
+  categoria_ingreso_id: z.string().uuid().nullish(),
 });
 
 export const ApproveWithObservationSchema = z.object({
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
+  categoria_ingreso_id: z.string().uuid().nullish(),
   comentario_observacion: z.string().min(1, 'El comentario es requerido'),
   lineas: z
     .array(
@@ -50,6 +52,7 @@ export const ApproveWithObservationSchema = z.object({
 
 export const RejectSchema = z.object({
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
+  categoria_ingreso_id: z.string().uuid().nullish(),
   razon_rechazo: z.string().min(1, 'La razón de rechazo es requerida'),
   permitir_reenvio: z.boolean().optional(),
 });

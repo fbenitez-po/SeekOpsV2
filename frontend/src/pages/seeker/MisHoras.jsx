@@ -36,33 +36,34 @@ function rollupEstado(lineas) {
   return 'APROBADO';
 }
 
-function agruparPorProyecto(lineas) {
-  const map = new Map();
-  for (const l of lineas) {
-    const pid = l.proyecto?.id;
-    if (!pid) continue;
-    if (!map.has(pid)) {
-      map.set(pid, {
-        proyecto_id: pid,
-        proyecto_nombre: l.proyecto.nombre,
-        proyecto_codigo: l.proyecto.codigo,
-        lineas: [],
-      });
-    }
-    map.get(pid).lineas.push(l);
-  }
-  return [...map.values()].map((g) => ({
-    ...g,
-    estado: rollupEstado(g.lineas),
-    horas: g.lineas.reduce((s, l) => s + l.horas, 0),
-    horas_extra: g.lineas.reduce((s, l) => s + l.horas_extra, 0),
+function agruparPorLinea(lineas) {
+  return lineas.map((l) => ({
+    key: `${l.proyecto?.id}:${l.categoria_ingreso?.id ?? ''}`,
+    proyecto_id: l.proyecto?.id,
+    proyecto_nombre: l.proyecto?.nombre,
+    proyecto_codigo: l.proyecto?.codigo,
+    categoria_nombre: l.categoria_ingreso?.nombre ?? null,
+    estado: l.estado,
+    horas: l.horas,
+    horas_extra: l.horas_extra,
+    linea_id: l.id,
   }));
+}
+
+function proyectosParaBadges(lineasAgrupadas) {
+  const seen = new Set();
+  return lineasAgrupadas.filter((g) => {
+    if (seen.has(g.proyecto_id)) return false;
+    seen.add(g.proyecto_id);
+    return true;
+  });
 }
 
 function FilaSemana({ entrada, onRecargar }) {
   const [expandida, setExpandida] = useState(false);
-  const proyectosPorEntrada = useMemo(() => agruparPorProyecto(entrada.lineas ?? []), [entrada.lineas]);
-  const hayRechazado = proyectosPorEntrada.some((p) => p.estado === 'RECHAZADO');
+  const lineasAgrupadas = useMemo(() => agruparPorLinea(entrada.lineas ?? []), [entrada.lineas]);
+  const badges = useMemo(() => proyectosParaBadges(lineasAgrupadas), [lineasAgrupadas]);
+  const hayRechazado = lineasAgrupadas.some((g) => g.estado === 'RECHAZADO');
 
   return (
     <>
@@ -83,7 +84,7 @@ function FilaSemana({ entrada, onRecargar }) {
         </td>
         <td className="px-6 py-3.5 text-slate-600">
           <div className="flex flex-wrap gap-1">
-            {proyectosPorEntrada.map((g) => (
+            {badges.map((g) => (
               <Badge key={g.proyecto_id} variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
                 {g.proyecto_codigo ?? g.proyecto_nombre}
               </Badge>
@@ -104,8 +105,8 @@ function FilaSemana({ entrada, onRecargar }) {
         </td>
       </tr>
 
-      {expandida && proyectosPorEntrada.map((g) => (
-        <tr key={g.proyecto_id} className="bg-slate-50 border-l-2 border-l-slate-200">
+      {expandida && lineasAgrupadas.map((g) => (
+        <tr key={g.key} className="bg-slate-50 border-l-2 border-l-slate-200">
           <td className="px-6 py-2.5" />
           <td className="px-3 py-2.5">
             <span className="text-xs text-slate-400 uppercase tracking-wide">Proyecto</span>
@@ -114,6 +115,11 @@ function FilaSemana({ entrada, onRecargar }) {
             <span className="text-sm font-medium text-slate-700">{g.proyecto_nombre}</span>
             {g.proyecto_codigo && (
               <span className="ml-2 text-xs text-slate-400">{g.proyecto_codigo}</span>
+            )}
+            {g.categoria_nombre && (
+              <span className="ml-2 text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5">
+                {g.categoria_nombre}
+              </span>
             )}
           </td>
           <td className="px-6 py-2.5 text-right text-sm text-slate-700">{g.horas}</td>

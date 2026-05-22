@@ -5,17 +5,6 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  await prisma.income_categories.createMany({
-    data: [
-      { code: 'RECLUTAMIENTO', name: 'Reclutamiento', description: '' },
-      { code: 'CAPACITACION',  name: 'Capacitación',  description: '' },
-      { code: 'COMERCIAL',     name: 'Comercial',     description: '' },
-      { code: 'AREA',          name: 'Área',          description: '' },
-      { code: 'CULTURA',       name: 'Cultura',       description: '' },
-    ],
-    skipDuplicates: true,
-  });
-
   await prisma.work_categories.createMany({
     data: [
       { code: 'ESTRATEGIA',             name: 'Estrategia' },
@@ -180,12 +169,20 @@ async function main() {
       { code: 'ESTRATEGIA_DIG_OTROS',        name: 'Estrategia Digital - Otros' },
       { code: 'STAFF_AUG_DESIGN',            name: 'Staff Augmentation - Design' },
       { code: 'DISENO_ESTRATEGICO',          name: 'Diseño estratégico' },
-      { code: 'RECLUTAMIENTO',               name: 'Reclutamiento' },
-      { code: 'CAPACITACION',                name: 'Capacitación' },
-      { code: 'COMERCIAL',                   name: 'Comercial' },
-      { code: 'AREA',                        name: 'Área' },
+      // Area-type categories
+      { code: 'RECLUTAMIENTO', name: 'Reclutamiento', is_area_type: true },
+      { code: 'CAPACITACION',  name: 'Capacitación',  is_area_type: true },
+      { code: 'COMERCIAL',     name: 'Comercial',     is_area_type: true },
+      { code: 'AREA',          name: 'Área',          is_area_type: true },
+      { code: 'CULTURA',       name: 'Cultura',       is_area_type: true },
     ],
     skipDuplicates: true,
+  });
+
+  // Ensure is_area_type flag is set correctly on existing DBs
+  await prisma.project_categories.updateMany({
+    where: { code: { in: ['RECLUTAMIENTO', 'CAPACITACION', 'COMERCIAL', 'AREA', 'CULTURA'] } },
+    data: { is_area_type: true },
   });
 
   await prisma.productivity_layers.createMany({

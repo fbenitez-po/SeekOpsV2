@@ -8,7 +8,6 @@ router.use(verifyToken);
 router.get('/equipos', ctrl.teams);
 router.get('/areas', ctrl.areas);
 router.get('/grupos', ctrl.profiles);
-router.get('/categorias-ingreso', ctrl.incomeCategories);
 router.get('/segmentaciones', ctrl.clientSegmentations);
 router.get('/sectores', ctrl.clientSectors);
 router.get('/segmentaciones-proyecto', ctrl.projectSegmentations);

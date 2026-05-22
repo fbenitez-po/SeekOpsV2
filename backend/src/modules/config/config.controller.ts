@@ -14,7 +14,6 @@ function handler(fn: () => Promise<unknown>) {
 export const teams = handler(service.teams);
 export const areas = handler(service.areas);
 export const profiles = handler(service.profiles);
-export const incomeCategories = handler(service.incomeCategories);
 export const clientSegmentations = handler(service.clientSegmentations);
 export const clientSectors = handler(service.clientSectors);
 export const projectSegmentations = handler(service.projectSegmentations);

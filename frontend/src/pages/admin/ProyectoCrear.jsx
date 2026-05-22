@@ -81,6 +81,19 @@ export default function ProyectoCrear() {
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target?.value ?? e }));
 
+  const toggleArea = (checked) => {
+    setForm((f) => ({ ...f, tiene_area: checked, area_id: '', categorias_proyecto_ids: [] }));
+  };
+
+  const seleccionarArea = (id) => {
+    const idsArea = (categorias || []).filter((c) => c.esDeArea).map((c) => c.id);
+    setForm((f) => ({ ...f, area_id: id, categorias_proyecto_ids: idsArea }));
+  };
+
+  const categoriasFiltradas = (categorias || []).filter((c) =>
+    form.tiene_area ? c.esDeArea : !c.esDeArea
+  );
+
   const BtnNuevo = ({ onClick }) => (
     <button
       type="button"
@@ -192,25 +205,14 @@ export default function ProyectoCrear() {
                 <Label className="w-36 shrink-0 text-[#64748b]">Fin real</Label>
                 <Input type="date" value={form.fecha_fin_real} onChange={set('fecha_fin_real')} className="flex-1" />
               </div>
-              <div className="col-span-2 flex items-start gap-3">
-                <Label className="w-36 shrink-0 pt-2 text-[#64748b]">Categoría de ingreso</Label>
-                <div className="flex-1 space-y-1">
-                  <MultiCheckbox
-                    opciones={categorias || []}
-                    seleccionados={form.categorias_proyecto_ids}
-                    onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
-                  />
-                  {form.categorias_proyecto_ids.length > 0 && (
-                    <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
-                  )}
-                </div>
-              </div>
+
+              {/* Área — aparece justo antes de categorías */}
               <div className="col-span-2 pt-2 border-t border-[#e2e8f0] space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={form.tiene_area}
-                    onChange={(e) => setForm((f) => ({ ...f, tiene_area: e.target.checked, area_id: '' }))}
+                    onChange={(e) => toggleArea(e.target.checked)}
                     className="h-4 w-4 rounded border"
                     style={{ accentColor: '#0f172a' }}
                   />
@@ -219,13 +221,36 @@ export default function ProyectoCrear() {
                 {form.tiene_area && (
                   <div className="flex items-center gap-3 max-w-xs">
                     <Label className="shrink-0 text-[#64748b]">Área *</Label>
-                    <Select value={form.area_id} onValueChange={set('area_id')}>
+                    <Select value={form.area_id} onValueChange={seleccionarArea}>
                       <SelectTrigger className="flex-1"><SelectValue placeholder="Selecciona" /></SelectTrigger>
                       <SelectContent>{(areas || []).map((a) => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 )}
               </div>
+
+              {/* Categoría de ingreso — filtrada según si es área o no */}
+              {(!form.tiene_area || form.area_id) && (
+                <div className="col-span-2 flex items-start gap-3">
+                  <Label className="w-36 shrink-0 pt-2 text-[#64748b]">Categoría de ingreso</Label>
+                  <div className="flex-1 space-y-1">
+                    <MultiCheckbox
+                      opciones={categoriasFiltradas}
+                      seleccionados={form.categorias_proyecto_ids}
+                      onChange={(ids) => setForm((f) => ({ ...f, categorias_proyecto_ids: ids }))}
+                    />
+                    {form.categorias_proyecto_ids.length > 0 && (
+                      <p className="text-xs text-[#64748b]">{form.categorias_proyecto_ids.length} seleccionada{form.categorias_proyecto_ids.length > 1 ? 's' : ''}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {form.tiene_area && !form.area_id && (
+                <div className="col-span-2 flex items-start gap-3">
+                  <Label className="w-36 shrink-0 pt-2 text-[#64748b]">Categoría de ingreso</Label>
+                  <p className="flex-1 text-sm text-[#94a3b8] pt-2">Seleccioná un área primero</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

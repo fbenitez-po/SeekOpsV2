@@ -34,8 +34,8 @@ export function buildTimeEntryDetail(
         codigo: l.projects.code,
         manager_id: (l.projects as any).manager_id ?? null,
       },
-      categoria_ingreso: l.income_categories
-        ? { id: l.income_category_id!, nombre: l.income_categories.name }
+      categoria_ingreso: l.project_categories
+        ? { id: l.income_category_id!, nombre: l.project_categories.name }
         : null,
       horas: Number(l.hours),
       horas_extra: Number(l.extra_hours),

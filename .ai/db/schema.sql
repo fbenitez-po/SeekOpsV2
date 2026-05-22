@@ -12,21 +12,6 @@ BEGIN;
 
 -- Config / lookup tables ------------------------------------
 
-CREATE TABLE IF NOT EXISTS income_categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code        VARCHAR(50)  NOT NULL UNIQUE,
-  name        VARCHAR(100) NOT NULL,
-  description TEXT,
-  created_at  TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by  VARCHAR(50) NOT NULL DEFAULT 'admin',
-  updated_at  TIMESTAMP,
-  updated_by  VARCHAR(50),
-  deleted_at  TIMESTAMP,
-  deleted_by  VARCHAR(50),
-  is_active   BOOLEAN     NOT NULL DEFAULT true
-);
-CREATE INDEX IF NOT EXISTS idx_income_categories_code ON income_categories(code);
-
 CREATE TABLE IF NOT EXISTS work_categories (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code        VARCHAR(50)  NOT NULL UNIQUE,
@@ -133,19 +118,21 @@ CREATE TABLE IF NOT EXISTS project_segmentation (
 CREATE INDEX IF NOT EXISTS idx_project_segmentation_code ON project_segmentation(code);
 
 CREATE TABLE IF NOT EXISTS project_categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code        VARCHAR(50)  NOT NULL UNIQUE,
-  name        VARCHAR(100) NOT NULL,
-  description TEXT,
-  created_at  TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by  VARCHAR(50) NOT NULL DEFAULT 'admin',
-  updated_at  TIMESTAMP,
-  updated_by  VARCHAR(50),
-  deleted_at  TIMESTAMP,
-  deleted_by  VARCHAR(50),
-  is_active   BOOLEAN     NOT NULL DEFAULT true
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code         VARCHAR(50)  NOT NULL UNIQUE,
+  name         VARCHAR(100) NOT NULL,
+  description  TEXT,
+  is_area_type BOOLEAN     NOT NULL DEFAULT false,
+  created_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+  created_by   VARCHAR(50) NOT NULL DEFAULT 'admin',
+  updated_at   TIMESTAMP,
+  updated_by   VARCHAR(50),
+  deleted_at   TIMESTAMP,
+  deleted_by   VARCHAR(50),
+  is_active    BOOLEAN     NOT NULL DEFAULT true
 );
-CREATE INDEX IF NOT EXISTS idx_project_categories_code ON project_categories(code);
+CREATE INDEX IF NOT EXISTS idx_project_categories_code         ON project_categories(code);
+CREATE INDEX IF NOT EXISTS idx_project_categories_is_area_type ON project_categories(is_area_type);
 
 CREATE TABLE IF NOT EXISTS productivity_layers (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -332,7 +319,7 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
   id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_id      UUID         NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
   project_id         UUID         NOT NULL REFERENCES projects(id),
-  income_category_id UUID         REFERENCES income_categories(id),
+  income_category_id UUID         REFERENCES project_categories(id),
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,

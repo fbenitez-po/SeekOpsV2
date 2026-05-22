@@ -7,15 +7,6 @@
 
 BEGIN;
 
--- income_categories -----------------------------------------
-
-INSERT INTO income_categories (code, name, description) VALUES
-  ('RECLUTAMIENTO', 'Reclutamiento', ''),
-  ('CAPACITACION',  'Capacitación',  ''),
-  ('COMERCIAL',     'Comercial',     ''),
-  ('AREA',          'Área',          ''),
-  ('CULTURA',       'Cultura',       '');
-
 -- work_categories -------------------------------------------
 
 INSERT INTO work_categories (code, name) VALUES
@@ -136,41 +127,44 @@ INSERT INTO project_segmentation (code, name) VALUES
 
 -- project_categories ----------------------------------------
 
-INSERT INTO project_categories (code, name) VALUES
-  ('DESIGN_PARTNERSHIP_SQUAD',    'Design Partnership Squad'),
-  ('DEV_PARTNERSHIP_SQUAD',       'Development Partnership Squad'),
-  ('INVESTIGACION_RETO',          'Investigacion de reto'),
-  ('E_COMMERCE',                  'E - Commerce'),
-  ('GESTION_ESTRATEGIA_MEDIOS',   'Gestion Estrategia de Medios'),
-  ('STAFF_AUG_DEV',               'Staff Augmentation - Development'),
-  ('PAGINA_WEB_CORPORATIVA',      'Pagina Web Corporativa'),
-  ('BOLSA_HORAS_DEV',             'Bolsa de Horas - Development'),
-  ('INTERNO_SEEK',                'Interno - Seek'),
-  ('BOLSA_HORAS_DISENO',          'Bolsa de Horas - Diseño y experiencia'),
-  ('LANDING_PAGE',                'Landing Page'),
-  ('PROD_DIG_DISENO_DEV',         'Producto Digital - Diseño y Desarrollo'),
-  ('PROD_DIG_E2E',                'Producto Digital - End to End'),
-  ('PROD_DIG_INV_DISENO',         'Producto Digital - Investigación y Diseño'),
-  ('MINISITE',                    'Minisite'),
-  ('PROD_DIG_DISENO_PROD',        'Producto Digital - Diseño de Producto'),
-  ('ESTRATEGIA_SEO',              'Estrategia SEO'),
-  ('DISENO_SERVICIO',             'Diseño de Servicio'),
-  ('PROGRAMA_FIDELIZACION',       'Programa Fidelizacion'),
-  ('SERVICIOS_DESARROLLO',        'Servicios de desarrollo'),
-  ('BRANDING_SERVICIOS_DISENO',   'Branding servicios diseño'),
-  ('ESTRATEGIA_DIG_SOCIAL_MEDIA', 'Estrategia Digital - Social Media'),
-  ('BRANDING',                    'Branding'),
-  ('ESTRATEGIA_DIG_TOOLKIT',      'Estrategia Digital - Tool Kit'),
-  ('EVAL_HEURISTICA_UX',          'Evaluacion Heuristica y Auditoría UX'),
-  ('BRANDING_BRAND_BOOK',         'Branding - Brand Book'),
-  ('BRANDING_OTROS',              'Branding - Otros Servicios'),
-  ('ESTRATEGIA_DIG_OTROS',        'Estrategia Digital - Otros'),
-  ('STAFF_AUG_DESIGN',            'Staff Augmentation - Design'),
-  ('DISENO_ESTRATEGICO',          'Diseño estratégico'),
-  ('RECLUTAMIENTO',               'Reclutamiento'),
-  ('CAPACITACION',                'Capacitación'),
-  ('COMERCIAL',                   'Comercial'),
-  ('AREA',                        'Área');
+INSERT INTO project_categories (code, name, is_area_type) VALUES
+  -- Categorías de proyectos normales
+  ('DESIGN_PARTNERSHIP_SQUAD',    'Design Partnership Squad',                false),
+  ('DEV_PARTNERSHIP_SQUAD',       'Development Partnership Squad',           false),
+  ('INVESTIGACION_RETO',          'Investigacion de reto',                   false),
+  ('E_COMMERCE',                  'E - Commerce',                            false),
+  ('GESTION_ESTRATEGIA_MEDIOS',   'Gestion Estrategia de Medios',            false),
+  ('STAFF_AUG_DEV',               'Staff Augmentation - Development',        false),
+  ('PAGINA_WEB_CORPORATIVA',      'Pagina Web Corporativa',                  false),
+  ('BOLSA_HORAS_DEV',             'Bolsa de Horas - Development',            false),
+  ('INTERNO_SEEK',                'Interno - Seek',                          false),
+  ('BOLSA_HORAS_DISENO',          'Bolsa de Horas - Diseño y experiencia',   false),
+  ('LANDING_PAGE',                'Landing Page',                            false),
+  ('PROD_DIG_DISENO_DEV',         'Producto Digital - Diseño y Desarrollo',  false),
+  ('PROD_DIG_E2E',                'Producto Digital - End to End',           false),
+  ('PROD_DIG_INV_DISENO',         'Producto Digital - Investigación y Diseño', false),
+  ('MINISITE',                    'Minisite',                                false),
+  ('PROD_DIG_DISENO_PROD',        'Producto Digital - Diseño de Producto',   false),
+  ('ESTRATEGIA_SEO',              'Estrategia SEO',                          false),
+  ('DISENO_SERVICIO',             'Diseño de Servicio',                      false),
+  ('PROGRAMA_FIDELIZACION',       'Programa Fidelizacion',                   false),
+  ('SERVICIOS_DESARROLLO',        'Servicios de desarrollo',                 false),
+  ('BRANDING_SERVICIOS_DISENO',   'Branding servicios diseño',               false),
+  ('ESTRATEGIA_DIG_SOCIAL_MEDIA', 'Estrategia Digital - Social Media',       false),
+  ('BRANDING',                    'Branding',                                false),
+  ('ESTRATEGIA_DIG_TOOLKIT',      'Estrategia Digital - Tool Kit',           false),
+  ('EVAL_HEURISTICA_UX',          'Evaluacion Heuristica y Auditoría UX',    false),
+  ('BRANDING_BRAND_BOOK',         'Branding - Brand Book',                   false),
+  ('BRANDING_OTROS',              'Branding - Otros Servicios',              false),
+  ('ESTRATEGIA_DIG_OTROS',        'Estrategia Digital - Otros',              false),
+  ('STAFF_AUG_DESIGN',            'Staff Augmentation - Design',             false),
+  ('DISENO_ESTRATEGICO',          'Diseño estratégico',                      false),
+  -- Categorías exclusivas de proyectos de área (is_area_type = true)
+  ('RECLUTAMIENTO',               'Reclutamiento',                           true),
+  ('CAPACITACION',                'Capacitación',                            true),
+  ('COMERCIAL',                   'Comercial',                               true),
+  ('AREA',                        'Área',                                    true),
+  ('CULTURA',                     'Cultura',                                 true);
 
 -- productivity_layers ---------------------------------------
 
@@ -201,7 +195,7 @@ BEGIN
     is_active, is_staff, is_superuser
   ) VALUES (
     'admin@seekglobal.co',
-    '$2a$10$k7CkE/Pwe48IjA.zsQdfAOUJRImHuxUsqXjx318MM9y79wVxxxJeC',
+    '$2a$10$E/FBFGB/8CqiwL/uzj.QD.wihbnWYehEEhEJrKZB/RWzAiqUL0Twu',
     'Admin', 'Seekops', '00000001', 'Administrador del Sistema',
     v_team_id, '2024-01-01', true, true, true
   );
