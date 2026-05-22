@@ -38,7 +38,7 @@ const entryIncludes = {
   users: { select: { id: true, first_name: true, last_name: true } },
   time_entry_lines: {
     include: {
-      projects: { select: { id: true, name: true, code: true } },
+      projects: { select: { id: true, name: true, code: true, manager_id: true } },
       income_categories: { select: { id: true, name: true } },
     },
   },
