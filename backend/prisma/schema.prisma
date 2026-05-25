@@ -176,7 +176,6 @@ model hour_projections {
   @@index([work_category_id], map: "idx_hour_projections_work_category_id")
 }
 
-
 model password_reset_tokens {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id    String   @unique @db.Uuid
@@ -468,7 +467,8 @@ model teams {
 model time_entries {
   id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id              String                 @db.Uuid
-  week                 String                 @db.VarChar(10)
+  week_start_date      DateTime               @db.Date
+  week_end_date        DateTime               @db.Date
   status               String                 @default("PENDIENTE") @db.VarChar(50)
   created_at           DateTime               @default(now()) @db.Timestamp(6)
   created_by           String                 @default("admin") @db.VarChar(50)
@@ -481,10 +481,11 @@ model time_entries {
   time_entry_approvals time_entry_approvals[]
   time_entry_lines     time_entry_lines[]
 
+  @@unique([user_id, week_start_date], map: "uq_time_entries_user_week_start")
   @@index([status], map: "idx_time_entries_status")
   @@index([user_id], map: "idx_time_entries_user_id")
-  @@index([user_id, week], map: "idx_time_entries_user_week")
-  @@index([week], map: "idx_time_entries_week")
+  @@index([user_id, week_start_date], map: "idx_time_entries_user_week_start")
+  @@index([week_start_date], map: "idx_time_entries_week_start")
 }
 
 model time_entry_approvals {
@@ -511,9 +512,9 @@ model time_entry_approvals {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model time_entry_lines {
-  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  time_entry_id      String             @db.Uuid
-  project_id         String             @db.Uuid
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  time_entry_id      String              @db.Uuid
+  project_id         String              @db.Uuid
   income_category_id String?             @db.Uuid
   hours              Decimal             @db.Decimal(6, 1)
   extra_hours        Decimal             @default(0) @db.Decimal(4, 1)
@@ -530,7 +531,7 @@ model time_entry_lines {
   is_active          Boolean             @default(true)
   project_categories project_categories? @relation(fields: [income_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   projects           projects            @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  time_entries       time_entries       @relation(fields: [time_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  time_entries       time_entries        @relation(fields: [time_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([project_id], map: "idx_time_entry_lines_project_id")
   @@index([status], map: "idx_time_entry_lines_status")

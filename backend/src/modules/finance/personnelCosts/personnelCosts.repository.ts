@@ -34,16 +34,8 @@ const horasUsadasFragment = Prisma.raw(`
     WHERE te.user_id = c.user_id
       AND tel.status IN ('APROBADO', 'APROBADO_CON_OBSERVACION')
       AND tel.is_active = true
-      AND EXTRACT(YEAR FROM to_date(
-        (2000 + right(te.week, 2)::int)::text ||
-        lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-        'IYYYIW'
-      )) = pe.year
-      AND EXTRACT(MONTH FROM to_date(
-        (2000 + right(te.week, 2)::int)::text ||
-        lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-        'IYYYIW'
-      )) = pe.month
+      AND EXTRACT(YEAR FROM te.week_start_date) = pe.year
+      AND EXTRACT(MONTH FROM te.week_start_date) = pe.month
   ), 0)
 `);
 

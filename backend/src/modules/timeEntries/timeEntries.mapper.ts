@@ -18,7 +18,8 @@ export function buildTimeEntryDetail(
 
   return {
     id: entry.id,
-    semana: entry.week,
+    semana_inicio: entry.week_start_date.toISOString().slice(0, 10),
+    semana_fin: entry.week_end_date.toISOString().slice(0, 10),
     estado: entry.status,
     fecha_carga: entry.created_at,
     usuario: {

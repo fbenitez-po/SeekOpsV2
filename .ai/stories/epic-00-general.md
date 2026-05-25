@@ -73,7 +73,7 @@ Como Seeker, quiero ver mi home con un resumen completo de mi estado de horas, p
 ### Criterios de aceptación
 
 **Sección 1: Semanas Pendientes de Carga**
-- **Given** soy Seeker y tengo semanas sin cargar **When** entro al home **Then** veo badges con "S15/24", "S16/24", etc. (semanas pendientes)
+- **Given** soy Seeker y tengo semanas sin cargar **When** entro al home **Then** veo badges con el rango de cada semana pendiente (ej: "Lun 11 al Dom 17 may 2026")
 - **Given** hago clic en un badge de semana pendiente **Then** se desplaza a la sección de carga y pre-selecciona esa semana
 
 **Sección 2: Horas Observadas o con Accionables**
@@ -82,7 +82,7 @@ Como Seeker, quiero ver mi home con un resumen completo de mi estado de horas, p
 - **Given** no tengo cargas observadas **Then** muestro "Ninguna" (gris, con ícono checkmark)
 
 **Sección 3: Histórico Últimas 3 Semanas**
-- **Given** tengo carga registradas **When** veo el histórico **Then** muestro las últimas 3 semanas con estado (S14/24 - 40h ✓ Aprobado | S13/24 - 35h 🔍 Observado | etc)
+- **Given** tengo carga registradas **When** veo el histórico **Then** muestro las últimas 3 semanas con estado (ej: "Lun 4 al Dom 10 may 2026 - 40h ✓ Aprobado | Lun 27 abr al Dom 3 may 2026 - 35h 🔍 Observado | etc")
 - **Given** hago clic en una línea del histórico **Then** puedo ver detalles de esa carga (modal opcional)
 
 **Sección 4: Acciones Rápidas**

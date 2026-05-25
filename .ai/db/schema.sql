@@ -298,22 +298,24 @@ CREATE INDEX IF NOT EXISTS idx_project_user_is_active  ON project_user(is_active
 -- Transactional tables --------------------------------------
 
 CREATE TABLE IF NOT EXISTS time_entries (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  week       VARCHAR(10) NOT NULL,
-  status     VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
-  created_at TIMESTAMP   NOT NULL DEFAULT NOW(),
-  created_by VARCHAR(50) NOT NULL DEFAULT 'admin',
-  updated_at TIMESTAMP,
-  updated_by VARCHAR(50),
-  deleted_at TIMESTAMP,
-  deleted_by VARCHAR(50),
-  is_active  BOOLEAN     NOT NULL DEFAULT true
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  week_start_date DATE NOT NULL,                  -- lunes de la semana (Lun–Dom)
+  week_end_date   DATE NOT NULL,                  -- domingo = week_start_date + 6
+  status          VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
+  created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+  created_by      VARCHAR(50) NOT NULL DEFAULT 'admin',
+  updated_at      TIMESTAMP,
+  updated_by      VARCHAR(50),
+  deleted_at      TIMESTAMP,
+  deleted_by      VARCHAR(50),
+  is_active       BOOLEAN     NOT NULL DEFAULT true,
+  UNIQUE (user_id, week_start_date)
 );
-CREATE INDEX IF NOT EXISTS idx_time_entries_user_id   ON time_entries(user_id);
-CREATE INDEX IF NOT EXISTS idx_time_entries_week      ON time_entries(week);
-CREATE INDEX IF NOT EXISTS idx_time_entries_status    ON time_entries(status);
-CREATE INDEX IF NOT EXISTS idx_time_entries_user_week ON time_entries(user_id, week);
+CREATE INDEX IF NOT EXISTS idx_time_entries_user_id         ON time_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_time_entries_week_start      ON time_entries(week_start_date);
+CREATE INDEX IF NOT EXISTS idx_time_entries_status          ON time_entries(status);
+CREATE INDEX IF NOT EXISTS idx_time_entries_user_week_start ON time_entries(user_id, week_start_date);
 
 CREATE TABLE IF NOT EXISTS time_entry_lines (
   id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),

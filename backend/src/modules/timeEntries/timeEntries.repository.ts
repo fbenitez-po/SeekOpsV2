@@ -31,7 +31,7 @@ export interface SeekerLoadRow {
   email: string;
   fecha_ingreso: Date | null;
   mis_proyectos: { id: string; nombre: string }[];
-  entradas: { semana: string; en_mis_proyectos: boolean; proyectos_otros: string[] | null }[];
+  entradas: { semana_inicio: string; en_mis_proyectos: boolean; proyectos_otros: string[] | null }[];
 }
 
 const entryIncludes = {
@@ -60,7 +60,7 @@ export function computeWeekRollup(lines: { status: string; is_active: boolean }[
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export async function findAll(
-  filters: { estado?: string; semana?: string; usuario_id?: string; proyecto_id?: string },
+  filters: { estado?: string; semana_inicio?: string; usuario_id?: string; proyecto_id?: string },
   userId: string,
   roles: string[],
   limit: number,
@@ -104,7 +104,7 @@ export async function findAll(
     }
   }
 
-  if (filters.semana) where.week = filters.semana;
+  if (filters.semana_inicio) where.week_start_date = new Date(`${filters.semana_inicio}T00:00:00Z`);
   if (filters.proyecto_id) {
     where.time_entry_lines = { some: { project_id: filters.proyecto_id } };
   }
@@ -181,19 +181,19 @@ export async function isUserAssignedToProject(userId: string, projectId: string)
 }
 
 /**
- * Returns existing line for (userId, week, projectId, categoryId) that is active and NOT rejected.
+ * Returns existing line for (userId, weekStart, projectId, categoryId) that is active and NOT rejected.
  * For area projects (categoryId != null), uniqueness is per (project, category).
  * For non-area projects (categoryId = null), uniqueness is per project only.
  * If only rejected lines exist, returns null (re-load allowed).
  */
 export async function findExistingLineForProject(
   userId: string,
-  week: string,
+  weekStart: Date,
   projectId: string,
   categoryId: string | null,
 ): Promise<{ id: string; status: string } | null> {
   const entry = await prisma.time_entries.findFirst({
-    where: { user_id: userId, week },
+    where: { user_id: userId, week_start_date: weekStart },
     select: { id: true },
   });
   if (!entry) return null;
@@ -214,10 +214,11 @@ export async function findExistingLineForProject(
 export async function findOrCreateEntry(
   userId: string,
   email: string | null,
-  week: string,
+  weekStart: Date,
+  weekEnd: Date,
 ): Promise<string> {
   const existing = await prisma.time_entries.findFirst({
-    where: { user_id: userId, week },
+    where: { user_id: userId, week_start_date: weekStart },
     select: { id: true },
   });
   if (existing) return existing.id;
@@ -225,7 +226,8 @@ export async function findOrCreateEntry(
   const created = await prisma.time_entries.create({
     data: {
       user_id: userId,
-      week,
+      week_start_date: weekStart,
+      week_end_date: weekEnd,
       status: 'PENDIENTE',
       created_by: email ?? 'admin',
       updated_by: email,
@@ -239,11 +241,12 @@ export async function create(
   params: {
     userId: string;
     email: string | null;
-    week: string;
+    weekStart: Date;
+    weekEnd: Date;
     lineas: CreateTimeEntryInput['lineas'];
   },
 ): Promise<EntryWithRelations> {
-  const entryId = await findOrCreateEntry(params.userId, params.email, params.week);
+  const entryId = await findOrCreateEntry(params.userId, params.email, params.weekStart, params.weekEnd);
 
   await prisma.time_entry_lines.createMany({
     data: params.lineas.map((l) => ({
@@ -366,10 +369,10 @@ export async function getUserHireDate(userId: string): Promise<Date | null> {
 export async function findLoadedWeeks(userId: string): Promise<string[]> {
   const rows = await prisma.time_entries.findMany({
     where: { user_id: userId },
-    select: { week: true },
-    distinct: ['week'],
+    select: { week_start_date: true },
+    distinct: ['week_start_date'],
   });
-  return rows.map((r) => r.week);
+  return rows.map((r) => r.week_start_date.toISOString().slice(0, 10));
 }
 
 export async function findSeekersWithLoadData(managerId: string): Promise<SeekerLoadRow[]> {
@@ -393,7 +396,7 @@ export async function findSeekersWithLoadData(managerId: string): Promise<Seeker
       COALESCE(
         json_agg(
           json_build_object(
-            'semana', te.week,
+            'semana_inicio', te.week_start_date,
             'en_mis_proyectos', EXISTS(
               SELECT 1 FROM time_entry_lines tel
               JOIN projects p2 ON p2.id = tel.project_id

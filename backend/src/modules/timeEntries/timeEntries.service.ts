@@ -14,20 +14,25 @@ import type {
 
 import { sendHoursReminder } from '../../shared/services/email.service';
 
-function calcularCodigoSemana(fecha: Date): string {
-  const inicio = new Date(fecha.getFullYear(), 0, 1);
-  const dias = Math.floor((fecha.getTime() - inicio.getTime()) / 86400000);
-  const semana = Math.ceil((dias + inicio.getDay() + 1) / 7);
-  const anio = String(fecha.getFullYear()).slice(-2);
-  return `S${String(semana).padStart(2, '0')}/${anio}`;
+const MS_DAY = 86400000;
+
+// Lunes (00:00 UTC) de la semana que contiene `fecha`. Semana = Lun–Dom.
+function lunesDeSemanaDe(fecha: Date): Date {
+  const d = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()));
+  const dow = d.getUTCDay(); // 0=Dom..6=Sáb
+  const offset = dow === 0 ? -6 : 1 - dow;
+  d.setUTCDate(d.getUTCDate() + offset);
+  return d;
 }
 
-function domingoDeSemanaDe(fecha: Date): Date {
-  const d = new Date(fecha);
-  d.setHours(0, 0, 0, 0);
-  const dia = d.getDay();
-  if (dia !== 0) d.setDate(d.getDate() + (7 - dia));
-  return d;
+function sumarDias(fecha: Date, dias: number): Date {
+  const r = new Date(fecha);
+  r.setUTCDate(r.getUTCDate() + dias);
+  return r;
+}
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10);
 }
 
 export async function list(
@@ -41,7 +46,7 @@ export async function list(
   const { entries, total } = await repo.findAll(
     {
       estado: filters['estado'],
-      semana: filters['semana'],
+      semana_inicio: filters['semana_inicio'],
       usuario_id: filters['usuario_id'],
       proyecto_id: filters['proyecto_id'],
     },
@@ -88,20 +93,24 @@ export async function create(body: CreateTimeEntryInput, userId: string, email: 
     throw new ValidationError('No se puede repetir la misma combinación de proyecto y categoría en una carga');
   }
 
+  const weekStart = new Date(`${body.semana_inicio}T00:00:00Z`);
+  const weekEnd = new Date(`${body.semana_fin}T00:00:00Z`);
+  const rangoLabel = `${body.semana_inicio} al ${body.semana_fin}`;
+
   for (const linea of body.lineas) {
     const assigned = await repo.isUserAssignedToProject(userId, linea.proyecto_id);
     if (!assigned) throw new ForbiddenError('No tenés acceso al proyecto indicado');
 
     // Check per-project uniqueness: block if active non-rejected line already exists
-    const existing = await repo.findExistingLineForProject(userId, body.semana, linea.proyecto_id, linea.categoria_ingreso_id ?? null);
+    const existing = await repo.findExistingLineForProject(userId, weekStart, linea.proyecto_id, linea.categoria_ingreso_id ?? null);
     if (existing) {
       throw new ValidationError(
-        `Ya existe una carga activa (${existing.status}) para la semana ${body.semana} en ese proyecto`,
+        `Ya existe una carga activa (${existing.status}) para la semana ${rangoLabel} en ese proyecto`,
       );
     }
   }
 
-  const entry = await repo.create({ userId, email, week: body.semana, lineas: body.lineas });
+  const entry = await repo.create({ userId, email, weekStart, weekEnd, lineas: body.lineas });
   return mapper.buildTimeEntryDetail(entry, [], userId, []);
 }
 
@@ -199,16 +208,17 @@ export async function getMissingWeeks(userId: string) {
   if (!hireDate) return { semanas: [], total: 0 };
 
   const loaded = new Set(loadedWeeks);
-  const domingoUltimaSemanaCompleta = domingoDeSemanaDe(new Date());
-  domingoUltimaSemanaCompleta.setDate(domingoUltimaSemanaCompleta.getDate() - 7);
+  const lunesUltimaSemanaCompleta = sumarDias(lunesDeSemanaDe(new Date()), -7);
 
-  const cursor = domingoDeSemanaDe(new Date(hireDate));
-  const missing: string[] = [];
+  const cursor = lunesDeSemanaDe(new Date(hireDate));
+  const missing: { semana_inicio: string; semana_fin: string }[] = [];
 
-  while (cursor <= domingoUltimaSemanaCompleta) {
-    const code = calcularCodigoSemana(cursor);
-    if (!loaded.has(code)) missing.push(code);
-    cursor.setDate(cursor.getDate() + 7);
+  while (cursor <= lunesUltimaSemanaCompleta) {
+    const inicio = toISODate(cursor);
+    if (!loaded.has(inicio)) {
+      missing.push({ semana_inicio: inicio, semana_fin: toISODate(sumarDias(cursor, 6)) });
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 7);
   }
 
   return { semanas: missing, total: missing.length };
@@ -221,10 +231,8 @@ export async function getSeekersWithMissingLoad(userId: string, roles: string[])
 
   const seekers = await repo.findSeekersWithLoadData(userId);
 
-  const hoy = new Date();
-  const domingoUltimaSemanaCompleta = domingoDeSemanaDe(hoy);
-  domingoUltimaSemanaCompleta.setDate(domingoUltimaSemanaCompleta.getDate() - 7);
-  const ultimaSemana = calcularCodigoSemana(domingoUltimaSemanaCompleta);
+  const lunesUltimaSemanaCompleta = sumarDias(lunesDeSemanaDe(new Date()), -7);
+  const ultimaSemanaInicio = toISODate(lunesUltimaSemanaCompleta);
 
   const resultado = [];
 
@@ -233,20 +241,20 @@ export async function getSeekersWithMissingLoad(userId: string, roles: string[])
 
     const entradas = Array.isArray(seeker.entradas) ? seeker.entradas : [];
     const semanasConCargaMisProyectos = new Set(
-      entradas.filter((e) => e.en_mis_proyectos).map((e) => e.semana),
+      entradas.filter((e) => e.en_mis_proyectos).map((e) => e.semana_inicio),
     );
 
-    const cursor = domingoDeSemanaDe(new Date(seeker.fecha_ingreso));
+    const cursor = lunesDeSemanaDe(new Date(seeker.fecha_ingreso));
     let cantSemanasSinCarga = 0;
-    while (cursor <= domingoUltimaSemanaCompleta) {
-      const codigo = calcularCodigoSemana(cursor);
-      if (!semanasConCargaMisProyectos.has(codigo)) cantSemanasSinCarga++;
-      cursor.setDate(cursor.getDate() + 7);
+    while (cursor <= lunesUltimaSemanaCompleta) {
+      const inicio = toISODate(cursor);
+      if (!semanasConCargaMisProyectos.has(inicio)) cantSemanasSinCarga++;
+      cursor.setUTCDate(cursor.getUTCDate() + 7);
     }
 
     if (cantSemanasSinCarga === 0) continue;
 
-    const entradaUltimaSemana = entradas.find((e) => e.semana === ultimaSemana);
+    const entradaUltimaSemana = entradas.find((e) => e.semana_inicio === ultimaSemanaInicio);
     const severidad = entradaUltimaSemana ? 'ADVERTENCIA' : 'CRITICO';
 
     const conteoOtros: Record<string, number> = {};
@@ -262,7 +270,7 @@ export async function getSeekersWithMissingLoad(userId: string, roles: string[])
     resultado.push({
       usuario: { id: seeker.user_id, nombres: seeker.nombres, apellidos: seeker.apellidos },
       semanas_sin_carga: cantSemanasSinCarga,
-      ultima_semana: ultimaSemana,
+      ultima_semana_inicio: ultimaSemanaInicio,
       severidad,
       proyectos_pendientes: Array.isArray(seeker.mis_proyectos) ? seeker.mis_proyectos : [],
       proyectos_otros: proyectosOtros,

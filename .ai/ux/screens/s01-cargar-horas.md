@@ -18,7 +18,7 @@
 │                                                      │
 │ SELECTOR DE SEMANA                                   │
 │ ┌────────────────────────────────────────────────┐   │
-│ │ Semana: [←] S15/24 (semana actual) [→]         │   │
+│ │ Semana: [←] Lun 18 al Dom 24 may 2026 [→]      │   │
 │ │ (navegación con flechas, cambios en tiempo real)│   │
 │ └────────────────────────────────────────────────┘   │
 │                                                      │
@@ -49,12 +49,12 @@
 ## Detalles de campos
 
 ### Semana
-- **Componente:** Botones [←] + Display "S15/24" + Botones [→]
+- **Componente:** Botones [←] + Display del rango de fechas + Botones [→]
 - **Default:** Semana actual (al ingresar a la página)
 - **Rango:** Cualquier semana (sin límite retroactivo)
 - **Navegación:** Cambio en tiempo real, actualiza semana disponible
-- **Formato código:** "SAAS/YY" (ej: S15/24 = semana 15 de 2024)
-- **Rango de días:** Lunes a domingo (ej: "Lun 20 al Dom 26 abr 2026")
+- **Display:** Solo el rango de días, lunes a domingo (ej: "Lun 20 al Dom 26 abr 2026"). Sin código de semana.
+- **Payload:** `semana_inicio` (lunes) y `semana_fin` (domingo) en formato ISO `YYYY-MM-DD`.
 
 ### Tabla de Proyectos
 **Proyecto (Dropdown, requerido):**

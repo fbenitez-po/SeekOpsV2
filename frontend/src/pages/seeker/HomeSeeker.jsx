@@ -6,7 +6,7 @@ import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { ESTADO_LABELS, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
+import { ESTADO_LABELS, rangoSemana } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
@@ -42,7 +42,7 @@ function TarjetaEntrada({ entrada, onRecargar }) {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium leading-snug truncate">
-            {formatearRangoDeSemana(semanaADomingo(entrada.semana)) || entrada.semana}
+            {rangoSemana(entrada.semana_inicio)}
           </p>
           <p className="text-xs text-muted-foreground">
             {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
@@ -62,7 +62,7 @@ function TarjetaEntrada({ entrada, onRecargar }) {
               </Badge>
               {g.estado === 'RECHAZADO' && onRecargar && (
                 <button
-                  onClick={() => onRecargar(entrada.semana, g.id)}
+                  onClick={() => onRecargar(entrada.semana_inicio, g.id)}
                   className="text-xs text-destructive underline underline-offset-2 hover:text-destructive/80"
                 >
                   Re-cargar
@@ -104,8 +104,8 @@ export default function HomeSeeker() {
     queryFn: () => timeEntryApi.listar({ limit: 3 }).then((r) => r.data),
   });
 
-  function handleRecargar(semana, proyectoId) {
-    navigate('/seeker/cargar', { state: { semana, proyectoId } });
+  function handleRecargar(semanaInicio, proyectoId) {
+    navigate('/seeker/cargar', { state: { semanaInicio, proyectoId } });
   }
 
   return (
@@ -140,13 +140,9 @@ export default function HomeSeeker() {
                     {semanasSinCarga.total} semana{semanasSinCarga.total > 1 ? 's' : ''} pendiente{semanasSinCarga.total > 1 ? 's' : ''}
                   </p>
                   <ul className="space-y-1">
-                    {semanasSinCarga.semanas.slice(0, 2).map((semana) => {
-                      const domingo = semanaADomingo(semana);
-                      const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
-                      return (
-                        <li key={semana} className="text-xs text-muted-foreground">· {rango}</li>
-                      );
-                    })}
+                    {semanasSinCarga.semanas.slice(0, 2).map((s) => (
+                      <li key={s.semana_inicio} className="text-xs text-muted-foreground">· {rangoSemana(s.semana_inicio)}</li>
+                    ))}
                     {semanasSinCarga.total > 2 && (
                       <li className="text-xs text-muted-foreground">
                         · y {semanasSinCarga.total - 2} semana{semanasSinCarga.total - 2 > 1 ? 's' : ''} más

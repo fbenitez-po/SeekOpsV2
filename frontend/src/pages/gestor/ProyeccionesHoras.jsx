@@ -5,6 +5,7 @@ import { projectionApi, projectApi, configApi } from '../../services/api';
 import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { rangoSemana } from '../../lib/utils';
 
 function seekerVacio() {
   return { id: crypto.randomUUID(), user_id: '', fecha_inicio: '', fecha_fin: '', horas_proyectadas: '', work_category_id: '', expandido: true };
@@ -446,7 +447,7 @@ export default function ProyeccionesHoras() {
                           {a.usuario_nombres} {a.usuario_apellidos}
                         </td>
                         <td className="px-4 py-2.5 text-amber-800">{a.proyecto_nombre}</td>
-                        <td className="px-4 py-2.5 text-amber-700">{a.semana}</td>
+                        <td className="px-4 py-2.5 text-amber-700">{rangoSemana(a.semana_inicio)}</td>
                         <td className="px-4 py-2.5 text-right font-semibold text-amber-900">{a.horas_cargadas}h</td>
                       </tr>
                     ))}

@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
-import { ESTADO_LABELS, formatearFecha } from '../../lib/utils';
+import { ESTADO_LABELS, formatearFecha, rangoSemana } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
@@ -35,7 +35,7 @@ function ModalAccion({ tipo, solicitud, onCerrar, onConfirmar }) {
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">{tipo === 'observar' ? 'Observar' : 'Rechazar'} horas</h2>
         <p className="text-sm text-muted-foreground">
-          {solicitud.nombres} {solicitud.apellidos} — {solicitud.semana} — {solicitud.proyecto_nombre}
+          {solicitud.nombres} {solicitud.apellidos} — {rangoSemana(solicitud.semana_inicio)} — {solicitud.proyecto_nombre}
         </p>
         <div className="space-y-2">
           <Label>{tipo === 'observar' ? 'Comentario de observación *' : 'Razón del rechazo *'}</Label>
@@ -104,7 +104,7 @@ export default function TodasLasHoras() {
           proyecto_nombre: g.proyecto.nombre,
           nombres: e.usuario.nombres,
           apellidos: e.usuario.apellidos,
-          semana: e.semana,
+          semana_inicio: e.semana_inicio,
           fecha_carga: e.fecha_carga,
           horas: g.lineas.reduce((s, l) => s + l.horas, 0),
           horas_extra: g.lineas.reduce((s, l) => s + l.horas_extra, 0),
@@ -160,7 +160,7 @@ export default function TodasLasHoras() {
                   {solicitudes.map((s) => (
                     <tr key={`${s.entrada_id}-${s.proyecto_id}`} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">{s.nombres} {s.apellidos}</td>
-                      <td className="px-4 py-3">{s.semana}</td>
+                      <td className="px-4 py-3">{rangoSemana(s.semana_inicio)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{s.proyecto_nombre}</td>
                       <td className="px-4 py-3">{s.horas}h{s.horas_extra > 0 ? ` + ${s.horas_extra}h ext.` : ''}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatearFecha(s.fecha_carga)}</td>

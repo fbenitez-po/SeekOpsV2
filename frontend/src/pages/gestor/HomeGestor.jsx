@@ -7,7 +7,7 @@ import Layout from '../../components/layout/Layout';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { ESTADO_LABELS, formatearFecha, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
+import { ESTADO_LABELS, formatearFecha, rangoSemana } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
@@ -31,7 +31,7 @@ function TarjetaEntradaPropia({ entrada, onClick }) {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium leading-snug truncate">
-            {formatearRangoDeSemana(semanaADomingo(entrada.semana)) || entrada.semana}
+            {rangoSemana(entrada.semana_inicio)}
           </p>
           <p className="text-xs text-muted-foreground truncate">
             {proyectosUnicos.length > 0 ? proyectosUnicos.join(' · ') + ' · ' : ''}
@@ -200,13 +200,9 @@ export default function HomeGestor() {
                         {semanasSinCarga.total} semana{semanasSinCarga.total > 1 ? 's' : ''} pendiente{semanasSinCarga.total > 1 ? 's' : ''}
                       </p>
                       <ul className="space-y-1">
-                        {semanasSinCarga.semanas.slice(0, 2).map((semana) => {
-                          const domingo = semanaADomingo(semana);
-                          const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
-                          return (
-                            <li key={semana} className="text-xs text-muted-foreground">· {rango}</li>
-                          );
-                        })}
+                        {semanasSinCarga.semanas.slice(0, 2).map((s) => (
+                          <li key={s.semana_inicio} className="text-xs text-muted-foreground">· {rangoSemana(s.semana_inicio)}</li>
+                        ))}
                         {semanasSinCarga.total > 2 && (
                           <li className="text-xs text-muted-foreground">
                             · y {semanasSinCarga.total - 2} semana{semanasSinCarga.total - 2 > 1 ? 's' : ''} más

@@ -11,7 +11,7 @@ Como Seeker, quiero registrar mis horas trabajadas en un proyecto para una seman
 ### Criterios de aceptación
 
 **Selector de Semana:**
-- **Given** estoy en formulario de carga **When** veo selector **Then** tengo botones [← semana →] con código "SAAS/YY" (ej: S15/24) y rango "Lun X al Dom Y mes año"
+- **Given** estoy en formulario de carga **When** veo selector **Then** tengo botones [← semana →] con el rango de fechas "Lun X al Dom Y mes año" (sin código de semana)
 - **Given** cambio de semana **When** presiono [← ó →] **Then** actualiza semana y lista de proyectos disponibles
 - **Given** es mi primera carga **When** ingreso al formulario **Then** pre-selecciona semana actual (lunes a domingo de la semana en curso)
 

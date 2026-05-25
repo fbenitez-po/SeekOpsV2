@@ -265,7 +265,7 @@ Authorization: Bearer <access_token>
 **Query params:**
 | Param | Tipo | Requerido | Default | Descripción |
 |-------|------|-----------|---------|-------------|
-| semana | string | No | — | Filtro semana ej: "S15/26" |
+| semana_inicio | string | No | — | Filtro por inicio de semana (lunes), ISO `YYYY-MM-DD` |
 | estado | string | No | — | PENDIENTE, APROBADO, OBSERVADO, RECHAZADO |
 | usuario_id | uuid | No | — | Solo Admin/Gestor |
 | proyecto_id | uuid | No | — | Filtrar por proyecto |
@@ -278,7 +278,8 @@ Authorization: Bearer <access_token>
   "data": [
     {
       "id": "uuid",
-      "semana": "S15/26",
+      "semana_inicio": "2026-05-18",
+      "semana_fin": "2026-05-24",
       "estado": "PENDIENTE",
       "fecha_carga": "2026-04-23T14:30:00Z",
       "usuario": {
@@ -341,7 +342,8 @@ Content-Type: application/json
 **Body:**
 ```json
 {
-  "semana": "S15/26",
+  "semana_inicio": "2026-05-18",
+  "semana_fin": "2026-05-24",
   "lineas": [
     {
       "proyecto_id": "uuid",
@@ -359,7 +361,8 @@ Content-Type: application/json
 {
   "id": "uuid",
   "usuario_id": "uuid",
-  "semana": "S15/26",
+  "semana_inicio": "2026-05-18",
+  "semana_fin": "2026-05-24",
   "estado": "PENDIENTE",
   "fecha_carga": "2026-04-23T14:30:00Z",
   "lineas": [
@@ -389,7 +392,7 @@ Content-Type: application/json
 
 **400 — Semana ya cargada:**
 ```json
-{ "error": "Ya existe un registro para la semana S15/26 en estado PENDIENTE o APROBADO" }
+{ "error": "Ya existe una carga activa (PENDIENTE) para la semana 2026-05-18 al 2026-05-24 en ese proyecto" }
 ```
 
 **403 — Proyecto no asignado:**
@@ -480,7 +483,8 @@ Content-Type: application/json
 ```json
 {
   "id": "uuid",
-  "semana": "S15/26",
+  "semana_inicio": "2026-05-18",
+  "semana_fin": "2026-05-24",
   "estado": "PENDIENTE",
   "lineas": [
     {

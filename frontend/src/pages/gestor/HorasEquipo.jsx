@@ -9,7 +9,7 @@ import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { formatearFecha, ESTADO_LABELS } from '../../lib/utils';
+import { formatearFecha, ESTADO_LABELS, rangoSemana } from '../../lib/utils';
 import useAuthStore from '../../store/authStore';
 
 const VARIANTE_ESTADO = {
@@ -36,7 +36,7 @@ function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
       <div className="w-full max-w-lg rounded-lg bg-card p-6 shadow-lg space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">Aprobar con observación</h2>
         <p className="text-sm text-muted-foreground">
-          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {solicitud.semana} — {solicitud.proyecto_nombre}
+          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {rangoSemana(solicitud.semana_inicio)} — {solicitud.proyecto_nombre}
         </p>
 
         <div className="space-y-2">
@@ -120,7 +120,7 @@ function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-4">
         <h2 className="text-lg font-semibold">Rechazar horas</h2>
         <p className="text-sm text-muted-foreground">
-          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {solicitud.semana} — {solicitud.proyecto_nombre}
+          {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {rangoSemana(solicitud.semana_inicio)} — {solicitud.proyecto_nombre}
         </p>
 
         <div className="space-y-2">
@@ -169,7 +169,7 @@ function buildSolicitudes(entries, gestorId) {
 
       solicitudes.push({
         id: entrada.id,
-        semana: entrada.semana,
+        semana_inicio: entrada.semana_inicio,
         fecha_carga: entrada.fecha_carga,
         usuario: entrada.usuario,
         proyecto_id: linea.proyecto.id,
@@ -361,7 +361,7 @@ export default function HorasEquipo() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {sol.semana} · {sol.total_horas}h normales
+                          {rangoSemana(sol.semana_inicio)} · {sol.total_horas}h normales
                           {sol.total_extras > 0 ? ` · ${sol.total_extras}h extras` : ''}
                         </p>
                         <p className="text-xs text-muted-foreground">{formatearFecha(sol.fecha_carga)}</p>

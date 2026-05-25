@@ -5,12 +5,35 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export function formatearSemana(fecha = new Date()) {
-  const inicio = new Date(fecha.getFullYear(), 0, 1);
-  const dias = Math.floor((fecha - inicio) / 86400000);
-  const semana = Math.ceil((dias + inicio.getDay() + 1) / 7);
-  const anio = String(fecha.getFullYear()).slice(-2);
-  return `S${String(semana).padStart(2, '0')}/${anio}`;
+// Parsea 'YYYY-MM-DD' como fecha a medianoche local (evita el corrimiento de día por UTC).
+export function parsearFechaISO(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+// 'YYYY-MM-DD' a partir de una fecha (en términos locales).
+export function aISODateLocal(fecha) {
+  const y = fecha.getFullYear();
+  const m = String(fecha.getMonth() + 1).padStart(2, '0');
+  const d = String(fecha.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// Dado el inicio de semana (lunes, ISO) retorna el domingo (Date) para los helpers de display.
+export function inicioADomingo(inicioISO) {
+  const lunes = parsearFechaISO(inicioISO);
+  if (!lunes) return null;
+  const domingo = new Date(lunes);
+  domingo.setDate(lunes.getDate() + 6);
+  return domingo;
+}
+
+// Etiqueta de display de una semana a partir de su inicio (lunes, ISO): "Lun 18 al Dom 24 may 2026".
+export function rangoSemana(inicioISO) {
+  const domingo = inicioADomingo(inicioISO);
+  return domingo ? formatearRangoDeSemana(domingo) : (inicioISO ?? '');
 }
 
 // Retorna el domingo de la semana actual (Lun-Dom).
@@ -117,16 +140,6 @@ export function formatearFechaHora(isoString) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-export function semanaADomingo(semana) {
-  const match = semana?.match(/^S(\d+)\/(\d+)$/);
-  if (!match) return null;
-  const nSemana = parseInt(match[1]);
-  const anio = 2000 + parseInt(match[2]);
-  const enero1 = new Date(anio, 0, 1);
-  const diasOffset = (nSemana - 1) * 7 - enero1.getDay();
-  return new Date(anio, 0, 1 + diasOffset);
 }
 
 export const ESTADO_LABELS = {

@@ -4,7 +4,8 @@ import type { CreateProjectionInput, UpdateProjectionInput } from './projections
 
 export interface AlertRow {
   time_entry_id: string;
-  semana: string;
+  semana_inicio: Date;
+  semana_fin: Date;
   estado: string;
   fecha_carga: Date;
   usuario_id: string;
@@ -100,16 +101,17 @@ export async function findAlerts(userId: string, roles: string[]): Promise<Alert
   if (roles.includes('ADMIN')) {
     return prisma.$queryRaw<AlertRow[]>`
       SELECT
-        te.id           AS time_entry_id,
-        te.week         AS semana,
-        te.status       AS estado,
-        te.created_at   AS fecha_carga,
-        u.id            AS usuario_id,
-        u.first_name    AS usuario_nombres,
-        u.last_name     AS usuario_apellidos,
-        p.id            AS proyecto_id,
-        p.name          AS proyecto_nombre,
-        SUM(tel.hours)  AS horas_cargadas
+        te.id              AS time_entry_id,
+        te.week_start_date AS semana_inicio,
+        te.week_end_date   AS semana_fin,
+        te.status          AS estado,
+        te.created_at      AS fecha_carga,
+        u.id               AS usuario_id,
+        u.first_name       AS usuario_nombres,
+        u.last_name        AS usuario_apellidos,
+        p.id               AS proyecto_id,
+        p.name             AS proyecto_nombre,
+        SUM(tel.hours)     AS horas_cargadas
       FROM time_entries te
       JOIN users u ON u.id = te.user_id
       JOIN time_entry_lines tel ON tel.time_entry_id = te.id
@@ -119,16 +121,8 @@ export async function findAlerts(userId: string, roles: string[]): Promise<Alert
           SELECT 1 FROM hour_projections hp
           WHERE hp.project_id = tel.project_id
             AND hp.user_id    = te.user_id
-            AND hp.start_date <= (to_date(
-                (2000 + right(te.week, 2)::int)::text ||
-                lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-                'IYYYIW'
-              ) + 6)
-            AND hp.end_date   >= to_date(
-                (2000 + right(te.week, 2)::int)::text ||
-                lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-                'IYYYIW'
-              )
+            AND hp.start_date <= te.week_end_date
+            AND hp.end_date   >= te.week_start_date
         )
       GROUP BY te.id, u.id, p.id
       ORDER BY te.created_at DESC
@@ -138,16 +132,17 @@ export async function findAlerts(userId: string, roles: string[]): Promise<Alert
 
   return prisma.$queryRaw<AlertRow[]>`
     SELECT
-      te.id           AS time_entry_id,
-      te.week         AS semana,
-      te.status       AS estado,
-      te.created_at   AS fecha_carga,
-      u.id            AS usuario_id,
-      u.first_name    AS usuario_nombres,
-      u.last_name     AS usuario_apellidos,
-      p.id            AS proyecto_id,
-      p.name          AS proyecto_nombre,
-      SUM(tel.hours)  AS horas_cargadas
+      te.id              AS time_entry_id,
+      te.week_start_date AS semana_inicio,
+      te.week_end_date   AS semana_fin,
+      te.status          AS estado,
+      te.created_at      AS fecha_carga,
+      u.id               AS usuario_id,
+      u.first_name       AS usuario_nombres,
+      u.last_name        AS usuario_apellidos,
+      p.id               AS proyecto_id,
+      p.name             AS proyecto_nombre,
+      SUM(tel.hours)     AS horas_cargadas
     FROM time_entries te
     JOIN users u ON u.id = te.user_id
     JOIN time_entry_lines tel ON tel.time_entry_id = te.id
@@ -158,16 +153,8 @@ export async function findAlerts(userId: string, roles: string[]): Promise<Alert
         SELECT 1 FROM hour_projections hp
         WHERE hp.project_id = tel.project_id
           AND hp.user_id    = te.user_id
-          AND hp.start_date <= (to_date(
-              (2000 + right(te.week, 2)::int)::text ||
-              lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-              'IYYYIW'
-            ) + 6)
-          AND hp.end_date   >= to_date(
-              (2000 + right(te.week, 2)::int)::text ||
-              lpad(split_part(substring(te.week from 2), '/', 1), 3, '0'),
-              'IYYYIW'
-            )
+          AND hp.start_date <= te.week_end_date
+          AND hp.end_date   >= te.week_start_date
       )
     GROUP BY te.id, u.id, p.id
     ORDER BY te.created_at DESC

@@ -18,10 +18,29 @@ const LineaCreateSchema = z.object({
   comentario: z.string().optional(),
 });
 
-export const CreateTimeEntrySchema = z.object({
-  semana: z.string().regex(/^S\d{2}\/\d{2}$/, 'La semana debe tener formato S15/26'),
-  lineas: z.array(LineaCreateSchema).min(1, 'Debe agregar al menos una línea de horas'),
-});
+const MS_DAY = 86400000;
+
+function esLunesUTC(iso: string): boolean {
+  return new Date(`${iso}T00:00:00Z`).getUTCDay() === 1;
+}
+
+export const CreateTimeEntrySchema = z
+  .object({
+    semana_inicio: z.string().date('semana_inicio debe ser una fecha ISO (YYYY-MM-DD)'),
+    semana_fin: z.string().date('semana_fin debe ser una fecha ISO (YYYY-MM-DD)'),
+    lineas: z.array(LineaCreateSchema).min(1, 'Debe agregar al menos una línea de horas'),
+  })
+  .refine((d) => esLunesUTC(d.semana_inicio), {
+    message: 'semana_inicio debe ser un día lunes',
+    path: ['semana_inicio'],
+  })
+  .refine(
+    (d) =>
+      new Date(`${d.semana_fin}T00:00:00Z`).getTime() -
+        new Date(`${d.semana_inicio}T00:00:00Z`).getTime() ===
+      6 * MS_DAY,
+    { message: 'semana_fin debe ser el domingo de la misma semana (semana_inicio + 6 días)', path: ['semana_fin'] },
+  );
 
 export const ApproveSchema = z.object({
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),

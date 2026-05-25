@@ -9,12 +9,13 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import {
-  formatearSemana,
   formatearRangoDeSemana,
   formatearDiaMes,
   obtenerDomingoBase,
   obtenerFeriadosSemana,
-  semanaADomingo,
+  inicioADomingo,
+  rangoSemana,
+  aISODateLocal,
 } from '../../lib/utils';
 
 function obtenerDomingo(offset = 0) {
@@ -35,8 +36,8 @@ function nuevaLinea(proyectoId) {
   };
 }
 
-function calcularOffset(semanaStr) {
-  const targetDomingo = semanaADomingo(semanaStr);
+function calcularOffset(semanaInicioISO) {
+  const targetDomingo = inicioADomingo(semanaInicioISO);
   if (!targetDomingo) return -1;
   const base = obtenerDomingoBase();
   const diffMs = targetDomingo.getTime() - base.getTime();
@@ -49,7 +50,7 @@ export default function CargarHoras() {
   const queryClient = useQueryClient();
 
   const recarga = location.state ?? null;
-  const initialOffset = recarga?.semana ? calcularOffset(recarga.semana) : -1;
+  const initialOffset = recarga?.semanaInicio ? calcularOffset(recarga.semanaInicio) : -1;
 
   const [offsetSemana, setOffsetSemana] = useState(initialOffset);
   // Array de líneas: [{ _key, proyecto_id, horas, horas_extra, mostrarExtras, comentario, categoria_ingreso_id }]
@@ -59,7 +60,6 @@ export default function CargarHoras() {
   const [mostrarModalProyecto, setMostrarModalProyecto] = useState(false);
 
   const domingo = obtenerDomingo(offsetSemana);
-  const semana = formatearSemana(domingo);
   const feriadosSemana = obtenerFeriadosSemana(domingo);
   const horasEsperadas = (5 - feriadosSemana.length) * 8;
 
@@ -133,7 +133,13 @@ export default function CargarHoras() {
       setError('Selecciona al menos un proyecto para cargar horas.');
       return;
     }
-    mutation.mutate({ semana, lineas: payload });
+    const lunes = new Date(domingo);
+    lunes.setDate(domingo.getDate() - 6);
+    mutation.mutate({
+      semana_inicio: aISODateLocal(lunes),
+      semana_fin: aISODateLocal(domingo),
+      lineas: payload,
+    });
   }
 
   const listaProyectos = proyectos || [];
@@ -154,9 +160,9 @@ export default function CargarHoras() {
           <p className="text-muted-foreground">Registra las horas trabajadas para la semana seleccionada</p>
         </div>
 
-        {recarga?.semana && (
+        {recarga?.semanaInicio && (
           <div className="max-w-2xl rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-            Re-cargando proyecto rechazado para la semana <span className="font-semibold">{recarga.semana}</span>. Solo se enviará este proyecto.
+            Re-cargando proyecto rechazado para la semana <span className="font-semibold">{rangoSemana(recarga.semanaInicio)}</span>. Solo se enviará este proyecto.
           </div>
         )}
 
@@ -170,7 +176,6 @@ export default function CargarHoras() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <div className="flex-1 text-center">
-                  <p className="text-xs text-muted-foreground">{semana}</p>
                   <p className="text-sm font-semibold text-foreground leading-tight">{formatearRangoDeSemana(domingo)}</p>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={avanzarSemana}>

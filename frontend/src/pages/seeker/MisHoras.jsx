@@ -7,7 +7,7 @@ import Layout from '../../components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { ESTADO_LABELS, formatearRangoDeSemana, semanaADomingo } from '../../lib/utils';
+import { ESTADO_LABELS, rangoSemana } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
   PENDIENTE: 'warning',
@@ -15,18 +15,6 @@ const VARIANTE_ESTADO = {
   APROBADO_CON_OBSERVACION: 'success',
   RECHAZADO: 'destructive',
 };
-
-function nroSemana(semana) {
-  const match = semana?.match(/^S(\d+)\/(\d+)$/);
-  return match ? parseInt(match[1]) : null;
-}
-
-function labelSemana(semana) {
-  const nro = nroSemana(semana);
-  const domingo = semanaADomingo(semana);
-  const rango = domingo ? formatearRangoDeSemana(domingo) : semana;
-  return nro ? `Semana ${nro} · ${rango}` : rango;
-}
 
 function rollupEstado(lineas) {
   const estados = lineas.map((l) => l.estado);
@@ -77,10 +65,7 @@ function FilaSemana({ entrada, onRecargar }) {
             : <ChevronRight className="h-4 w-4 text-slate-400" />}
         </td>
         <td className="px-3 py-3.5">
-          <span className="font-medium text-slate-700">Semana {nroSemana(entrada.semana)}</span>
-          <span className="block text-xs text-slate-400 mt-0.5">
-            {formatearRangoDeSemana(semanaADomingo(entrada.semana))}
-          </span>
+          <span className="font-medium text-slate-700">{rangoSemana(entrada.semana_inicio)}</span>
         </td>
         <td className="px-6 py-3.5 text-slate-600">
           <div className="flex flex-wrap gap-1">
@@ -134,7 +119,7 @@ function FilaSemana({ entrada, onRecargar }) {
                   size="sm"
                   variant="outline"
                   className="h-6 text-xs px-2 gap-1"
-                  onClick={(e) => { e.stopPropagation(); onRecargar(entrada.semana, g.proyecto_id); }}
+                  onClick={(e) => { e.stopPropagation(); onRecargar(entrada.semana_inicio, g.proyecto_id); }}
                 >
                   <RotateCcw className="h-3 w-3" />
                   Re-cargar
@@ -181,28 +166,24 @@ export default function MisHoras() {
   }, [proyectosAsignados, filas]);
 
   const semanasUnicas = useMemo(() => {
-    return [...new Set(filas.map((f) => f.semana))].sort((a, b) => {
-      const ma = a.match(/^S(\d+)\/(\d+)$/);
-      const mb = b.match(/^S(\d+)\/(\d+)$/);
-      if (!ma || !mb) return 0;
-      const yearDiff = parseInt(mb[2]) - parseInt(ma[2]);
-      return yearDiff !== 0 ? yearDiff : parseInt(mb[1]) - parseInt(ma[1]);
-    });
+    return [...new Set(filas.map((f) => f.semana_inicio).filter(Boolean))].sort((a, b) =>
+      b.localeCompare(a),
+    );
   }, [filas]);
 
   const filasFiltradas = useMemo(() => {
     return filas.filter((f) => {
       if (filtroEstado && f.estado !== filtroEstado) return false;
       if (filtroProyecto && !f._proyectos.includes(filtroProyecto)) return false;
-      if (filtroSemana && f.semana !== filtroSemana) return false;
+      if (filtroSemana && f.semana_inicio !== filtroSemana) return false;
       return true;
     });
   }, [filas, filtroEstado, filtroProyecto, filtroSemana]);
 
   const hayFiltros = filtroEstado || filtroProyecto || filtroSemana;
 
-  function handleRecargar(semana, proyectoId) {
-    navigate('/seeker/cargar', { state: { semana, proyectoId } });
+  function handleRecargar(semanaInicio, proyectoId) {
+    navigate('/seeker/cargar', { state: { semanaInicio, proyectoId } });
   }
 
   return (
@@ -229,7 +210,7 @@ export default function MisHoras() {
           >
             <option value="">Todas las semanas</option>
             {semanasUnicas.map((s) => (
-              <option key={s} value={s}>{labelSemana(s)}</option>
+              <option key={s} value={s}>{rangoSemana(s)}</option>
             ))}
           </select>
 

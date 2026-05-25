@@ -25,11 +25,11 @@
 **Pantalla:** S-01-CARGAR-HORAS / S-01-HOME-SEEKER (Sección 4)
 
 #### Selector de Semana
-- **Campo:** semana (date)
-- **Type:** Date picker con navegación [← →]
+- **Campos:** `semana_inicio` (date, lunes) y `semana_fin` (date, domingo)
+- **Type:** Navegación [← →] por semana (Lun–Dom)
 - **Default:** Semana actual
-- **Validación:** Cualquier semana (sin límite retroactivo)
-- **Display:** Formato "SAAS/YY" (ej: S15/24)
+- **Validación:** Cualquier semana (sin límite retroactivo); `semana_inicio` debe ser lunes y `semana_fin = semana_inicio + 6`
+- **Display:** Rango de fechas (ej: "Lun 18 al Dom 24 may 2026"). Se eliminó el código "SAAS/YY".
 
 #### Tabla de Proyectos (dinámico, múltiples filas)
 | Campo | Type | Requerido | Validación | Notas |
@@ -45,7 +45,8 @@
 {
   "id": "uuid",
   "usuario_id": "uuid",
-  "semana": "S15/24",
+  "semana_inicio": "2026-05-18",
+  "semana_fin": "2026-05-24",
   "estado": "PENDIENTE",
   "lineas": [
     {
