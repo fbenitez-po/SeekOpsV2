@@ -15,27 +15,24 @@ const VARIANTE_ESTADO = {
   RECHAZADO: 'destructive',
 };
 
-function agruparPorProyecto(lineas) {
-  const map = new Map();
-  for (const l of lineas ?? []) {
-    const pid = l.proyecto?.id;
-    if (!pid) continue;
-    if (!map.has(pid)) map.set(pid, { ...l.proyecto, estados: [] });
-    map.get(pid).estados.push(l.estado);
-  }
-  return [...map.values()].map((g) => {
-    const es = g.estados;
-    const estado = es.includes('PENDIENTE') ? 'PENDIENTE'
-      : es.includes('RECHAZADO') ? 'RECHAZADO'
-      : es.includes('APROBADO_CON_OBSERVACION') ? 'APROBADO_CON_OBSERVACION'
-      : 'APROBADO';
-    return { ...g, estado };
-  });
+function agruparLineas(lineas) {
+  return (lineas ?? []).map((l) => ({
+    key: `${l.proyecto?.id}:${l.categoria_ingreso?.id ?? ''}:${l.id}`,
+    linea_id: l.id,
+    proyecto_id: l.proyecto?.id,
+    proyecto_nombre: l.proyecto?.nombre,
+    proyecto_codigo: l.proyecto?.codigo,
+    categoria_nombre: l.categoria_ingreso?.nombre ?? null,
+    estado: l.estado,
+    horas: l.horas,
+    horas_extra: l.horas_extra,
+    horas_efectivas: l.horas_efectivas ?? l.horas,
+    horas_extra_efectivas: l.horas_extra_efectivas ?? l.horas_extra,
+  }));
 }
 
 function TarjetaEntrada({ entrada, onRecargar }) {
-  const grupos = agruparPorProyecto(entrada.lineas);
-  const hayMixto = grupos.some((g) => g.estado !== grupos[0].estado);
+  const lineas = agruparLineas(entrada.lineas);
 
   return (
     <div className="rounded-md border px-3 py-2 space-y-2">
@@ -48,30 +45,40 @@ function TarjetaEntrada({ entrada, onRecargar }) {
             {entrada.total_horas}h{entrada.total_extras > 0 ? ` + ${entrada.total_extras}h extra` : ''}
           </p>
         </div>
-        <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 text-xs">
-          {ESTADO_LABELS[entrada.estado]}
-        </Badge>
       </div>
 
-      {(hayMixto || grupos.length > 1) && (
-        <div className="flex flex-wrap gap-1.5 pt-0.5">
-          {grupos.map((g) => (
-            <div key={g.id} className="flex items-center gap-1">
-              <Badge variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
-                {g.codigo ?? g.nombre}
-              </Badge>
-              {g.estado === 'RECHAZADO' && onRecargar && (
-                <button
-                  onClick={() => onRecargar(entrada.semana_inicio, g.id)}
-                  className="text-xs text-destructive underline underline-offset-2 hover:text-destructive/80"
-                >
-                  Re-cargar
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="space-y-1 pt-0.5">
+        {lineas.map((l) => (
+          <div key={l.key} className="flex items-center gap-2 text-xs">
+            <Badge variant={VARIANTE_ESTADO[l.estado]} className="text-xs shrink-0">
+              {l.proyecto_codigo ?? l.proyecto_nombre}
+            </Badge>
+            {l.categoria_nombre && (
+              <span className="text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 shrink-0">{l.categoria_nombre}</span>
+            )}
+            <span className="text-slate-600 shrink-0">
+              {l.estado === 'APROBADO_CON_OBSERVACION' ? (
+                <>
+                  <span className="text-teal-700 font-medium">{l.horas_efectivas}h</span>
+                  {l.horas !== l.horas_efectivas && (
+                    <span className="line-through text-slate-400 ml-1">{l.horas}h</span>
+                  )}
+                </>
+              ) : `${l.horas}h`}
+              {l.horas_extra_efectivas > 0 && ` + ${l.horas_extra_efectivas}h ext.`}
+            </span>
+            <span className="text-slate-500 flex-1 truncate">{ESTADO_LABELS[l.estado]}</span>
+            {l.estado === 'RECHAZADO' && onRecargar && (
+              <button
+                onClick={() => onRecargar(entrada.semana_inicio, l.proyecto_id)}
+                className="text-destructive underline underline-offset-2 hover:text-destructive/80 shrink-0"
+              >
+                Re-cargar
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

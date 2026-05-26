@@ -6,7 +6,7 @@ Dos bases de datos PostgreSQL en el mismo servidor:
 - **seekops_old**: Django app legacy, 44 tablas, ~75k filas
 - **seekops** (nueva): schema normalizado custom, 31 tablas
 
-La migración usa la extensión `dblink` para leer `seekops_old` directamente desde `seekops`. Todos los scripts son idempotentes (`ON CONFLICT DO NOTHING`).
+La migración usa la extensión `dblink` para leer `seekops_old` directamente desde `seekops`. Todos los scripts son idempotentes: los pasos 2-4 vía `ON CONFLICT DO NOTHING` (tienen unique natural), y los pasos 5, 6 y 7 vía `DELETE FROM <tabla> WHERE created_by='migration'` al inicio del paso (esas tablas no tienen unique natural, así que el `ON CONFLICT` solo no bastaba y re-correr duplicaba).
 
 **Cómo ejecutar:**
 ```bash
@@ -19,7 +19,7 @@ docker exec -i <container> psql -U postgres -d seekops < .ai/db/migration-seekop
 
 ---
 
-## Estado actual (19 Mayo 2026)
+## Estado actual (25 Mayo 2026 — Paso 7 completado)
 
 ### Mapa completo de tablas — qué paso llena cada una
 
@@ -47,9 +47,9 @@ docker exec -i <container> psql -U postgres -d seekops < .ai/db/migration-seekop
 | `project_user` | Relación (M2M) | 4 | migrate_seekops_old.sql | ✅ | 1090 (role='SEEKER') |
 | `hour_projections` | Transaccional | 5 | migrate_seekops_old.sql | ✅ | 2.563 (1.965 activas, 598 anuladas) |
 | `commercial_records` | Transaccional | 6 | migrate_seekops_old.sql | ✅ | 677 (1 excluido: precio negativo) |
-| `time_entries` | Transaccional | 7 | pendiente | ❌ | — |
-| `time_entry_lines` | Transaccional | 7 | pendiente | ❌ | — |
-| `time_entry_approvals` | Log inmutable | 7 | pendiente | ❌ | — |
+| `time_entries` | Transaccional | 7 | migrate_seekops_old.sql | ✅ | 1.593 (sin status: el estado vive en time_entry_approvals) |
+| `time_entry_lines` | Transaccional | 7 | migrate_seekops_old.sql | ✅ | 2.928 activas (horas originales del seeker; sin status) |
+| `time_entry_approvals` | Fuente de verdad de estado | 7 | migrate_seekops_old.sql | ✅ | 2.928 (una por línea; PENDIENTE/APROBADO/APROBADO_CON_OBSERVACION/RECHAZADO) |
 | `revenues` | Financiero | — | no migrar | ⛔ | datos nuevos, sin equivalente |
 | `admin_expenses` | Financiero | — | no migrar | ⛔ | datos nuevos, sin equivalente |
 | `sales_costs` | Financiero | — | no migrar | ⛔ | datos nuevos, sin equivalente |
@@ -223,6 +223,8 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `schedule.hours` | `projected_hours` | ROUND(hours * 2) / 2.0 — fuerza múltiplo de 0.5 |
 | `block.status = 'Anulado'` | `is_active = false` | resto → true |
 
+> Idempotencia: el paso arranca con `DELETE FROM hour_projections WHERE created_by='migration'`. La tabla no tiene unique natural, así que sin esto re-correr el script duplicaba las filas.
+
 ---
 
 ## Paso 6 — Registros comerciales ✅
@@ -249,45 +251,74 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `evidence_file` | `evidence_filename` | NULLIF si vacío |
 | `type` (Proyecto/Recurrente/Renovacion) | *(sin equivalente)* | campo perdido — no existe en nueva BD |
 
+> Idempotencia: el paso arranca con `DELETE FROM commercial_records WHERE created_by='migration'` (misma razón que el Paso 5).
+
 ---
 
-## Paso 7 — Horas trabajadas ❌ No iniciado
+## Paso 7 — Horas trabajadas y aprobaciones ✅
 
-**Script:** pendiente de crear
+**Script:** `migrate_seekops_old.sql` (paso 7)
 
 **Tablas populadas en seekops:** `time_entries`, `time_entry_lines`, `time_entry_approvals`
 
-**Qué migra:** Registros históricos de horas trabajadas por usuario por semana.
+**Qué migra:** Registros históricos de horas trabajadas por usuario por semana, y el log de aprobaciones (sintetizado, porque el old no tiene tabla de aprobaciones).
 
 ### Mapeo de tablas
 
 | Tabla old | Tabla new | Descripción |
 |-----------|-----------|-------------|
-| `seekers_hoursworkedhead` | `time_entries` | Cabecera: un registro por usuario por semana |
-| `seekers_hoursworked` | `time_entry_lines` | Detalle: una línea por proyecto dentro de esa semana |
+| `seekers_hoursworkedhead` (2.105) | `time_entries` | Cabecera: una semana por usuario |
+| `seekers_hoursworked` (3.005) | `time_entry_lines` | Detalle: una línea por proyecto dentro de la semana |
+| *(inline: `manager_id`, `status`, `validated_*`, `justification`)* | `time_entry_approvals` | Log de aprobaciones, sintetizado por línea aprobada/rechazada |
 
-### Mapeo de campos — Cabecera (`seekers_hoursworkedhead` → `time_entries`)
+### Fusión semanal (decisión clave)
+
+El old parte una misma semana de un usuario en **varias cabeceras** (una por proyecto): 279 grupos `(usuario, date_init)` duplicados, casi siempre proyectos distintos. La nueva BD exige **una** entrada por `(user_id, week_start_date)` (`UNIQUE`). Por eso se **fusionan**: todas las heads del mismo `(usuario, date_init)` → una `time_entry`, combinando sus líneas. Esto satisface el unique sin cambiar el schema.
+
+### Cabecera (`seekers_hoursworkedhead` → `time_entries`)
 
 | Campo old | Campo new | Cómo se resuelve |
 |-----------|-----------|-----------------|
 | `user_id` | `user_id` | JOIN `users_user` → `users` por email |
-| `date_init` | `week` | Convertir a formato `S{WW}/{YY}` — ej: semana 15/2025 → `S15/25` |
-| `status = 'validated'` | `status = 'APPROVED'` | mapeo |
-| `status = 'pending'` / `'submitted'` | `status = 'PENDING'` | mapeo |
-| `status = 'rejected'` | `status = 'REJECTED'` | mapeo |
+| `date_init` | `week_start_date` | directo (date) |
+| *(calculado)* | `week_end_date` | `date_init + 6` (Domingo) — normaliza spans irregulares (4d, etc.) |
+| *(ninguno)* | `status` | **columna eliminada** — el estado vive en `time_entry_approvals` |
 
-**Problema a resolver:** La old permite múltiples cabeceras por usuario por semana. La nueva espera una sola. Requiere deduplicar con `DISTINCT ON (user_id, week)`.
-
-### Mapeo de campos — Detalle (`seekers_hoursworked` → `time_entry_lines`)
+### Detalle (`seekers_hoursworked` → `time_entry_lines`)
 
 | Campo old | Campo new | Cómo se resuelve |
 |-----------|-----------|-----------------|
-| `head_id` | `time_entry_id` | FK a la cabecera migrada |
+| `head_id` (vía usuario+semana) | `time_entry_id` | JOIN a la `time_entries` fusionada por `(user_id, week_start_date)` |
 | `project_id` | `project_id` | JOIN `projects_project` → `projects` por code |
-| `hours` | `hours` | directo |
-| `extra_hours` | `extra_hours` | directo |
-| `extensioncategory_id` | `work_category_id` | JOIN `masters_extensioncategory` → `work_categories` por nombre |
-| *(no aplica)* | `income_category_id` | NULL — solo aplica para proyectos de Área |
+| `category_extension_id` | `income_category_id` | JOIN `masters_extensioncategory` → `project_categories` por nombre normalizado; NULL si no resuelve (14/14 resuelven) |
+| `hours` | `hours` | horas **originales** del seeker (`SUM(l.hours)`). Se agregan las líneas del mismo proyecto+categoría dentro de la semana |
+| `extra_hours` | `extra_hours` | análogo (`SUM(COALESCE(l.extra_hours, 0))`) |
+| `description` | `comment` | NULLIF si vacío (`string_agg` si hay varias) |
+| *(ninguno)* | `status`, `reviewed_by`, `reviewed_at` | **columnas eliminadas** — el estado y la firma del gestor viven en `time_entry_approvals` |
+
+No se generan líneas con baja lógica. Con el nuevo modelo, las horas originales del seeker siempre quedan en la línea activa; la sugerencia del gestor va a `suggested_hours`/`suggested_extra_hours` en la approval.
+
+### Aprobaciones (`time_entry_approvals`, una por línea)
+
+Una fila por cada `time_entry_lines` creada en el paso anterior (incluyendo líneas con estado PENDIENTE en el origen). Estado derivado del `status` agregado de la fuente:
+
+| Campo new | Origen |
+|-----------|--------|
+| `time_entry_line_id` | JOIN a `time_entry_lines` por `(time_entry_id, project_id, income_category_id)` |
+| `project_id` | proyecto de la línea |
+| `status` | `all_approved` + ajuste → `APROBADO_CON_OBSERVACION`; `all_approved` sin ajuste → `APROBADO`; `all_rejected` → `RECHAZADO`; resto → `PENDIENTE` |
+| `comment` | `justification` (la justificación del aprobador, `string_agg`) |
+| `suggested_hours` / `suggested_extra_hours` | `SUM(validated_*)` solo cuando difiere de `SUM(hours)` (horas ajustadas por el gestor) |
+| `reviewed_by` / `reviewed_at` | email del `manager_id` / `max(updated_at)` de líneas aprobadas/rechazadas |
+| `created_by` | `'migration'` |
+
+### Heads con fechas rotas — NO migradas
+
+47 cabeceras con rango inválido (`date_end < date_init`, span > 7 días, o fecha NULL) **no se migraron**. Quedan listadas en **`paso7_fechas_rotas_pendientes.sql`** (+ CSV exportado) para corregirlas a mano en el origen y re-ejecutar el Paso 7 (es idempotente).
+
+### Idempotencia
+
+El paso arranca con `DELETE FROM time_entries WHERE created_by='migration'`; el FK `ON DELETE CASCADE` limpia `time_entry_lines` y `time_entry_approvals`. Re-ejecutar deja los conteos estables.
 
 ---
 
@@ -309,10 +340,11 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 
 | # | Pendiente | Prioridad |
 |---|-----------|-----------|
-| 1 | Crear script Paso 7 (horas trabajadas) | Alta |
+| 1 | ~~Crear script Paso 7 (horas trabajadas)~~ — resuelto: migrado ✅ | ✅ |
 | 2 | ~~Confirmar lógica is_active de clientes~~ — resuelto: todos migran como `true` | ✅ |
-| 3 | Completar `hire_date` manualmente para los 275 usuarios | Baja (post-MVP) |
-| 4 | Completar `manager_id` para los 152 proyectos sin gestor | Baja (post-MVP) |
+| 3 | Corregir las 47 heads con fechas rotas (ver `paso7_fechas_rotas_pendientes.sql`) y re-correr Paso 7 | Media |
+| 4 | Completar `hire_date` manualmente para los 275 usuarios | Baja (post-MVP) |
+| 5 | Completar `manager_id` para los 152 proyectos sin gestor | Baja (post-MVP) |
 
 ---
 
@@ -324,4 +356,6 @@ Reemplaza el sistema de grupos de Django (`auth_group`):
 | `.ai/db/data.sql` | Seeds: catálogos + usuario admin |
 | `.ai/db/schema.md` | Documentación del schema |
 | `.ai/db/migration-seekops-old/migration_plan.md` | Este archivo |
-| `.ai/db/migration-seekops-old/migrate_seekops_old.sql` | Script unificado pasos 2-6 |
+| `.ai/db/migration-seekops-old/migrate_seekops_old.sql` | Script unificado pasos 2-7 |
+| `.ai/db/migration-seekops-old/paso7_fechas_rotas_pendientes.sql` | Query de las 47 heads con fechas rotas (no migradas) |
+| `.ai/db/migration-seekops-old/paso7_fechas_rotas_pendientes.csv` | Export de esas heads/líneas para corrección manual |

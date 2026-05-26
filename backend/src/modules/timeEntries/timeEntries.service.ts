@@ -123,15 +123,14 @@ export async function approve(id: string, body: ApproveInput, userId: string, em
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
-  const categoryId = body.categoria_ingreso_id ?? undefined;
-  const lines = await repo.getLinesForProject(id, body.proyecto_id, categoryId);
-  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  const lines = await repo.getLinesForProject(id, body.linea_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontró la línea indicada en este registro');
   if (lines.every((l) => l.status !== 'PENDIENTE')) {
-    throw new ForbiddenError('No hay líneas pendientes para aprobar en este proyecto');
+    throw new ForbiddenError('La línea indicada no está pendiente de aprobación');
   }
 
-  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, categoryId, action: 'APROBAR', email, data: {} });
-  return { id, proyecto_id: body.proyecto_id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
+  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'APROBAR', email, data: {} });
+  return { id, proyecto_id: body.proyecto_id, linea_id: body.linea_id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
 export async function observe(
@@ -149,17 +148,17 @@ export async function observe(
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede aprobar');
   }
 
-  const categoryId = body.categoria_ingreso_id ?? undefined;
-  const lines = await repo.getLinesForProject(id, body.proyecto_id, categoryId);
-  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  const lines = await repo.getLinesForProject(id, body.linea_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontró la línea indicada en este registro');
   if (lines.every((l) => l.status !== 'PENDIENTE')) {
-    throw new ForbiddenError('No hay líneas pendientes para aprobar en este proyecto');
+    throw new ForbiddenError('La línea indicada no está pendiente de aprobación');
   }
 
-  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, categoryId, action: 'APROBAR_CON_OBSERVACION', email, data: body });
+  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
   return {
     id,
     proyecto_id: body.proyecto_id,
+    linea_id: body.linea_id,
     estado: 'APROBADO_CON_OBSERVACION',
     aprobado_en: new Date().toISOString(),
     comentario_observacion: body.comentario_observacion,
@@ -181,17 +180,17 @@ export async function reject(
     if (!isManager) throw new ForbiddenError('Solo el gestor del proyecto o un administrador puede rechazar');
   }
 
-  const categoryId = body.categoria_ingreso_id ?? undefined;
-  const lines = await repo.getLinesForProject(id, body.proyecto_id, categoryId);
-  if (lines.length === 0) throw new NotFoundError('No se encontraron líneas para el proyecto indicado en este registro');
+  const lines = await repo.getLinesForProject(id, body.linea_id);
+  if (lines.length === 0) throw new NotFoundError('No se encontró la línea indicada en este registro');
   if (lines.every((l) => l.status !== 'PENDIENTE')) {
-    throw new ForbiddenError('No hay líneas pendientes para rechazar en este proyecto');
+    throw new ForbiddenError('La línea indicada no está pendiente de rechazo');
   }
 
-  await repo.recordApproval({ entryId: id, projectId: body.proyecto_id, categoryId, action: 'RECHAZAR', email, data: body });
+  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'RECHAZAR', email, data: body });
   return {
     id,
     proyecto_id: body.proyecto_id,
+    linea_id: body.linea_id,
     estado: 'RECHAZADO',
     rechazado_en: new Date().toISOString(),
     razon_rechazo: body.razon_rechazo,

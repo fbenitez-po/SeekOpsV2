@@ -16,17 +16,9 @@ const VARIANTE_ESTADO = {
   RECHAZADO: 'destructive',
 };
 
-function rollupEstado(lineas) {
-  const estados = lineas.map((l) => l.estado);
-  if (estados.includes('PENDIENTE')) return 'PENDIENTE';
-  if (estados.includes('RECHAZADO')) return 'RECHAZADO';
-  if (estados.includes('APROBADO_CON_OBSERVACION')) return 'APROBADO_CON_OBSERVACION';
-  return 'APROBADO';
-}
-
 function agruparPorLinea(lineas) {
   return lineas.map((l) => ({
-    key: `${l.proyecto?.id}:${l.categoria_ingreso?.id ?? ''}`,
+    key: `${l.proyecto?.id}:${l.categoria_ingreso?.id ?? ''}:${l.id}`,
     proyecto_id: l.proyecto?.id,
     proyecto_nombre: l.proyecto?.nombre,
     proyecto_codigo: l.proyecto?.codigo,
@@ -34,6 +26,8 @@ function agruparPorLinea(lineas) {
     estado: l.estado,
     horas: l.horas,
     horas_extra: l.horas_extra,
+    horas_efectivas: l.horas_efectivas ?? l.horas,
+    horas_extra_efectivas: l.horas_extra_efectivas ?? l.horas_extra,
     linea_id: l.id,
   }));
 }
@@ -79,14 +73,9 @@ function FilaSemana({ entrada, onRecargar }) {
         <td className="px-6 py-3.5 text-right font-medium text-slate-700">{entrada.total_horas}</td>
         <td className="px-6 py-3.5 text-right text-slate-600">{entrada.total_extras > 0 ? entrada.total_extras : 0}</td>
         <td className="px-6 py-3.5">
-          <div className="flex items-center gap-2">
-            <Badge variant={VARIANTE_ESTADO[entrada.estado]}>
-              {ESTADO_LABELS[entrada.estado]}
-            </Badge>
-            {hayRechazado && (
-              <span className="text-xs text-destructive font-medium">Tiene rechazos</span>
-            )}
-          </div>
+          {hayRechazado && (
+            <span className="text-xs text-destructive font-medium">Tiene rechazos</span>
+          )}
         </td>
       </tr>
 
@@ -107,8 +96,22 @@ function FilaSemana({ entrada, onRecargar }) {
               </span>
             )}
           </td>
-          <td className="px-6 py-2.5 text-right text-sm text-slate-700">{g.horas}</td>
-          <td className="px-6 py-2.5 text-right text-sm text-slate-600">{g.horas_extra > 0 ? g.horas_extra : 0}</td>
+          <td className="px-6 py-2.5 text-right text-sm text-slate-700">
+            {g.estado === 'APROBADO_CON_OBSERVACION' ? (
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="font-medium text-teal-700">{g.horas_efectivas}</span>
+                <span className="text-xs line-through text-slate-400">{g.horas}</span>
+              </div>
+            ) : g.horas_efectivas}
+          </td>
+          <td className="px-6 py-2.5 text-right text-sm text-slate-600">
+            {g.estado === 'APROBADO_CON_OBSERVACION' && (g.horas_extra > 0 || g.horas_extra_efectivas > 0) ? (
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="font-medium text-teal-700">{g.horas_extra_efectivas}</span>
+                {g.horas_extra > 0 && <span className="text-xs line-through text-slate-400">{g.horas_extra}</span>}
+              </div>
+            ) : (g.horas_extra_efectivas > 0 ? g.horas_extra_efectivas : 0)}
+          </td>
           <td className="px-6 py-2.5">
             <div className="flex items-center gap-2">
               <Badge variant={VARIANTE_ESTADO[g.estado]} className="text-xs">
@@ -173,7 +176,7 @@ export default function MisHorasGestor() {
 
   const filasFiltradas = useMemo(() => {
     return filas.filter((f) => {
-      if (filtroEstado && f.estado !== filtroEstado) return false;
+      if (filtroEstado && !f.lineas?.some((l) => l.estado === filtroEstado)) return false;
       if (filtroProyecto && !f._proyectos.includes(filtroProyecto)) return false;
       if (filtroSemana && f.semana_inicio !== filtroSemana) return false;
       return true;

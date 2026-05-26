@@ -1,0 +1,96 @@
+head_id,user_id,email,date_init,date_end,span_days,motivo,head_status,line_id,project_code,hours,extra_hours,validated_hours,line_status,description,justification
+246,194,afernandez@seekglobal.co,2025-02-01,2025-02-28,27,span > 7 dias,approved,,,,,,,,
+247,194,afernandez@seekglobal.co,2025-02-01,2025-02-28,27,span > 7 dias,approved,,,,,,,,
+248,194,afernandez@seekglobal.co,2025-02-01,2025-02-28,27,span > 7 dias,approved,,,,,,,,
+249,194,afernandez@seekglobal.co,2025-03-01,2025-03-31,30,span > 7 dias,approved,,,,,,,,
+250,194,afernandez@seekglobal.co,2025-03-01,2025-03-31,30,span > 7 dias,approved,,,,,,,,
+251,194,afernandez@seekglobal.co,2025-03-01,2025-03-31,30,span > 7 dias,approved,,,,,,,,
+563,3,avdp@seekglobal.co,2025-07-01,2025-07-11,10,span > 7 dias,approved,660,SCP202501,4.00,0.00,4.00,approved,horas 1-11 julio,""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1019,SI202501,14.25,0.00,14.25,approved,Coord. y acompañamiento en Iniciativas del área de Tech Q3,""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1015,SG202513,9.00,0.00,9.00,approved,"Onboarding Leonardo Ruiz, Coordinaciones sobre desempeño de Jhossy y Rodrigo, Townhall Q2, Reuniones de Checkpoint con Cultura, Coordinación promoción de Maxi y Arturo, Concurso de Chistes Malos v2",
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1013,S007,122.25,0.00,122.25,approved,"1. Coordinaciones de apoyo en servicios a:
+- Agora
+- B4E
+- PGO
+- La Tinka
+- Tai Loy
+2. Seek Status 
+3. Reuniones de Sync con Tech y PM
+4. SteerCo",""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1014,SG202502,13.00,0.00,13.00,approved,"Propuesta de Servicio de QA para La Tinka, Reunión con Unacem, Coordinaciones sobre oportunidades en Tai Loy, Norber Wiener y Casa Andina, Reuniones en Ferreyros Corp (Presencial),",""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1016,SG202506,8.50,0.00,8.50,approved,"Creación de retos técnicos para QAs, Entrevista a Candidatos PO, Java SSr y QAs",""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1017,SG202510,4.50,0.00,4.50,approved,Revisión de temas de Ciberseguridad e IA.,""
+799,12,dcorrea@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1018,SI202504,6.00,0.00,6.00,approved,Coord. y acompañamiento en Iniciativas del área de Product Management Q3,""
+66,257,dgomez@seek.pe,2025-02-17,2025-03-21,32,span > 7 dias,approved,67,P0316,40.00,0.00,40.00,approved,Desarrollo de mejoras activación de poliza,""
+474,198,dgonzalez@seek.pe,2025-04-01,2025-04-30,29,span > 7 dias,submitted,,,,,,,,
+475,198,dgonzalez@seek.pe,2025-05-01,2025-05-30,29,span > 7 dias,submitted,,,,,,,,
+476,198,dgonzalez@seek.pe,2025-06-02,2025-06-30,28,span > 7 dias,submitted,,,,,,,,
+910,236,djaime@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1165,P0338,152.00,0.00,152.00,approved,horas del mes,""
+910,236,djaime@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1166,SCP202505,16.00,0.00,16.00,approved,horas dedicadas a la comunidad,""
+1110,236,djaime@seekglobal.co,2025-08-01,2025-08-22,21,span > 7 dias,approved,1473,SCP202505,8.00,0.00,8.00,approved,horas dedicadas a la comunidad,
+1110,236,djaime@seekglobal.co,2025-08-01,2025-08-22,21,span > 7 dias,approved,1474,P0338,119.00,0.00,119.00,approved,horas de 3 semanas acumuladas,
+495,11,dluyo@seekglobal.co,2025-07-01,2025-07-09,8,span > 7 dias,approved,569,P0339,6.00,0.00,6.00,approved,Actualización de flujo de mis pedidos en Clip,""
+495,11,dluyo@seekglobal.co,2025-07-01,2025-07-09,8,span > 7 dias,approved,568,SCP202505,2.00,0.00,2.00,approved,Orden de lo que se trabajó en el miro,
+45,299,fbenitez@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,approved,45,SIQ1202509,4.00,0.00,4.00,approved,Se toma el input de diferentes interesados para encontrar brechas y posibles mejoras.,""
+71,297,fgarcia@seekglobal.co,2025-02-17,2025-03-21,32,span > 7 dias,approved,76,P0316,40.00,0.00,40.00,approved,"Se trabaja en la automatización de pruebas del proceso de la PGO Control Operativo SPF, se realizan las pruebas manuales correspondiente a los diferentes requisitos de filtros, se levantan 8 incidentes a desarrollo para corregir.
+Se realiza la reunión con el equipo de QA para revisión y colaboración con los colegas en la mejora de la automatización en los diferentes proyectos.
+Se realiza la revisión de la documentación para el Paso a Paso de como instalar y configurar Playwright con Typescript",""
+49,296,ghornos@seek.pe,2025-02-17,2025-03-21,32,span > 7 dias,approved,49,SIQ1202513,10.00,0.00,10.00,approved,avance de la iniciativa,""
+67,296,ghornos@seek.pe,2025-02-17,2025-03-21,32,span > 7 dias,approved,68,P0316,30.00,0.00,30.00,approved,motor de reglas,""
+114,238,icoronado@seek.pe,2025-02-24,2025-03-28,32,span > 7 dias,approved,119,SIQ1202510,2.00,0.00,2.00,approved,Actualizar prácticas de desarrolla para ciclo de vida de software a nivel de ejemplo de código,""
+245,237,imanrique@seekglobal.co,2025-02-03,2025-03-07,32,span > 7 dias,approved,,,,,,,,
+473,322,jmite@seekglobal.co,2025-07-01,2025-07-11,10,span > 7 dias,submitted,,,,,,,,
+874,229,jzuniga@seekglobal.co,2025-07-01,2025-07-31,30,span > 7 dias,approved,1118,P0246,84.00,,84.00,approved,Iniciativas Tinkagente,
+571,202,lmendoza@seek.pe,2025-07-01,2025-07-13,12,span > 7 dias,approved,668,P0367,0.00,10.00,0.00,approved,Bolsa de hora la tinka - KYC,""
+572,202,lmendoza@seek.pe,2025-07-01,2025-07-13,12,span > 7 dias,approved,669,P0240,60.00,0.00,60.00,approved,Squad 1 - 2 dias libres por trabajo de fin de semana + COP,""
+573,202,lmendoza@seek.pe,2025-07-01,2025-07-13,12,span > 7 dias,approved,670,SCP202503,4.00,0.00,4.00,approved,COP reuniones,
+102,260,mcasas@seekglobal.co,2025-01-06,2025-02-11,36,span > 7 dias,submitted,,,,,,,,
+87,260,mcasas@seekglobal.co,2025-02-03,2025-03-07,32,span > 7 dias,submitted,,,,,,,,
+81,260,mcasas@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,approved,,,,,,,,
+88,260,mcasas@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,submitted,,,,,,,,
+90,260,mcasas@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,submitted,,,,,,,,
+98,260,mcasas@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,submitted,,,,,,,,
+91,260,mcasas@seekglobal.co,2025-02-17,2025-03-21,32,span > 7 dias,submitted,,,,,,,,
+99,260,mcasas@seekglobal.co,2025-02-17,2025-03-21,32,span > 7 dias,submitted,,,,,,,,
+100,260,mcasas@seekglobal.co,2025-02-17,2025-03-21,32,span > 7 dias,submitted,,,,,,,,
+15,260,mcasas@seekglobal.co,2025-02-24,2025-02-01,-23,rango invertido,approved,,,,,,,,
+28,295,nbarrios@seekglobal.co,2025-01-06,2025-02-07,32,span > 7 dias,approved,28,P0309,39.00,0.00,39.00,approved,"Daylies		0,75
+
+Sprint Planning		1
+
+Breakdown		1
+
+Code Backend Roles for API Keys	8696u6b53	16,25
+
+Code Frontend Roles for API Keys	8696u6b53	20",""
+77,295,nbarrios@seekglobal.co,2025-02-03,2025-03-07,32,span > 7 dias,approved,82,S007,1.50,0.00,1.50,approved,"Seek: Weekly Status			0,5
+Seek: Horizon			1",""
+78,295,nbarrios@seekglobal.co,2025-02-10,2025-03-14,32,span > 7 dias,approved,83,S007,2.00,0.00,2.00,approved,"Seek: Weekly Status			0,5
+Seek: Weekly Chapter			0,5
+Seek: Piloto Registro Horas			1",""
+72,265,nmorales@seekglobal.co,2025-02-17,2025-03-21,32,span > 7 dias,approved,77,P0316,39.00,0.00,39.00,approved,"- Nueva arquitectura de Módulo Administrativo
+- Construcción motor de reglas y API de consulta de Controles Operativos",""
+199,39,sgambini@seekglobal.co,2025-03-03,2025-03-28,25,span > 7 dias,submitted,,,,,,,,
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,703,SCP202503,4.00,0.00,4.00,approved,COP,
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,700,P0240,52.00,0.00,52.00,approved,emergencia KYC - rituales,""
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,699,P0374,,14.00,0.00,approved,Pases y KYC,
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,701,P0241,34.00,0.00,34.00,approved,Rituales Squad 2 - Video Lottery,""
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,702,SG202501,12.00,0.00,12.00,approved,Propuestas La Tinka - ecommerce discovery,""
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,697,P0309,16.00,0.00,16.00,approved,Reuniones con cliente,""
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,704,S001,24.00,0.00,24.00,approved,Rituales de producto + Exploración de ClickUp,""
+597,37,sharmsen@seekglobal.co,2025-07-01,2025-07-27,26,span > 7 dias,approved,698,P0297,1.00,0.00,1.00,approved,Incidencias,""
+758,37,sharmsen@seekglobal.co,2025-07-07,2025-07-27,20,span > 7 dias,approved,955,SCP202503,8.00,0.00,8.00,approved,COP,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1234,SG202501,6.00,0.00,6.00,approved,Propuesta La Tinka,""
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1235,SG202513,4.00,0.00,4.00,approved,PDI,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1236,SCP202503,4.00,0.00,4.00,approved,COP,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1237,P0240,18.00,0.00,18.00,approved,"Mercados bloqueados, eventos simples y sentry",
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1238,P0241,14.00,0.00,14.00,approved,Nuibiz + Cencosud,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1239,P0297,4.00,0.00,4.00,approved,Pases y fixes - Ajustes de funcionalidades,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1240,P0368,2.00,0.00,2.00,approved,Ajustes y pases,
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1232,P0309,5.00,0.00,5.00,approved,"Weekly's, Daily's y Plannings",
+958,37,sharmsen@seekglobal.co,2025-07-28,2025-08-10,13,span > 7 dias,approved,1233,SI202501,8.00,0.00,8.00,approved,Lovable,""
+650,218,whernandez@seek.pe,2025-07-01,2025-07-13,12,span > 7 dias,approved,780,P0240,47.00,4.00,47.00,approved,Horas extra de pase KYC,""
+650,218,whernandez@seek.pe,2025-07-01,2025-07-13,12,span > 7 dias,approved,781,P0339,28.00,0.00,28.00,approved,Horas de pruebas realizadas.,""
+651,218,whernandez@seek.pe,2025-07-09,2025-07-17,8,span > 7 dias,approved,782,P0367,0.00,5.00,0.00,approved,4 horas de Miércoles 9 pase KYC y 1 hora de Jueves 17 pase Tipo Doc,""
+852,218,whernandez@seek.pe,2025-07-21,2025-08-03,13,span > 7 dias,approved,1090,P0240,30.00,0.00,30.00,approved,"Solo horario regular, pruebas KYC, eventos simples y eventos bloqueados.",""
+852,218,whernandez@seek.pe,2025-07-21,2025-08-03,13,span > 7 dias,approved,1091,P0344,22.00,0.00,22.00,approved,Horario regular.,""

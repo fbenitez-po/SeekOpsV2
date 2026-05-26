@@ -253,6 +253,10 @@ COMMIT;
 
 BEGIN;
 
+-- Limpieza idempotente: estas tablas no tienen unique natural, así que el
+-- ON CONFLICT no atrapa duplicados. Se borran las filas de migración previas.
+DELETE FROM hour_projections WHERE created_by = 'migration';
+
 INSERT INTO hour_projections (
   project_id, user_id, work_category_id,
   start_date, end_date, projected_hours,
@@ -318,6 +322,9 @@ COMMIT;
 -- 1 registro excluido: id=206, precio negativo
 
 BEGIN;
+
+-- Limpieza idempotente (misma razón que en el Paso 5)
+DELETE FROM commercial_records WHERE created_by = 'migration';
 
 INSERT INTO commercial_records (
   record_date, project_id, owner_id,
@@ -385,6 +392,185 @@ ON CONFLICT DO NOTHING;
 COMMIT;
 
 
+-- ── PASO 7: Horas trabajadas y aprobaciones ───────────────────
+-- Tablas: time_entries (cabecera semanal) + time_entry_lines (horas originales
+--         del seeker) + time_entry_approvals (estado y sugerencias del gestor).
+-- Origen: seekers_hoursworkedhead (cabecera) + seekers_hoursworked (detalle).
+--
+-- Modelo (2026-05-26): time_entries y time_entry_lines NO tienen columna status.
+-- time_entry_approvals es la fuente de verdad (1 fila por línea, UNIQUE).
+-- Las horas en time_entry_lines son siempre las originales del seeker.
+-- Si el gestor ajustó horas → suggested_hours/suggested_extra_hours +
+-- estado APROBADO_CON_OBSERVACION.  No se crean líneas con baja lógica.
+--
+-- Reglas:
+--   - Una time_entry por (usuario, date_init): el viejo parte la semana en
+--     varias heads (una por proyecto); aquí se FUSIONAN.
+--   - week_start_date = date_init ; week_end_date = date_init + 6 (Domingo).
+--   - Se EXCLUYEN las heads con rango roto (date_end < date_init o span > 7d):
+--     quedan listadas en paso7_fechas_rotas_pendientes.sql para corregir a mano.
+--   - Líneas con hours NULL u horas negativas se omiten.
+--   - description → time_entry_lines.comment ; justification → approvals.comment.
+--
+-- Idempotente: al inicio se borran las filas de esta migración
+-- (created_by='migration'); el FK ON DELETE CASCADE limpia líneas y aprobaciones.
+
+BEGIN;
+
+-- Limpieza idempotente (cascade a time_entry_lines y time_entry_approvals)
+DELETE FROM time_entries WHERE created_by = 'migration';
+
+-- 7.1 — Cabeceras semanales (fusionadas por usuario + date_init, sin status)
+INSERT INTO time_entries (
+  user_id, week_start_date, week_end_date, created_at, created_by
+)
+SELECT
+  u.id,
+  src.date_init,
+  src.date_init + 6,
+  NOW(),
+  'migration'
+FROM dblink('dbname=seekops_old user=postgres',
+  'SELECT uu.email, h.date_init
+   FROM seekers_hoursworked l
+   JOIN seekers_hoursworkedhead h ON h.id = l.head_id
+   JOIN users_user uu ON uu.id = h.user_id
+   WHERE h.date_init IS NOT NULL
+     AND h.date_end >= h.date_init
+     AND (h.date_end - h.date_init) <= 7
+     AND l.hours IS NOT NULL
+     AND l.hours >= 0
+   GROUP BY uu.email, h.date_init'
+) AS src(email varchar, date_init date)
+JOIN users u ON u.email = src.email
+ON CONFLICT (user_id, week_start_date) DO NOTHING;
+
+-- 7.2 — Líneas de detalle (horas ORIGINALES del seeker, sin status)
+INSERT INTO time_entry_lines (
+  time_entry_id, project_id, income_category_id,
+  hours, extra_hours, comment,
+  created_at, created_by, is_active
+)
+SELECT
+  te.id,
+  p.id,
+  pc.id,
+  src.hours,
+  src.extra_hours,
+  src.comment,
+  NOW(),
+  'migration',
+  true
+FROM dblink('dbname=seekops_old user=postgres',
+  'SELECT
+     uu.email                              AS email,
+     h.date_init                           AS date_init,
+     pp.code                               AS project_code,
+     ec.name                               AS cat_name,
+     SUM(l.hours)::numeric                 AS hours,
+     SUM(COALESCE(l.extra_hours, 0))::numeric AS extra_hours,
+     string_agg(NULLIF(TRIM(l.description), ''''), '' | '') AS comment
+   FROM seekers_hoursworked l
+   JOIN seekers_hoursworkedhead h ON h.id = l.head_id
+   JOIN users_user uu ON uu.id = h.user_id
+   JOIN projects_project pp ON pp.id = l.project_id
+   LEFT JOIN masters_extensioncategory ec ON ec.id = l.category_extension_id
+   WHERE h.date_init IS NOT NULL
+     AND h.date_end >= h.date_init
+     AND (h.date_end - h.date_init) <= 7
+     AND l.hours IS NOT NULL
+     AND l.hours >= 0
+   GROUP BY uu.email, h.date_init, pp.code, ec.name'
+) AS src(email varchar, date_init date, project_code varchar, cat_name varchar,
+         hours numeric, extra_hours numeric, comment text)
+JOIN users u ON u.email = src.email
+JOIN time_entries te ON te.user_id = u.id AND te.week_start_date = src.date_init
+JOIN projects p ON p.code = src.project_code
+LEFT JOIN project_categories pc ON pc.name = trim(regexp_replace(src.cat_name, '\s+', ' ', 'g'))
+ON CONFLICT DO NOTHING;
+
+-- 7.3 — Aprobaciones (una por línea activa; APROBADO_CON_OBSERVACION cuando
+--        el gestor ajustó las horas originales del seeker)
+INSERT INTO time_entry_approvals (
+  time_entry_line_id, project_id, status, comment,
+  suggested_hours, suggested_extra_hours,
+  reviewed_by, reviewed_at,
+  created_at, created_by
+)
+SELECT
+  tel.id,
+  p.id,
+  CASE
+    WHEN src.all_approved
+         AND ( src.sum_validated_hours <> src.sum_hours
+            OR src.sum_validated_extra  <> src.sum_extra )
+      THEN 'APROBADO_CON_OBSERVACION'
+    WHEN src.all_approved THEN 'APROBADO'
+    WHEN src.all_rejected THEN 'RECHAZADO'
+    ELSE                       'PENDIENTE'
+  END,
+  src.justification,
+  CASE
+    WHEN src.all_approved AND src.sum_validated_hours <> src.sum_hours
+      THEN src.sum_validated_hours
+  END,
+  CASE
+    WHEN src.all_approved AND src.sum_validated_extra <> src.sum_extra
+      THEN src.sum_validated_extra
+  END,
+  CASE WHEN src.all_approved OR src.all_rejected THEN src.reviewed_by END,
+  CASE WHEN src.all_approved OR src.all_rejected THEN src.reviewed_at END,
+  NOW(),
+  'migration'
+FROM dblink('dbname=seekops_old user=postgres',
+  'SELECT
+     uu.email                              AS email,
+     h.date_init                           AS date_init,
+     pp.code                               AS project_code,
+     ec.name                               AS cat_name,
+     bool_and(l.status = ''approved'')     AS all_approved,
+     bool_and(l.status = ''rejected'')     AS all_rejected,
+     SUM(l.hours)::numeric                 AS sum_hours,
+     SUM(COALESCE(l.extra_hours, 0))::numeric AS sum_extra,
+     SUM(CASE WHEN l.status = ''approved'' AND l.validated_hours IS NOT NULL
+              THEN l.validated_hours ELSE l.hours END)::numeric AS sum_validated_hours,
+     SUM(CASE WHEN l.status = ''approved'' AND l.validated_extra_hours IS NOT NULL
+              THEN l.validated_extra_hours ELSE COALESCE(l.extra_hours, 0) END)::numeric AS sum_validated_extra,
+     string_agg(NULLIF(TRIM(l.justification), ''''), '' | '') AS justification,
+     (array_agg(mm.email) FILTER (WHERE l.status IN (''approved'', ''rejected'')))[1] AS reviewed_by,
+     max(l.updated_at) FILTER (WHERE l.status IN (''approved'', ''rejected'')) AS reviewed_at
+   FROM seekers_hoursworked l
+   JOIN seekers_hoursworkedhead h ON h.id = l.head_id
+   JOIN users_user uu ON uu.id = h.user_id
+   JOIN projects_project pp ON pp.id = l.project_id
+   LEFT JOIN masters_extensioncategory ec ON ec.id = l.category_extension_id
+   LEFT JOIN users_user mm ON mm.id = l.manager_id
+   WHERE h.date_init IS NOT NULL
+     AND h.date_end >= h.date_init
+     AND (h.date_end - h.date_init) <= 7
+     AND l.hours IS NOT NULL
+     AND l.hours >= 0
+   GROUP BY uu.email, h.date_init, pp.code, ec.name'
+) AS src(email varchar, date_init date, project_code varchar, cat_name varchar,
+         all_approved bool, all_rejected bool,
+         sum_hours numeric, sum_extra numeric,
+         sum_validated_hours numeric, sum_validated_extra numeric,
+         justification text, reviewed_by varchar, reviewed_at timestamptz)
+JOIN users u ON u.email = src.email
+JOIN time_entries te ON te.user_id = u.id AND te.week_start_date = src.date_init
+JOIN projects p ON p.code = src.project_code
+LEFT JOIN project_categories pc ON pc.name = trim(regexp_replace(src.cat_name, '\s+', ' ', 'g'))
+JOIN time_entry_lines tel
+  ON  tel.time_entry_id = te.id
+  AND tel.project_id    = p.id
+  AND (tel.income_category_id = pc.id OR (tel.income_category_id IS NULL AND pc.id IS NULL))
+  AND tel.is_active     = true
+  AND tel.created_by    = 'migration'
+ON CONFLICT (time_entry_line_id) DO NOTHING;
+
+COMMIT;
+
+
 -- ── REPORTE FINAL ─────────────────────────────────────────────
 
 SELECT 'usuarios' AS tabla,
@@ -430,3 +616,11 @@ SELECT 'registros_comerciales' AS tabla,
   SUM(price) FILTER (WHERE currency = 'USD') AS total_usd,
   SUM(price) FILTER (WHERE currency = 'PEN') AS total_pen
 FROM commercial_records;
+
+SELECT 'horas_trabajadas' AS tabla,
+  (SELECT COUNT(*) FROM time_entries WHERE created_by = 'migration') AS entries,
+  (SELECT COUNT(*) FROM time_entry_lines WHERE created_by = 'migration' AND is_active) AS lineas_activas,
+  (SELECT COUNT(*) FROM time_entry_approvals WHERE created_by = 'migration' AND status = 'APROBADO') AS aprobadas,
+  (SELECT COUNT(*) FROM time_entry_approvals WHERE created_by = 'migration' AND status = 'APROBADO_CON_OBSERVACION') AS con_observacion,
+  (SELECT COUNT(*) FROM time_entry_approvals WHERE created_by = 'migration' AND status = 'RECHAZADO') AS rechazadas,
+  (SELECT COUNT(*) FROM time_entry_approvals WHERE created_by = 'migration' AND status = 'PENDIENTE') AS pendientes;

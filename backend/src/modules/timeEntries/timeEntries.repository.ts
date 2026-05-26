@@ -11,6 +11,7 @@ import type {
 export interface ApprovalRow {
   id: string;
   accion: string;
+  line_id: string | null;
   proyecto_id: string | null;
   proyecto_nombre: string | null;
   comentario: string | null;
@@ -46,17 +47,6 @@ const entryIncludes = {
 
 export type EntryWithRelations = Prisma.time_entriesGetPayload<{ include: typeof entryIncludes }>;
 
-// ─── Rollup helper ────────────────────────────────────────────────────────────
-
-export function computeWeekRollup(lines: { status: string; is_active: boolean }[]): string {
-  const active = lines.filter((l) => l.is_active);
-  if (active.length === 0) return 'PENDIENTE';
-  if (active.some((l) => l.status === 'PENDIENTE')) return 'PENDIENTE';
-  if (active.some((l) => l.status === 'RECHAZADO')) return 'RECHAZADO';
-  if (active.some((l) => l.status === 'APROBADO_CON_OBSERVACION')) return 'APROBADO_CON_OBSERVACION';
-  return 'APROBADO';
-}
-
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export async function findAll(
@@ -71,15 +61,14 @@ export async function findAll(
   if (roles.includes('ADMIN')) {
     if (filters.usuario_id) where.user_id = filters.usuario_id;
   } else if (roles.includes('GESTOR')) {
-    // Gestor sees own entries OR entries with pending lines in his projects
     where.OR = [
       { user_id: userId },
       {
         time_entry_lines: {
           some: {
-            projects: { manager_id: userId },
-            status: 'PENDIENTE',
             is_active: true,
+            projects: { manager_id: userId },
+            time_entry_approvals: { status: 'PENDIENTE' },
           },
         },
       },
@@ -88,19 +77,22 @@ export async function findAll(
     where.user_id = userId;
   }
 
-  // For gestor, filter by line-level status (pending lines in their projects) instead of week rollup
   if (filters.estado) {
     if (roles.includes('GESTOR') && !roles.includes('ADMIN')) {
-      // Filter entries that have at least one line matching the status in manager's projects
       where.time_entry_lines = {
         some: {
-          projects: { manager_id: userId },
-          status: filters.estado,
           is_active: true,
+          projects: { manager_id: userId },
+          time_entry_approvals: { status: filters.estado },
         },
       };
     } else {
-      where.status = filters.estado;
+      where.time_entry_lines = {
+        some: {
+          is_active: true,
+          time_entry_approvals: { status: filters.estado },
+        },
+      };
     }
   }
 
@@ -132,7 +124,8 @@ export async function findById(id: string): Promise<EntryWithRelations | null> {
 export async function findApprovals(timeEntryId: string): Promise<ApprovalRow[]> {
   return prisma.$queryRaw<ApprovalRow[]>`
     SELECT tea.id,
-           tea.action         AS accion,
+           tea.status         AS accion,
+           tea.time_entry_line_id AS line_id,
            tea.project_id     AS proyecto_id,
            p.name             AS proyecto_nombre,
            tea.comment        AS comentario,
@@ -145,27 +138,37 @@ export async function findApprovals(timeEntryId: string): Promise<ApprovalRow[]>
            u.first_name       AS nombres,
            u.last_name        AS apellidos
     FROM time_entry_approvals tea
-    LEFT JOIN users u ON u.email = tea.created_by
+    JOIN time_entry_lines tel ON tel.id = tea.time_entry_line_id
+    LEFT JOIN users u ON u.email = tea.reviewed_by
     LEFT JOIN projects p ON p.id = tea.project_id
-    WHERE tea.time_entry_id = ${timeEntryId}
+    WHERE tel.time_entry_id = ${timeEntryId}
     ORDER BY tea.created_at ASC
   `;
 }
 
 export async function getLinesForProject(
   timeEntryId: string,
-  projectId: string,
-  categoryId?: string | null,
+  lineaId: string,
 ): Promise<{ id: string; status: string; hours: any; extra_hours: any }[]> {
-  return prisma.time_entry_lines.findMany({
+  const lines = await prisma.time_entry_lines.findMany({
     where: {
       time_entry_id: timeEntryId,
-      project_id: projectId,
+      id: lineaId,
       is_active: true,
-      ...(categoryId !== undefined ? { income_category_id: categoryId } : {}),
     },
-    select: { id: true, status: true, hours: true, extra_hours: true },
+    select: {
+      id: true,
+      hours: true,
+      extra_hours: true,
+      time_entry_approvals: { select: { status: true } },
+    },
   });
+  return lines.map((l) => ({
+    id: l.id,
+    status: l.time_entry_approvals?.status ?? 'PENDIENTE',
+    hours: l.hours,
+    extra_hours: l.extra_hours,
+  }));
 }
 
 export async function isProjectManager(userId: string, projectId: string): Promise<boolean> {
@@ -181,10 +184,8 @@ export async function isUserAssignedToProject(userId: string, projectId: string)
 }
 
 /**
- * Returns existing line for (userId, weekStart, projectId, categoryId) that is active and NOT rejected.
- * For area projects (categoryId != null), uniqueness is per (project, category).
- * For non-area projects (categoryId = null), uniqueness is per project only.
- * If only rejected lines exist, returns null (re-load allowed).
+ * Returns existing active line for (userId, weekStart, projectId, categoryId) whose approval
+ * is NOT RECHAZADO. Returns null if no such line exists (re-load allowed).
  */
 export async function findExistingLineForProject(
   userId: string,
@@ -204,11 +205,16 @@ export async function findExistingLineForProject(
       project_id: projectId,
       income_category_id: categoryId ?? null,
       is_active: true,
-      status: { not: 'RECHAZADO' },
     },
-    select: { id: true, status: true },
+    select: {
+      id: true,
+      time_entry_approvals: { select: { status: true } },
+    },
   });
-  return line ?? null;
+  if (!line) return null;
+  const status = line.time_entry_approvals?.status ?? 'PENDIENTE';
+  if (status === 'RECHAZADO') return null;
+  return { id: line.id, status };
 }
 
 export async function findOrCreateEntry(
@@ -228,7 +234,6 @@ export async function findOrCreateEntry(
       user_id: userId,
       week_start_date: weekStart,
       week_end_date: weekEnd,
-      status: 'PENDIENTE',
       created_by: email ?? 'admin',
       updated_by: email,
     },
@@ -248,7 +253,7 @@ export async function create(
 ): Promise<EntryWithRelations> {
   const entryId = await findOrCreateEntry(params.userId, params.email, params.weekStart, params.weekEnd);
 
-  await prisma.time_entry_lines.createMany({
+  const createdLines = await prisma.time_entry_lines.createManyAndReturn({
     data: params.lineas.map((l) => ({
       time_entry_id: entryId,
       project_id: l.proyecto_id,
@@ -256,21 +261,26 @@ export async function create(
       hours: l.horas,
       extra_hours: l.horas_extra ?? 0,
       comment: l.comentario ?? '',
+      created_by: params.email ?? 'admin',
+    })),
+    select: { id: true, project_id: true },
+  });
+
+  await prisma.time_entry_approvals.createMany({
+    data: createdLines.map((line) => ({
+      time_entry_line_id: line.id,
+      project_id: line.project_id,
       status: 'PENDIENTE',
       created_by: params.email ?? 'admin',
     })),
   });
 
-  // Recalculate rollup
-  await recalculateEntryStatus(entryId);
-
   return (await findById(entryId))!;
 }
 
 export async function recordApproval(params: {
-  entryId: string;
+  lineaId: string;
   projectId: string;
-  categoryId?: string | null;
   action: 'APROBAR' | 'APROBAR_CON_OBSERVACION' | 'RECHAZAR';
   email: string | null;
   data: Partial<ApproveWithObservationInput & RejectInput>;
@@ -280,85 +290,25 @@ export async function recordApproval(params: {
     APROBAR_CON_OBSERVACION: 'APROBADO_CON_OBSERVACION',
     RECHAZAR: 'RECHAZADO',
   };
-  const newLineStatus = statusMap[params.action];
+  const newStatus = statusMap[params.action];
+  const observeData = params.data as ApproveWithObservationInput;
+  const rejectData = params.data as RejectInput;
 
-  await prisma.$transaction(async (tx) => {
-    const observeData = params.data as ApproveWithObservationInput;
-    const rejectData = params.data as RejectInput;
-
-    // If observe with line adjustments, apply them (only to PENDIENTE lines of this project)
-    if (params.action === 'APROBAR_CON_OBSERVACION' && observeData.lineas?.length) {
-      for (const l of observeData.lineas) {
-        await tx.time_entry_lines.updateMany({
-          where: {
-            id: l.id,
-            time_entry_id: params.entryId,
-            project_id: params.projectId,
-            status: 'PENDIENTE',
-          },
-          data: { hours: l.horas, extra_hours: l.horas_extra ?? 0, updated_at: new Date() },
-        });
-      }
-    }
-
-    // Update status on active lines of this project (scoped to category when provided)
-    await tx.time_entry_lines.updateMany({
-      where: {
-        time_entry_id: params.entryId,
-        project_id: params.projectId,
-        is_active: true,
-        status: 'PENDIENTE',
-        ...(params.categoryId !== undefined ? { income_category_id: params.categoryId } : {}),
-      },
-      data: {
-        status: newLineStatus,
-        reviewed_by: params.email,
-        reviewed_at: new Date(),
-        updated_at: new Date(),
-        updated_by: params.email,
-      },
-    });
-
-    // Recalculate rollup for the entry
-    const lines = await tx.time_entry_lines.findMany({
-      where: { time_entry_id: params.entryId },
-      select: { status: true, is_active: true },
-    });
-    const rollup = computeWeekRollup(lines);
-    await tx.time_entries.update({
-      where: { id: params.entryId },
-      data: { status: rollup, updated_at: new Date(), updated_by: params.email },
-    });
-
-    // Record audit entry
-    await tx.time_entry_approvals.create({
-      data: {
-        time_entry_id: params.entryId,
-        project_id: params.projectId,
-        action: newLineStatus,
-        comment: observeData.comentario_observacion ?? rejectData.razon_rechazo ?? null,
-        suggested_hours: observeData.sugerencia_horas ?? null,
-        suggested_extra_hours: observeData.sugerencia_extras ?? null,
-        rejection_reason: rejectData.razon_rechazo ?? null,
-        can_resubmit: rejectData.permitir_reenvio ?? false,
-        created_by: params.email ?? 'admin',
-      },
-    });
+  await prisma.time_entry_approvals.update({
+    where: { time_entry_line_id: params.lineaId },
+    data: {
+      status: newStatus,
+      reviewed_by: params.email ?? 'admin',
+      reviewed_at: new Date(),
+      comment: observeData.comentario_observacion ?? rejectData.razon_rechazo ?? null,
+      suggested_hours: params.action === 'APROBAR_CON_OBSERVACION' ? (observeData.sugerencia_horas ?? null) : null,
+      suggested_extra_hours: params.action === 'APROBAR_CON_OBSERVACION' ? (observeData.sugerencia_extras ?? null) : null,
+      rejection_reason: rejectData.razon_rechazo ?? null,
+      can_resubmit: rejectData.permitir_reenvio ?? false,
+    },
   });
 
-  return newLineStatus;
-}
-
-async function recalculateEntryStatus(entryId: string): Promise<void> {
-  const lines = await prisma.time_entry_lines.findMany({
-    where: { time_entry_id: entryId },
-    select: { status: true, is_active: true },
-  });
-  const rollup = computeWeekRollup(lines);
-  await prisma.time_entries.update({
-    where: { id: entryId },
-    data: { status: rollup, updated_at: new Date() },
-  });
+  return newStatus;
 }
 
 export async function getUserHireDate(userId: string): Promise<Date | null> {
@@ -400,7 +350,11 @@ export async function findSeekersWithLoadData(managerId: string): Promise<Seeker
             'en_mis_proyectos', EXISTS(
               SELECT 1 FROM time_entry_lines tel
               JOIN projects p2 ON p2.id = tel.project_id
-              WHERE tel.time_entry_id = te.id AND p2.manager_id = ${managerId}
+              JOIN time_entry_approvals tea2 ON tea2.time_entry_line_id = tel.id
+              WHERE tel.time_entry_id = te.id
+                AND p2.manager_id = ${managerId}
+                AND tel.is_active = true
+                AND tea2.status != 'RECHAZADO'
             ),
             'proyectos_otros', (
               SELECT json_agg(p_o.name ORDER BY p_o.name)
@@ -419,7 +373,7 @@ export async function findSeekersWithLoadData(managerId: string): Promise<Seeker
       WHERE p.manager_id = ${managerId} AND pu.is_active = true AND pu.role = 'SEEKER'
     ) seekers
     JOIN users u ON u.id = seekers.user_id AND u.id != ${managerId}
-    LEFT JOIN time_entries te ON te.user_id = u.id AND te.status != 'RECHAZADO'
+    LEFT JOIN time_entries te ON te.user_id = u.id
     GROUP BY u.id, u.first_name, u.last_name, u.email, u.hire_date
   `;
 }

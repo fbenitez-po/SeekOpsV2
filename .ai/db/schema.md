@@ -74,7 +74,7 @@ is_active  BOOLEAN     NOT NULL DEFAULT true
 | Completo (7 campos) | 10 catálogos + `users`, `profiles`, `clients`, `projects` + `time_entries`, `time_entry_lines`, `hour_projections`, `periods`, `revenues`, `admin_expenses`, `sales_costs`, `personnel_costs`, `commercial_records` (23 tablas) | bloque completo |
 | Puente mínimo | `user_area`, `user_profile`, `project_project_category` | solo `created_at`, `created_by` |
 | Puente con estado | `project_user` | `created_at`, `created_by`, `updated_at`, `updated_by`, `is_active` |
-| Log inmutable | `time_entry_approvals` | solo `created_at`, `created_by` |
+| Approval (mutable 1:1) | `time_entry_approvals` | `created_at`, `created_by` (carga) + `reviewed_by`, `reviewed_at` (acción gestor) |
 | Sin bloque | `refresh_tokens`, `password_reset_tokens` | solo su `created_at` propio |
 
 `created_by`/`updated_by`/`deleted_by` guardan el **email** del responsable (o `'admin'` por defecto), `VARCHAR(50)`, sin FK.
@@ -325,7 +325,9 @@ CREATE INDEX IF NOT EXISTS idx_project_user_is_active  ON project_user(is_active
 
 ### time_entries
 
-Registros semanales de horas (cabecera). Un registro por (usuario, semana). La semana se identifica por su **rango de fechas** `week_start_date` (lunes) / `week_end_date` (domingo) — no por un código string. Bloque de auditoría completo.
+Registros semanales de horas (cabecera). Un registro por (usuario, semana). La semana se identifica por su **rango de fechas** `week_start_date` (lunes) / `week_end_date` (domingo) — no por un código string. Bloque de auditoría completo. **Sin columna `status`** — el estado de revisión vive únicamente en `time_entry_approvals`.
+
+> **Decisión 2026-05-26:** Se eliminó `status` de `time_entries`. El estado de semana no existe como concepto; solo interesa el estado por línea (proyecto+categoría).
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entries (
@@ -333,7 +335,6 @@ CREATE TABLE IF NOT EXISTS time_entries (
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   week_start_date DATE NOT NULL,                  -- lunes de la semana (Lun–Dom)
   week_end_date   DATE NOT NULL,                  -- domingo = week_start_date + 6
-  status          VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by      VARCHAR(50) NOT NULL DEFAULT 'admin',
   updated_at      TIMESTAMP,
@@ -345,21 +346,16 @@ CREATE TABLE IF NOT EXISTS time_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_id         ON time_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_time_entries_week_start      ON time_entries(week_start_date);
-CREATE INDEX IF NOT EXISTS idx_time_entries_status          ON time_entries(status);
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_week_start ON time_entries(user_id, week_start_date);
 ```
 
-**Estados (`status`):** PENDIENTE → APROBADO (final) | OBSERVADO → PENDIENTE (ciclo) | RECHAZADO (final). El valor `'PENDIENTE'` se conserva en español (dato, no estructura).
-
 ### time_entry_lines
 
-Líneas de detalle de cada carga. Una línea por proyecto+categoría. `hours`/`extra_hours` NUMERIC(x,1), múltiplos de 0.5.
+Registro **inmutable** de lo que cargó el seeker. Una línea por proyecto+categoría. `hours`/`extra_hours` NUMERIC(x,1), múltiplos de 0.5. **Sin columna `status`** — el estado de revisión vive en `time_entry_approvals`. Cada línea tiene exactamente una approval asociada (`time_entry_approvals.time_entry_line_id`).
 
-**`status`** es la fuente de verdad de aprobación (`PENDIENTE`/`APROBADO`/`APROBADO_CON_OBSERVACION`/`RECHAZADO`); `time_entries.status` es un rollup derivado. Una línea `RECHAZADO` puede coexistir con una nueva `PENDIENTE` del mismo proyecto (re-carga tras rechazo — no es baja lógica).
+> **Decisión 2026-05-26:** Se eliminaron `status`, `reviewed_by` y `reviewed_at` de `time_entry_lines`. La tabla ahora es de solo escritura (lo que cargó el seeker no se modifica nunca). Si el gestor rechaza y el seeker re-carga, la línea vieja queda (histórico) y se crean línea nueva + approval PENDIENTE nueva.
 
-`income_category_id` referencia `project_categories` (antes `income_categories`, eliminada en 2026-05-22). Solo aplica para proyectos de área; en proyectos normales es NULL. Dos índices parciales únicos garantizan la integridad:
-- Sin categoría (proyectos normales): `(time_entry_id, project_id) WHERE income_category_id IS NULL AND is_active AND status<>'RECHAZADO'`
-- Con categoría (proyectos de área): `(time_entry_id, project_id, income_category_id) WHERE income_category_id IS NOT NULL AND is_active AND status<>'RECHAZADO'`
+`income_category_id` referencia `project_categories` (antes `income_categories`, eliminada en 2026-05-22). Solo aplica para proyectos de área; en proyectos normales es NULL.
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_lines (
@@ -370,9 +366,6 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,
-  status             VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',  -- fuente de verdad de aprobación
-  reviewed_by        VARCHAR(50),   -- email del gestor que revisó
-  reviewed_at        TIMESTAMP,
   created_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by         VARCHAR(50) NOT NULL DEFAULT 'admin',
   updated_at         TIMESTAMP,
@@ -385,40 +378,34 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_time_entry_id ON time_entry_lines(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_lines(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_lines_status        ON time_entry_lines(status);
--- Proyectos normales (sin categoría): una sola línea activa no rechazada por (entry, project)
-CREATE UNIQUE INDEX idx_tel_entry_project_no_category
-  ON time_entry_lines(time_entry_id, project_id)
-  WHERE (is_active = true AND status <> 'RECHAZADO' AND income_category_id IS NULL);
--- Proyectos de área (con categoría): una sola línea activa no rechazada por (entry, project, categoría)
-CREATE UNIQUE INDEX idx_tel_entry_project_with_category
-  ON time_entry_lines(time_entry_id, project_id, income_category_id)
-  WHERE (is_active = true AND status <> 'RECHAZADO' AND income_category_id IS NOT NULL);
 ```
 
 ### time_entry_approvals
 
-Historial de acciones sobre un time entry, ahora con dimensión de proyecto (`project_id`). Log inmutable: solo `created_at`/`created_by`. `can_resubmit` es booleano de negocio.
+**Fuente de verdad del estado de revisión.** Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar el seeker. El gestor la muta a `APROBADO | APROBADO_CON_OBSERVACION | RECHAZADO`. Auditoría mínima (`created_at`/`created_by` = momento de carga; `reviewed_by`/`reviewed_at` = acción del gestor).
+
+> **Decisión 2026-05-26:** `time_entry_approvals` pasa de log inmutable a registro 1:1 con la línea. `action` renombrado a `status`. Al observar, las horas sugeridas van **solo** a `suggested_hours`/`suggested_extra_hours` — nunca se modifican las `time_entry_lines`. `can_resubmit` default cambiado a `false`. `time_entry_id` eliminado (redundante — alcanzable vía `time_entry_line_id → time_entry_lines.time_entry_id`).
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  time_entry_id         UUID NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
-  project_id            UUID REFERENCES projects(id),  -- proyecto afectado (nullable para historial)
-  action                VARCHAR(50) NOT NULL,
+  time_entry_line_id    UUID UNIQUE NOT NULL REFERENCES time_entry_lines(id) ON DELETE CASCADE,  -- 1:1; time_entry alcanzable vía línea
+  project_id            UUID REFERENCES projects(id),
+  status                VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',  -- PENDIENTE|APROBADO|APROBADO_CON_OBSERVACION|RECHAZADO
   comment               TEXT,
-  suggested_hours       NUMERIC(6,1),
-  suggested_extra_hours NUMERIC(4,1),
-  rejection_reason      TEXT,
-  can_resubmit          BOOLEAN DEFAULT true,
+  suggested_hours       NUMERIC(6,1),        -- solo en APROBADO_CON_OBSERVACION
+  suggested_extra_hours NUMERIC(4,1),        -- solo en APROBADO_CON_OBSERVACION
+  rejection_reason      TEXT,                -- solo en RECHAZADO
+  can_resubmit          BOOLEAN DEFAULT false,
+  reviewed_by           VARCHAR(50),         -- email del gestor que actuó
+  reviewed_at           TIMESTAMP,           -- cuándo actuó el gestor
   created_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by            VARCHAR(50) NOT NULL DEFAULT 'admin'
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_action        ON time_entry_approvals(action);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id       ON time_entry_approvals(time_entry_line_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status        ON time_entry_approvals(status);
 ```
 
 ### refresh_tokens / password_reset_tokens
@@ -703,8 +690,8 @@ Proyectos pueden o no pertenecer a un área. La UI lo controla con un checkbox.
 ### client_categories renombrada a work_categories (migración 021)
 Contenía tipos de trabajo, no categorías de cliente. Se eliminó la FK `clients.client_category_id` y `hour_projections` usa `work_category_id`.
 
-### time_entry_approvals como historial completo
-Cada acción (aprobación, observación, rechazo) genera un registro. No se sobreescribe el estado. Log inmutable (auditoría mínima).
+### time_entry_approvals como fuente de verdad (2026-05-26)
+Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar. El gestor la muta al estado terminal. Las horas sugeridas del gestor van a `suggested_hours`/`suggested_extra_hours` — nunca modifican `time_entry_lines`. Si se rechaza, el seeker puede re-cargar: se crea un par nuevo (línea + approval PENDIENTE); la vieja queda como histórico.
 
 ### Acceso del Gestor a proyectos
 Un Gestor tiene acceso a todos los proyectos donde figura como `manager_id`, independientemente de si tiene fila en `project_user`. Validado en tres puntos del backend.

@@ -20,16 +20,10 @@ const VARIANTE_ESTADO = {
 };
 
 function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
+  const linea = solicitud.lineas[0];
   const [comentario, setComentario] = useState('');
-  const [lineas, setLineas] = useState(
-    solicitud.lineas.map((l) => ({ id: l.id, horas: l.horas, horas_extra: l.horas_extra })),
-  );
-
-  function actualizarLinea(idx, campo, valor) {
-    setLineas((prev) =>
-      prev.map((l, i) => (i === idx ? { ...l, [campo]: valor === '' ? '' : Number(valor) } : l)),
-    );
-  }
+  const [sugerenciaHoras, setSugerenciaHoras] = useState(linea?.horas ?? 0);
+  const [sugerenciaExtras, setSugerenciaExtras] = useState(linea?.horas_extra ?? 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -37,44 +31,40 @@ function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
         <h2 className="text-lg font-semibold">Aprobar con observación</h2>
         <p className="text-sm text-muted-foreground">
           {solicitud.usuario.nombres} {solicitud.usuario.apellidos} — {rangoSemana(solicitud.semana_inicio)} — {solicitud.proyecto_nombre}
+          {solicitud.categoria_nombre && ` · ${solicitud.categoria_nombre}`}
         </p>
 
+        <div className="rounded-md border p-3 bg-slate-50 text-sm text-slate-600">
+          Horas cargadas por el seeker: <span className="font-medium">{linea?.horas}h</span>
+          {linea?.horas_extra > 0 && <> · Extras: <span className="font-medium">{linea.horas_extra}h</span></>}
+        </div>
+
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Horas por línea</Label>
-          <div className="rounded-md border divide-y">
-            {solicitud.lineas.map((linea, idx) => (
-              <div key={linea.id} className="flex items-center gap-3 p-3">
-                <p className="flex-1 text-sm font-medium truncate">
-                  {linea.categoria_ingreso?.nombre ?? 'Sin categoría'}
-                </p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground text-center">Horas</p>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="24"
-                      step="0.5"
-                      className="w-16 h-8 text-center text-sm"
-                      value={lineas[idx].horas}
-                      onChange={(e) => actualizarLinea(idx, 'horas', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs text-muted-foreground text-center">Extra</p>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="8"
-                      step="0.5"
-                      className="w-16 h-8 text-center text-sm"
-                      value={lineas[idx].horas_extra}
-                      onChange={(e) => actualizarLinea(idx, 'horas_extra', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+          <Label className="text-sm font-medium">Horas sugeridas</Label>
+          <div className="flex items-center gap-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Horas normales</p>
+              <Input
+                type="number"
+                min="0"
+                step="0.5"
+                className="w-24 text-center"
+                value={sugerenciaHoras}
+                onChange={(e) => setSugerenciaHoras(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Horas extra</p>
+              <Input
+                type="number"
+                min="0"
+                max="8"
+                step="0.5"
+                className="w-24 text-center"
+                value={sugerenciaExtras}
+                onChange={(e) => setSugerenciaExtras(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+            </div>
           </div>
         </div>
 
@@ -97,10 +87,11 @@ function ModalAprobarConObservacion({ solicitud, onCerrar, onConfirmar }) {
             disabled={!comentario}
             onClick={() =>
               onConfirmar({
+                linea_id: solicitud.linea_id,
                 proyecto_id: solicitud.proyecto_id,
-                categoria_ingreso_id: solicitud.categoria_id,
                 comentario_observacion: comentario,
-                lineas,
+                sugerencia_horas: Number(sugerenciaHoras) || 0,
+                sugerencia_extras: Number(sugerenciaExtras) || 0,
               })
             }
           >
@@ -142,7 +133,7 @@ function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
             className="flex-1"
             disabled={!razon}
             onClick={() =>
-              onConfirmar({ proyecto_id: solicitud.proyecto_id, categoria_ingreso_id: solicitud.categoria_id, razon_rechazo: razon, permitir_reenvio: true })
+              onConfirmar({ linea_id: solicitud.linea_id, proyecto_id: solicitud.proyecto_id, razon_rechazo: razon, permitir_reenvio: true })
             }
           >
             Rechazar
@@ -172,6 +163,7 @@ function buildSolicitudes(entries, gestorId) {
         semana_inicio: entrada.semana_inicio,
         fecha_carga: entrada.fecha_carga,
         usuario: entrada.usuario,
+        linea_id: linea.id,
         proyecto_id: linea.proyecto.id,
         proyecto_nombre: linea.proyecto.nombre,
         categoria_id: linea.categoria_ingreso?.id ?? null,
@@ -225,8 +217,8 @@ export default function HorasEquipo() {
   }
 
   const mutAprobar = useMutation({
-    mutationFn: ({ id, proyecto_id, categoria_id }) =>
-      timeEntryApi.aprobar(id, { proyecto_id, categoria_ingreso_id: categoria_id }),
+    mutationFn: ({ id, linea_id, proyecto_id }) =>
+      timeEntryApi.aprobar(id, { linea_id, proyecto_id }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['horas-equipo'] }),
   });
 
@@ -376,7 +368,7 @@ export default function HorasEquipo() {
                       <Button
                         size="sm"
                         className="gap-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => mutAprobar.mutate({ id: sol.id, proyecto_id: sol.proyecto_id, categoria_id: sol.categoria_id })}
+                        onClick={() => mutAprobar.mutate({ id: sol.id, linea_id: sol.linea_id, proyecto_id: sol.proyecto_id })}
                         disabled={mutAprobar.isPending}
                       >
                         <Check className="h-3 w-3" /> Aprobar

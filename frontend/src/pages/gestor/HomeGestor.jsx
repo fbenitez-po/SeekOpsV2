@@ -19,16 +19,14 @@ const VARIANTE_ESTADO = {
 function TarjetaEntradaPropia({ entrada, onClick }) {
   const lineas = entrada.lineas || [];
   const proyectosUnicos = [...new Set(lineas.map((l) => l.proyecto?.nombre).filter(Boolean))];
-  const obs = entrada.estado === 'APROBADO_CON_OBSERVACION'
-    ? entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION')
-    : null;
+  const obs = entrada.aprobaciones?.find((a) => a.accion === 'APROBADO_CON_OBSERVACION') ?? null;
 
   return (
     <div
       className="cursor-pointer rounded-md border px-3 py-2 hover:bg-muted/50 transition-colors"
       onClick={() => onClick(entrada)}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium leading-snug truncate">
             {rangoSemana(entrada.semana_inicio)}
@@ -41,9 +39,13 @@ function TarjetaEntradaPropia({ entrada, onClick }) {
             <p className="text-xs text-teal-700 mt-0.5 border-l-2 border-teal-300 pl-2 truncate">{obs.comentario}</p>
           )}
         </div>
-        <Badge variant={VARIANTE_ESTADO[entrada.estado]} className="shrink-0 text-xs">
-          {ESTADO_LABELS[entrada.estado]}
-        </Badge>
+        <div className="flex flex-wrap gap-1 shrink-0">
+          {[...new Set(lineas.map((l) => l.estado).filter(Boolean))].map((estado) => (
+            <Badge key={estado} variant={VARIANTE_ESTADO[estado]} className="text-xs">
+              {ESTADO_LABELS[estado]}
+            </Badge>
+          ))}
+        </div>
       </div>
     </div>
   );

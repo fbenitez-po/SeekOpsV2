@@ -43,35 +43,29 @@ export const CreateTimeEntrySchema = z
   );
 
 export const ApproveSchema = z.object({
+  linea_id: z.string().uuid('La línea indicada no es válida'),
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
-  categoria_ingreso_id: z.string().uuid().nullish(),
 });
 
 export const ApproveWithObservationSchema = z.object({
+  linea_id: z.string().uuid('La línea indicada no es válida'),
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
-  categoria_ingreso_id: z.string().uuid().nullish(),
   comentario_observacion: z.string().min(1, 'El comentario es requerido'),
-  lineas: z
-    .array(
-      z.object({
-        id: z.string().uuid(),
-        horas: z.number().min(0).refine(horasMultiple, 'Las horas deben ser múltiplo de 0.5'),
-        horas_extra: z
-          .number()
-          .min(0)
-          .max(8)
-          .refine(horasMultiple, 'Las horas extra deben ser múltiplo de 0.5')
-          .optional(),
-      }),
-    )
+  sugerencia_horas: z
+    .number()
+    .min(0)
+    .refine(horasMultiple, 'Las horas sugeridas deben ser múltiplo de 0.5'),
+  sugerencia_extras: z
+    .number()
+    .min(0)
+    .max(8)
+    .refine(horasMultiple, 'Las horas extra sugeridas deben ser múltiplo de 0.5')
     .optional(),
-  sugerencia_horas: z.number().optional(),
-  sugerencia_extras: z.number().optional(),
 });
 
 export const RejectSchema = z.object({
+  linea_id: z.string().uuid('La línea indicada no es válida'),
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
-  categoria_ingreso_id: z.string().uuid().nullish(),
   razon_rechazo: z.string().min(1, 'La razón de rechazo es requerida'),
   permitir_reenvio: z.boolean().optional(),
 });

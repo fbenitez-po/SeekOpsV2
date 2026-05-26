@@ -297,12 +297,12 @@ CREATE INDEX IF NOT EXISTS idx_project_user_is_active  ON project_user(is_active
 
 -- Transactional tables --------------------------------------
 
+-- Sin status: el estado de revisión vive solo en time_entry_approvals (2026-05-26)
 CREATE TABLE IF NOT EXISTS time_entries (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   week_start_date DATE NOT NULL,                  -- lunes de la semana (Lun–Dom)
   week_end_date   DATE NOT NULL,                  -- domingo = week_start_date + 6
-  status          VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',
   created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by      VARCHAR(50) NOT NULL DEFAULT 'admin',
   updated_at      TIMESTAMP,
@@ -314,9 +314,9 @@ CREATE TABLE IF NOT EXISTS time_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_id         ON time_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_time_entries_week_start      ON time_entries(week_start_date);
-CREATE INDEX IF NOT EXISTS idx_time_entries_status          ON time_entries(status);
 CREATE INDEX IF NOT EXISTS idx_time_entries_user_week_start ON time_entries(user_id, week_start_date);
 
+-- Registro inmutable de lo que cargó el seeker; sin status/reviewed_by/reviewed_at (2026-05-26)
 CREATE TABLE IF NOT EXISTS time_entry_lines (
   id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_id      UUID         NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
@@ -325,9 +325,6 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
   hours              NUMERIC(6,1) NOT NULL,
   extra_hours        NUMERIC(4,1) NOT NULL DEFAULT 0,
   comment            TEXT,
-  status             VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',
-  reviewed_by        VARCHAR(50),
-  reviewed_at        TIMESTAMP,
   created_at         TIMESTAMP    NOT NULL DEFAULT NOW(),
   created_by         VARCHAR(50)  NOT NULL DEFAULT 'admin',
   updated_at         TIMESTAMP,
@@ -340,30 +337,28 @@ CREATE TABLE IF NOT EXISTS time_entry_lines (
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_time_entry_id ON time_entry_lines(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_lines(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_lines_status        ON time_entry_lines(status);
--- Permite re-carga post-rechazo: solo una línea activa no-rechazada por (entry, proyecto)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_time_entry_lines_entry_project_active
-  ON time_entry_lines(time_entry_id, project_id)
-  WHERE (is_active = true AND status <> 'RECHAZADO');
 
+-- Fuente de verdad del estado de revisión: 1 fila por línea, creada PENDIENTE, mutada por el gestor (2026-05-26)
+-- time_entry alcanzable vía time_entry_line_id → time_entry_lines.time_entry_id
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-  time_entry_id         UUID         NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
+  time_entry_line_id    UUID         UNIQUE NOT NULL REFERENCES time_entry_lines(id) ON DELETE CASCADE,
   project_id            UUID         REFERENCES projects(id),
-  action                VARCHAR(50)  NOT NULL,
+  status                VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',  -- PENDIENTE|APROBADO|APROBADO_CON_OBSERVACION|RECHAZADO
   comment               TEXT,
-  suggested_hours       NUMERIC(6,1),
-  suggested_extra_hours NUMERIC(4,1),
-  rejection_reason      TEXT,
-  can_resubmit          BOOLEAN      DEFAULT true,
+  suggested_hours       NUMERIC(6,1),        -- solo en APROBADO_CON_OBSERVACION
+  suggested_extra_hours NUMERIC(4,1),        -- solo en APROBADO_CON_OBSERVACION
+  rejection_reason      TEXT,                -- solo en RECHAZADO
+  can_resubmit          BOOLEAN      DEFAULT false,
+  reviewed_by           VARCHAR(50),         -- email del gestor
+  reviewed_at           TIMESTAMP,
   created_at            TIMESTAMP    NOT NULL DEFAULT NOW(),
   created_by            VARCHAR(50)  NOT NULL DEFAULT 'admin'
 );
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
 CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by    ON time_entry_approvals(created_by);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_action        ON time_entry_approvals(action);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at    ON time_entry_approvals(created_at);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id       ON time_entry_approvals(time_entry_line_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status        ON time_entry_approvals(status);
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

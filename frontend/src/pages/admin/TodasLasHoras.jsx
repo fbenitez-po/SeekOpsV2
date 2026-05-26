@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
+import { Input } from '../../components/ui/input';
 import { ESTADO_LABELS, formatearFecha, rangoSemana } from '../../lib/utils';
 
 const VARIANTE_ESTADO = {
@@ -29,6 +30,8 @@ function rollupLineas(lineas) {
 
 function ModalAccion({ tipo, solicitud, onCerrar, onConfirmar }) {
   const [comentario, setComentario] = useState('');
+  const [sugerenciaHoras, setSugerenciaHoras] = useState(solicitud.horas ?? 0);
+  const [sugerenciaExtras, setSugerenciaExtras] = useState(solicitud.horas_extra ?? 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -37,6 +40,20 @@ function ModalAccion({ tipo, solicitud, onCerrar, onConfirmar }) {
         <p className="text-sm text-muted-foreground">
           {solicitud.nombres} {solicitud.apellidos} — {rangoSemana(solicitud.semana_inicio)} — {solicitud.proyecto_nombre}
         </p>
+        {tipo === 'observar' && (
+          <div className="flex gap-3">
+            <div className="space-y-1 flex-1">
+              <Label className="text-xs">Horas sugeridas</Label>
+              <Input type="number" min="0" step="0.5" value={sugerenciaHoras}
+                onChange={(e) => setSugerenciaHoras(e.target.value === '' ? '' : Number(e.target.value))} />
+            </div>
+            <div className="space-y-1 flex-1">
+              <Label className="text-xs">Extras sugeridas</Label>
+              <Input type="number" min="0" max="8" step="0.5" value={sugerenciaExtras}
+                onChange={(e) => setSugerenciaExtras(e.target.value === '' ? '' : Number(e.target.value))} />
+            </div>
+          </div>
+        )}
         <div className="space-y-2">
           <Label>{tipo === 'observar' ? 'Comentario de observación *' : 'Razón del rechazo *'}</Label>
           <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={3} />
@@ -46,7 +63,7 @@ function ModalAccion({ tipo, solicitud, onCerrar, onConfirmar }) {
           <Button
             className={`flex-1 ${tipo === 'rechazar' ? 'bg-destructive hover:bg-destructive/90' : ''}`}
             disabled={!comentario}
-            onClick={() => onConfirmar(comentario)}
+            onClick={() => onConfirmar({ comentario, sugerencia_horas: Number(sugerenciaHoras) || 0, sugerencia_extras: Number(sugerenciaExtras) || 0 })}
           >
             {tipo === 'observar' ? 'Observar' : 'Rechazar'}
           </Button>
@@ -68,19 +85,19 @@ export default function TodasLasHoras() {
   });
 
   const mutAprobar = useMutation({
-    mutationFn: ({ id, proyecto_id }) => timeEntryApi.aprobar(id, { proyecto_id }),
+    mutationFn: ({ id, linea_id, proyecto_id }) => timeEntryApi.aprobar(id, { linea_id, proyecto_id }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todas-horas'] }),
   });
 
   const mutObservar = useMutation({
-    mutationFn: ({ id, proyecto_id, comentario }) =>
-      timeEntryApi.observar(id, { proyecto_id, comentario_observacion: comentario }),
+    mutationFn: ({ id, linea_id, proyecto_id, comentario, sugerencia_horas, sugerencia_extras }) =>
+      timeEntryApi.observar(id, { linea_id, proyecto_id, comentario_observacion: comentario, sugerencia_horas, sugerencia_extras }),
     onSuccess: () => { setModal(null); queryClient.invalidateQueries({ queryKey: ['todas-horas'] }); },
   });
 
   const mutRechazar = useMutation({
-    mutationFn: ({ id, proyecto_id, comentario }) =>
-      timeEntryApi.rechazar(id, { proyecto_id, razon_rechazo: comentario, permitir_reenvio: true }),
+    mutationFn: ({ id, linea_id, proyecto_id, comentario }) =>
+      timeEntryApi.rechazar(id, { linea_id, proyecto_id, razon_rechazo: comentario, permitir_reenvio: true }),
     onSuccess: () => { setModal(null); queryClient.invalidateQueries({ queryKey: ['todas-horas'] }); },
   });
 
@@ -98,16 +115,18 @@ export default function TodasLasHoras() {
       }
       for (const [pid, g] of porProyecto) {
         const estado = rollupLineas(g.lineas);
+        const lineaPendiente = g.lineas.find((l) => l.estado === 'PENDIENTE') ?? g.lineas[0];
         rows.push({
           entrada_id: e.id,
+          linea_id: lineaPendiente?.id ?? null,
           proyecto_id: pid,
           proyecto_nombre: g.proyecto.nombre,
           nombres: e.usuario.nombres,
           apellidos: e.usuario.apellidos,
           semana_inicio: e.semana_inicio,
           fecha_carga: e.fecha_carga,
-          horas: g.lineas.reduce((s, l) => s + l.horas, 0),
-          horas_extra: g.lineas.reduce((s, l) => s + l.horas_extra, 0),
+          horas: g.lineas.reduce((s, l) => s + (l.horas_efectivas ?? l.horas), 0),
+          horas_extra: g.lineas.reduce((s, l) => s + (l.horas_extra_efectivas ?? l.horas_extra), 0),
           estado,
         });
       }
@@ -173,7 +192,7 @@ export default function TodasLasHoras() {
                             <Button
                               size="sm" variant="ghost" className="text-green-700"
                               disabled={mutAprobar.isPending}
-                              onClick={() => mutAprobar.mutate({ id: s.entrada_id, proyecto_id: s.proyecto_id })}
+                              onClick={() => mutAprobar.mutate({ id: s.entrada_id, linea_id: s.linea_id, proyecto_id: s.proyecto_id })}
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -206,12 +225,12 @@ export default function TodasLasHoras() {
           tipo={modal.tipo}
           solicitud={modal.solicitud}
           onCerrar={() => setModal(null)}
-          onConfirmar={(comentario) => {
-            const { entrada_id, proyecto_id } = modal.solicitud;
+          onConfirmar={({ comentario, sugerencia_horas, sugerencia_extras }) => {
+            const { entrada_id, linea_id, proyecto_id } = modal.solicitud;
             if (modal.tipo === 'observar') {
-              mutObservar.mutate({ id: entrada_id, proyecto_id, comentario });
+              mutObservar.mutate({ id: entrada_id, linea_id, proyecto_id, comentario, sugerencia_horas, sugerencia_extras });
             } else {
-              mutRechazar.mutate({ id: entrada_id, proyecto_id, comentario });
+              mutRechazar.mutate({ id: entrada_id, linea_id, proyecto_id, comentario });
             }
           }}
         />
