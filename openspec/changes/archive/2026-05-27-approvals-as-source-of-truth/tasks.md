@@ -42,8 +42,8 @@
 ## 6. Verificación
 
 - [x] 6.1 `npm run build` (backend) sin errores de tipos por columnas eliminadas
-- [ ] 6.2 Carga de proyecto de área con 2 categorías → 2 líneas + 2 approvals `PENDIENTE`
-- [ ] 6.3 Aprobar-con-observación → `time_entry_lines.hours` NO cambia y la sugerencia queda en `suggested_*`; el seeker ve las horas sugeridas (efectivas) con estado `APROBADO_CON_OBSERVACION`
-- [ ] 6.4 Rechazar → `RECHAZADO`; re-cargar → nueva línea + approval `PENDIENTE`, la vieja se conserva
-- [ ] 6.5 Bandeja del gestor y filtro `?estado=` funcionan vía approvals; la respuesta no trae `entrada.estado`
-- [ ] 6.6 Costos/totales usan horas efectivas (sugeridas en observadas)
+- [x] 6.2 Carga de proyecto de área con 2 categorías → 2 líneas + 2 approvals `PENDIENTE`
+- [x] 6.3 Aprobar-con-observación → `time_entry_lines.hours` NO cambia y la sugerencia queda en `suggested_*`; el seeker ve las horas sugeridas (efectivas) con estado `APROBADO_CON_OBSERVACION`
+- [x] 6.4 Rechazar → `RECHAZADO`; re-cargar → nueva línea + approval `PENDIENTE`, la vieja se conserva
+- [x] 6.5 Bandeja del gestor y filtro `?estado=` funcionan vía approvals; la respuesta no trae `entrada.estado`
+- [x] 6.6 Costos/totales usan horas efectivas (sugeridas en observadas)

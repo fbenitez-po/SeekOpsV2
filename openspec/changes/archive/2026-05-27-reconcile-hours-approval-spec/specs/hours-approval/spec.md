@@ -1,9 +1,4 @@
-# hours-approval Specification
-
-## Purpose
-Reglas de aprobación de horas a nivel de **línea** (proyecto + categoría): dónde vive el estado, el alcance del gestor por proyecto, la bandeja de solicitudes, la inmutabilidad de lo cargado, la re-carga tras rechazo, la auditoría y el cómputo de horas efectivas. Refleja el estado del código tras los changes `approvals-as-source-of-truth` y `simplify-time-entry-approvals` (reconciliado en `reconcile-hours-approval-spec`, 2026-05-27).
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Estado de aprobación por línea
 El sistema SHALL almacenar el estado de revisión de cada línea de horas **exclusivamente en `time_entry_approvals`**, con valores `PENDIENTE`, `APROBADO`, `APROBADO_CON_OBSERVACION` o `RECHAZADO`. Por cada línea creada en una carga (`time_entry_lines`) el sistema SHALL generar **una fila paralela en `time_entry_approvals` en estado `PENDIENTE`**, vinculada por `time_entry_line_id`. Las tablas `time_entries` y `time_entry_lines` NO SHALL tener columna `status`.
@@ -19,13 +14,6 @@ El sistema SHALL almacenar el estado de revisión de cada línea de horas **excl
 #### Scenario: El estado no vive en líneas ni semana
 - **WHEN** se consulta el estado de revisión de una línea
 - **THEN** el valor proviene de su fila en `time_entry_approvals`, y ni `time_entries` ni `time_entry_lines` exponen una columna `status`
-
-### Requirement: Inmutabilidad de las horas cargadas
-El sistema SHALL tratar `time_entry_lines` como un registro inmutable de lo cargado por el seeker. Tras la creación de una línea, ninguna acción de revisión del gestor SHALL modificar sus `hours`, `extra_hours`, `comment`, `project_id` ni `income_category_id`.
-
-#### Scenario: Ninguna acción de revisión altera la línea
-- **WHEN** un gestor aprueba, observa o rechaza una línea
-- **THEN** los campos de horas y categoría de `time_entry_lines` permanecen idénticos a lo cargado por el seeker
 
 ### Requirement: Alcance de aprobación por proyecto del gestor
 El sistema SHALL permitir que un gestor apruebe, rechace o apruebe-con-observación únicamente las líneas cuyos proyectos tienen `manager_id` igual al gestor. La acción SHALL identificar la línea afectada por su `linea_id` y operar **mutando la fila `time_entry_approvals` de esa línea** desde `PENDIENTE` al estado resultante. Al aprobar-con-observación, las horas indicadas por el gestor SHALL guardarse **solo** en `suggested_hours`/`suggested_extra_hours` de la approval y NO SHALL modificar `time_entry_lines`.
@@ -61,13 +49,6 @@ El sistema SHALL exponer al gestor las solicitudes pendientes filtrando por **ap
 - **WHEN** un seeker carga, en la misma semana, un proyecto de área con dos categorías administradas por el mismo gestor
 - **THEN** el gestor ve dos solicitudes separadas, una por línea (proyecto + categoría)
 
-### Requirement: El seeker no edita lo cargado
-El sistema SHALL impedir que un seeker edite las líneas ya cargadas. El endpoint de edición (`PUT /time-entries/:id`) y la pantalla de ajuste del seeker SHALL eliminarse.
-
-#### Scenario: Edición deshabilitada
-- **WHEN** un seeker intenta modificar las horas de una línea ya cargada
-- **THEN** no existe un mecanismo de edición disponible para el seeker
-
 ### Requirement: Re-carga de un proyecto rechazado
 El sistema SHALL permitir que un seeker vuelva a cargar las horas de un proyecto cuya approval quedó en `RECHAZADO`, para la misma semana, creando **una nueva línea en `time_entry_lines` y una nueva approval en estado `PENDIENTE`**. La línea rechazada y su approval `RECHAZADO` SHALL conservarse (histórico) y pueden coexistir con la nueva línea pendiente del mismo proyecto/categoría. El guard de duplicados SHALL bloquear la carga cuando exista una línea activa del mismo `(usuario, semana, proyecto, categoría)` cuya approval NO esté `RECHAZADO`.
 
@@ -89,6 +70,15 @@ El sistema SHALL registrar cada acción de revisión en la fila `time_entry_appr
 #### Scenario: Motivo de rechazo en comment
 - **WHEN** un gestor rechaza una línea y proporciona una razón de rechazo
 - **THEN** la razón se almacena en el campo `comment` de la approval, y el estado queda `RECHAZADO`
+
+## ADDED Requirements
+
+### Requirement: Inmutabilidad de las horas cargadas
+El sistema SHALL tratar `time_entry_lines` como un registro inmutable de lo cargado por el seeker. Tras la creación de una línea, ninguna acción de revisión del gestor SHALL modificar sus `hours`, `extra_hours`, `comment`, `project_id` ni `income_category_id`.
+
+#### Scenario: Ninguna acción de revisión altera la línea
+- **WHEN** un gestor aprueba, observa o rechaza una línea
+- **THEN** los campos de horas y categoría de `time_entry_lines` permanecen idénticos a lo cargado por el seeker
 
 ### Requirement: La API no expone estado de semana
 El sistema SHALL eliminar el estado a nivel de semana de la API. La respuesta de listado y detalle de horas NO SHALL incluir un campo `estado` a nivel de entrada/semana; SHALL exponer el estado por línea (derivado de su approval) y el detalle de approvals.
@@ -119,3 +109,13 @@ El sistema SHALL definir las **horas efectivas** de una línea según el estado 
 #### Scenario: Pendiente o rechazada no cuenta
 - **WHEN** una línea está `PENDIENTE` o `RECHAZADO`
 - **THEN** sus horas no se incluyen en costos, totales ni reportes, aunque otras líneas de la misma semana estén aprobadas
+
+## REMOVED Requirements
+
+### Requirement: Estado de la semana derivado
+**Reason**: Se elimina el concepto de estado a nivel de semana; solo interesa el estado por proyecto + categoría (línea). La columna `time_entries.status` y su rollup desaparecen.
+**Migration**: Los consumidores que mostraban el badge de semana pasan a mostrar el estado por proyecto/línea. El filtro `?estado=` opera sobre approvals de líneas en vez del estado agregado.
+
+### Requirement: Cómputo financiero de horas por línea aprobada
+**Reason**: Reemplazado por "Cómputo de horas efectivas por línea aprobada", que generaliza el cómputo (observada→sugeridas, aprobada→cargadas) y abarca no solo costos sino totales, reportes y la vista del seeker.
+**Migration**: Ninguna a nivel de datos; el cómputo ya usa horas efectivas en el código. Es una reformulación del requirement.

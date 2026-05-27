@@ -1,0 +1,710 @@
+{
+  "info": {
+    "_postman_id": "b1f9c0a2-7e44-4d2a-9c3a-seekopsv2backend",
+    "name": "SeekOps v2 — Backend API",
+    "description": "Colección del backend de SeekOps v2 (TypeScript + Express + Prisma).\n\n## Uso\n1. Ajustá la variable `base_root` si tu backend no corre en `http://localhost:3000`.\n2. Ejecutá **Auth → Login**: el script de test guarda `access_token` y `refresh_token` en las variables de la colección automáticamente.\n3. El resto de los requests heredan el Bearer token a nivel de colección.\n4. Las variables `*_id` son placeholders: completalas con IDs reales (muchos salen de los endpoints de **Config**).\n\n## Convenciones\n- `base_url` = `{{base_root}}/api/v1` (el prefijo real es `/api/v1`, configurable por `API_PREFIX`).\n- Claves de request/response en **español** (excepto el módulo **Dashboard**, que replica el contrato en inglés de v1).\n- Mayoría de endpoints requieren rol ADMIN; Projections requiere GESTOR o ADMIN; Dashboard es **abierto** (sin token).\n\nMantener sincronizada con la API a medida que se agregan endpoints (p. ej. los recursos pendientes del módulo Dashboard: clients, commercial, project).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_root", "value": "http://localhost:3000" },
+    { "key": "base_url", "value": "{{base_root}}/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "gestor_id", "value": "" },
+    { "key": "client_id", "value": "" },
+    { "key": "project_id", "value": "" },
+    { "key": "time_entry_id", "value": "" },
+    { "key": "linea_id", "value": "" },
+    { "key": "projection_id", "value": "" },
+    { "key": "periodo_id", "value": "" },
+    { "key": "revenue_id", "value": "" },
+    { "key": "admin_expense_id", "value": "" },
+    { "key": "sales_cost_id", "value": "" },
+    { "key": "personnel_cost_id", "value": "" },
+    { "key": "commercial_id", "value": "" },
+    { "key": "equipo_id", "value": "" },
+    { "key": "area_id", "value": "" },
+    { "key": "segmentacion_id", "value": "" },
+    { "key": "sector_id", "value": "" },
+    { "key": "segmentacion_proyecto_id", "value": "" },
+    { "key": "categoria_proyecto_id", "value": "" },
+    { "key": "capa_productividad_id", "value": "" },
+    { "key": "tipo_servicio_id", "value": "" },
+    { "key": "tipo_documento_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_root}}/health", "host": ["{{base_root}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access_token) pm.collectionVariables.set('access_token', json.access_token);",
+                  "if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "pm.test('login 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@seekglobal.co\",\n  \"password\": \"your-password\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access_token) pm.collectionVariables.set('access_token', json.access_token);",
+                  "if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/auth/refresh-token", "host": ["{{base_url}}"], "path": ["auth", "refresh-token"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Solicitar reset",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@seekglobal.co\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/auth/solicitar-reset", "host": ["{{base_url}}"], "path": ["auth", "solicitar-reset"] }
+          }
+        },
+        {
+          "name": "Confirmar reset",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<token-del-email>\",\n  \"nueva_password\": \"NuevaPassword123\",\n  \"confirmar_password\": \"NuevaPassword123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/auth/confirmar-reset", "host": ["{{base_url}}"], "path": ["auth", "confirmar-reset"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "activo", "value": "true", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "equipo_id", "value": "{{equipo_id}}", "disabled": true },
+                { "key": "grupo", "value": "SEEKER", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"nuevo.seeker@seekglobal.co\",\n  \"nombres\": \"Nuevo\",\n  \"apellidos\": \"Seeker\",\n  \"numero_documento\": \"12345678\",\n  \"puesto\": \"Consultor\",\n  \"celular\": \"+51999888777\",\n  \"equipo_id\": \"{{equipo_id}}\",\n  \"areas\": [\"{{area_id}}\"],\n  \"fecha_ingreso\": \"2024-01-15\",\n  \"grupos\": [\"SEEKER\"],\n  \"staff\": false,\n  \"super_usuario\": false\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "Get user by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"puesto\": \"Consultor Senior\",\n  \"celular\": \"+51988777666\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}"] }
+          }
+        },
+        {
+          "name": "Toggle activo",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{base_url}}/users/{{user_id}}/toggle-activo", "host": ["{{base_url}}"], "path": ["users", "{{user_id}}", "toggle-activo"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "List clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/clients?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["clients"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "activo", "value": "true", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "segmentacion_id", "value": "{{segmentacion_id}}", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"razon_social\": \"Cliente Ejemplo SAC\",\n  \"razon_comercial\": \"Cliente Ejemplo\",\n  \"ruc\": \"20123456789\",\n  \"nombre_contacto\": \"Juan Pérez\",\n  \"email_contacto\": \"contacto@cliente.com\",\n  \"telefono\": \"+5114001234\",\n  \"direccion\": \"Av. Siempre Viva 123\",\n  \"segmentacion_id\": \"{{segmentacion_id}}\",\n  \"sector_id\": \"{{sector_id}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/clients", "host": ["{{base_url}}"], "path": ["clients"] }
+          }
+        },
+        {
+          "name": "Get client by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/clients/{{client_id}}", "host": ["{{base_url}}"], "path": ["clients", "{{client_id}}"] }
+          }
+        },
+        {
+          "name": "Update client",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"razon_comercial\": \"Cliente Ejemplo Renombrado\",\n  \"telefono\": \"+5114009999\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/clients/{{client_id}}", "host": ["{{base_url}}"], "path": ["clients", "{{client_id}}"] }
+          }
+        },
+        {
+          "name": "Toggle activo",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{base_url}}/clients/{{client_id}}/toggle-activo", "host": ["{{base_url}}"], "path": ["clients", "{{client_id}}", "toggle-activo"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["projects"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "activo", "value": "true", "disabled": true },
+                { "key": "cliente_id", "value": "{{client_id}}", "disabled": true },
+                { "key": "gestor_id", "value": "{{gestor_id}}", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"PRJ-001\",\n  \"nombre\": \"Proyecto Ejemplo\",\n  \"cliente_id\": \"{{client_id}}\",\n  \"gestor_id\": \"{{gestor_id}}\",\n  \"segmentacion_id\": \"{{segmentacion_proyecto_id}}\",\n  \"categorias_proyecto_ids\": [\"{{categoria_proyecto_id}}\"],\n  \"capa_productividad_id\": \"{{capa_productividad_id}}\",\n  \"tipo_servicio_id\": \"{{tipo_servicio_id}}\",\n  \"area_id\": null,\n  \"fecha_inicio\": \"2026-02-01\",\n  \"fecha_fin\": \"2026-06-30\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/projects", "host": ["{{base_url}}"], "path": ["projects"] }
+          }
+        },
+        {
+          "name": "Get project by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects", "{{project_id}}"] }
+          }
+        },
+        {
+          "name": "Update project",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Proyecto Ejemplo (actualizado)\",\n  \"fecha_fin\": \"2026-08-31\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects", "{{project_id}}"] }
+          }
+        },
+        {
+          "name": "Toggle activo",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/toggle-activo", "host": ["{{base_url}}"], "path": ["projects", "{{project_id}}", "toggle-activo"] }
+          }
+        },
+        {
+          "name": "Assign users",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarios\": [\n    { \"usuario_id\": \"{{user_id}}\", \"rol\": \"SEEKER\" }\n  ]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/usuarios", "host": ["{{base_url}}"], "path": ["projects", "{{project_id}}", "usuarios"] }
+          }
+        },
+        {
+          "name": "Remove user",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/usuarios/{{user_id}}", "host": ["{{base_url}}"], "path": ["projects", "{{project_id}}", "usuarios", "{{user_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Config",
+      "item": [
+        { "name": "Equipos", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/equipos", "host": ["{{base_url}}"], "path": ["config", "equipos"] } } },
+        { "name": "Áreas", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/areas", "host": ["{{base_url}}"], "path": ["config", "areas"] } } },
+        { "name": "Grupos", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/grupos", "host": ["{{base_url}}"], "path": ["config", "grupos"] } } },
+        { "name": "Segmentaciones (cliente)", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/segmentaciones", "host": ["{{base_url}}"], "path": ["config", "segmentaciones"] } } },
+        { "name": "Sectores", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/sectores", "host": ["{{base_url}}"], "path": ["config", "sectores"] } } },
+        { "name": "Segmentaciones de proyecto", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/segmentaciones-proyecto", "host": ["{{base_url}}"], "path": ["config", "segmentaciones-proyecto"] } } },
+        { "name": "Categorías de proyecto", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/categorias-proyecto", "host": ["{{base_url}}"], "path": ["config", "categorias-proyecto"] } } },
+        { "name": "Capas de productividad", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/capas-productividad", "host": ["{{base_url}}"], "path": ["config", "capas-productividad"] } } },
+        { "name": "Tipos de servicio", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/tipos-servicio", "host": ["{{base_url}}"], "path": ["config", "tipos-servicio"] } } },
+        { "name": "Work categories", "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/config/work-categories", "host": ["{{base_url}}"], "path": ["config", "work-categories"] } } }
+      ]
+    },
+    {
+      "name": "Time Entries",
+      "item": [
+        {
+          "name": "List time entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/time-entries",
+              "host": ["{{base_url}}"],
+              "path": ["time-entries"],
+              "query": [
+                { "key": "semana_inicio", "value": "2026-05-25", "disabled": true },
+                { "key": "estado", "value": "PENDIENTE", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create time entry",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"semana_inicio\": \"2026-05-25\",\n  \"semana_fin\": \"2026-05-31\",\n  \"lineas\": [\n    {\n      \"proyecto_id\": \"{{project_id}}\",\n      \"horas\": 40,\n      \"horas_extra\": 0,\n      \"comentario\": \"Trabajo semanal\"\n    }\n  ]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/time-entries", "host": ["{{base_url}}"], "path": ["time-entries"] }
+          }
+        },
+        {
+          "name": "Get time entry by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/time-entries/{{time_entry_id}}", "host": ["{{base_url}}"], "path": ["time-entries", "{{time_entry_id}}"] }
+          }
+        },
+        {
+          "name": "Semanas sin carga",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/time-entries/semanas-sin-carga", "host": ["{{base_url}}"], "path": ["time-entries", "semanas-sin-carga"] }
+          }
+        },
+        {
+          "name": "Seekers sin carga",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/time-entries/seekers-sin-carga", "host": ["{{base_url}}"], "path": ["time-entries", "seekers-sin-carga"] }
+          }
+        },
+        {
+          "name": "Enviar recordatorio a seeker",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/time-entries/seekers-sin-carga/{{user_id}}/recordatorio", "host": ["{{base_url}}"], "path": ["time-entries", "seekers-sin-carga", "{{user_id}}", "recordatorio"] }
+          }
+        },
+        {
+          "name": "Approve line",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"linea_id\": \"{{linea_id}}\",\n  \"proyecto_id\": \"{{project_id}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/time-entries/{{time_entry_id}}/approve", "host": ["{{base_url}}"], "path": ["time-entries", "{{time_entry_id}}", "approve"] }
+          }
+        },
+        {
+          "name": "Observe line (aprobar con observación)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"linea_id\": \"{{linea_id}}\",\n  \"proyecto_id\": \"{{project_id}}\",\n  \"comentario_observacion\": \"Ajuste de horas\",\n  \"sugerencia_horas\": 32,\n  \"sugerencia_extras\": 0\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/time-entries/{{time_entry_id}}/observe", "host": ["{{base_url}}"], "path": ["time-entries", "{{time_entry_id}}", "observe"] }
+          }
+        },
+        {
+          "name": "Reject line",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"linea_id\": \"{{linea_id}}\",\n  \"proyecto_id\": \"{{project_id}}\",\n  \"razon_rechazo\": \"Horas no justificadas\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/time-entries/{{time_entry_id}}/reject", "host": ["{{base_url}}"], "path": ["time-entries", "{{time_entry_id}}", "reject"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projections",
+      "item": [
+        {
+          "name": "List alerts",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/projections/alerts", "host": ["{{base_url}}"], "path": ["projections", "alerts"] } }
+        },
+        {
+          "name": "List projections",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/projections", "host": ["{{base_url}}"], "path": ["projections"] } }
+        },
+        {
+          "name": "Create projection",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"project_id\": \"{{project_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"fecha_inicio\": \"2026-05-25\",\n  \"fecha_fin\": \"2026-06-30\",\n  \"horas_proyectadas\": 120,\n  \"work_category_id\": null,\n  \"notas\": \"Proyección inicial\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/projections", "host": ["{{base_url}}"], "path": ["projections"] }
+          }
+        },
+        {
+          "name": "Update projection",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"horas_proyectadas\": 100,\n  \"notas\": \"Proyección ajustada\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/projections/{{projection_id}}", "host": ["{{base_url}}"], "path": ["projections", "{{projection_id}}"] }
+          }
+        },
+        {
+          "name": "Delete projection",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/projections/{{projection_id}}", "host": ["{{base_url}}"], "path": ["projections", "{{projection_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Finance — Periods",
+      "item": [
+        {
+          "name": "List periods",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/periods", "host": ["{{base_url}}"], "path": ["periods"] } }
+        },
+        {
+          "name": "Toggle period (abrir/cerrar)",
+          "request": { "method": "PATCH", "header": [], "url": { "raw": "{{base_url}}/periods/{{periodo_id}}/toggle", "host": ["{{base_url}}"], "path": ["periods", "{{periodo_id}}", "toggle"] } }
+        }
+      ]
+    },
+    {
+      "name": "Finance — Revenues",
+      "item": [
+        {
+          "name": "List revenues",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/revenues?periodo_id={{periodo_id}}", "host": ["{{base_url}}"], "path": ["revenues"], "query": [{ "key": "periodo_id", "value": "{{periodo_id}}" }] }
+          }
+        },
+        {
+          "name": "Create revenue",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"proyecto_id\": \"{{project_id}}\",\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"monto\": 15000\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/revenues", "host": ["{{base_url}}"], "path": ["revenues"] }
+          }
+        },
+        {
+          "name": "Import revenues (batch)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "[\n  { \"code\": \"PRJ-001\", \"ingreso\": 15000, \"period\": \"2026-05\" }\n]", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/revenues/import", "host": ["{{base_url}}"], "path": ["revenues", "import"] }
+          }
+        },
+        {
+          "name": "Update revenue",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"monto\": 18000\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/revenues/{{revenue_id}}", "host": ["{{base_url}}"], "path": ["revenues", "{{revenue_id}}"] }
+          }
+        },
+        {
+          "name": "Delete revenue",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/revenues/{{revenue_id}}", "host": ["{{base_url}}"], "path": ["revenues", "{{revenue_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Finance — Admin Expenses",
+      "item": [
+        {
+          "name": "List admin expenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/admin-expenses?periodo_id={{periodo_id}}", "host": ["{{base_url}}"], "path": ["admin-expenses"], "query": [{ "key": "periodo_id", "value": "{{periodo_id}}" }] }
+          }
+        },
+        {
+          "name": "Create admin expense",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"codigo\": \"ADM-001\",\n  \"descripcion\": \"Alquiler oficina\",\n  \"monto\": 5000\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/admin-expenses", "host": ["{{base_url}}"], "path": ["admin-expenses"] }
+          }
+        },
+        {
+          "name": "Get admin expense by id",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/admin-expenses/{{admin_expense_id}}", "host": ["{{base_url}}"], "path": ["admin-expenses", "{{admin_expense_id}}"] } }
+        },
+        {
+          "name": "Update admin expense",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"codigo\": \"ADM-001\",\n  \"descripcion\": \"Alquiler oficina (ajustado)\",\n  \"monto\": 5500\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/admin-expenses/{{admin_expense_id}}", "host": ["{{base_url}}"], "path": ["admin-expenses", "{{admin_expense_id}}"] }
+          }
+        },
+        {
+          "name": "Delete admin expense",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/admin-expenses/{{admin_expense_id}}", "host": ["{{base_url}}"], "path": ["admin-expenses", "{{admin_expense_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Finance — Sales Costs",
+      "item": [
+        {
+          "name": "List sales costs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/sales-costs?periodo_id={{periodo_id}}", "host": ["{{base_url}}"], "path": ["sales-costs"], "query": [{ "key": "periodo_id", "value": "{{periodo_id}}" }] }
+          }
+        },
+        {
+          "name": "Create sales cost",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"codigo\": \"VEN-001\",\n  \"descripcion\": \"Comisión de ventas\",\n  \"monto\": 2000\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/sales-costs", "host": ["{{base_url}}"], "path": ["sales-costs"] }
+          }
+        },
+        {
+          "name": "Get sales cost by id",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/sales-costs/{{sales_cost_id}}", "host": ["{{base_url}}"], "path": ["sales-costs", "{{sales_cost_id}}"] } }
+        },
+        {
+          "name": "Update sales cost",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"codigo\": \"VEN-001\",\n  \"descripcion\": \"Comisión de ventas (ajustada)\",\n  \"monto\": 2200\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/sales-costs/{{sales_cost_id}}", "host": ["{{base_url}}"], "path": ["sales-costs", "{{sales_cost_id}}"] }
+          }
+        },
+        {
+          "name": "Delete sales cost",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/sales-costs/{{sales_cost_id}}", "host": ["{{base_url}}"], "path": ["sales-costs", "{{sales_cost_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Finance — Personnel Costs",
+      "item": [
+        {
+          "name": "List personnel costs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/personnel-costs?periodo_id={{periodo_id}}", "host": ["{{base_url}}"], "path": ["personnel-costs"], "query": [{ "key": "periodo_id", "value": "{{periodo_id}}" }] }
+          }
+        },
+        {
+          "name": "Create personnel cost",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"remuneracion\": 4000,\n  \"dias_habiles\": 22,\n  \"horas_por_dia\": 8\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/personnel-costs", "host": ["{{base_url}}"], "path": ["personnel-costs"] }
+          }
+        },
+        {
+          "name": "Import personnel costs (batch)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "[\n  {\n    \"periodo_id\": \"{{periodo_id}}\",\n    \"user_id\": \"{{user_id}}\",\n    \"remuneracion\": 4000,\n    \"dias_habiles\": 22,\n    \"horas_por_dia\": 8\n  }\n]", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/personnel-costs/import", "host": ["{{base_url}}"], "path": ["personnel-costs", "import"] }
+          }
+        },
+        {
+          "name": "Get personnel cost by id",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/personnel-costs/{{personnel_cost_id}}", "host": ["{{base_url}}"], "path": ["personnel-costs", "{{personnel_cost_id}}"] } }
+        },
+        {
+          "name": "Update personnel cost",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"periodo_id\": \"{{periodo_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"remuneracion\": 4200,\n  \"dias_habiles\": 22,\n  \"horas_por_dia\": 8\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/personnel-costs/{{personnel_cost_id}}", "host": ["{{base_url}}"], "path": ["personnel-costs", "{{personnel_cost_id}}"] }
+          }
+        },
+        {
+          "name": "Delete personnel cost",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/personnel-costs/{{personnel_cost_id}}", "host": ["{{base_url}}"], "path": ["personnel-costs", "{{personnel_cost_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Commercial",
+      "item": [
+        {
+          "name": "Document types",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/commercial/document-types", "host": ["{{base_url}}"], "path": ["commercial", "document-types"] } }
+        },
+        {
+          "name": "List commercial records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/commercial?proyecto_id={{project_id}}", "host": ["{{base_url}}"], "path": ["commercial"], "query": [{ "key": "proyecto_id", "value": "{{project_id}}", "disabled": true }] }
+          }
+        },
+        {
+          "name": "Create commercial record",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fecha_registro\": \"2026-05-01\",\n  \"proyecto_id\": \"{{project_id}}\",\n  \"responsable_id\": \"{{user_id}}\",\n  \"precio\": 25000,\n  \"detalle\": \"Contrato anual\",\n  \"tipo_documento_id\": \"{{tipo_documento_id}}\",\n  \"estado_contrato\": true,\n  \"facturacion\": false,\n  \"evidencia_nombre\": null\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/commercial", "host": ["{{base_url}}"], "path": ["commercial"] }
+          }
+        },
+        {
+          "name": "Get commercial record by id",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{base_url}}/commercial/{{commercial_id}}", "host": ["{{base_url}}"], "path": ["commercial", "{{commercial_id}}"] } }
+        },
+        {
+          "name": "Update commercial record",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fecha_registro\": \"2026-05-01\",\n  \"proyecto_id\": \"{{project_id}}\",\n  \"responsable_id\": \"{{user_id}}\",\n  \"precio\": 27000,\n  \"detalle\": \"Contrato anual (ajustado)\",\n  \"tipo_documento_id\": \"{{tipo_documento_id}}\",\n  \"estado_contrato\": true,\n  \"facturacion\": true\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/commercial/{{commercial_id}}", "host": ["{{base_url}}"], "path": ["commercial", "{{commercial_id}}"] }
+          }
+        },
+        {
+          "name": "Delete commercial record",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/commercial/{{commercial_id}}", "host": ["{{base_url}}"], "path": ["commercial", "{{commercial_id}}"] } }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard (integración externa)",
+      "item": [
+        {
+          "name": "List seekers",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "Endpoint ABIERTO (sin token). Replica GET /seekers/ de v1: array plano de usuarios con claves en inglés.",
+            "url": { "raw": "{{base_url}}/dashboard/seekers", "host": ["{{base_url}}"], "path": ["dashboard", "seekers"] }
+          }
+        }
+      ]
+    }
+  ]
+}

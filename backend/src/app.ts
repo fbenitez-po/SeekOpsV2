@@ -15,6 +15,7 @@ import salesCostsRoutes from './modules/finance/salesCosts/salesCosts.routes';
 import personnelCostsRoutes from './modules/finance/personnelCosts/personnelCosts.routes';
 import commercialRoutes from './modules/commercial/commercial.routes';
 import authRoutes from './modules/auth/auth.routes';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
 
 const app = express();
 
@@ -38,6 +39,9 @@ api.use('/admin-expenses', adminExpensesRoutes);
 api.use('/sales-costs', salesCostsRoutes);
 api.use('/personnel-costs', personnelCostsRoutes);
 api.use('/commercial', commercialRoutes);
+// Superficie de integración externa (BI), read-only y abierta. Sin auth a nivel
+// de módulo: cada sub-recurso define su acceso (hoy todos abiertos, como v1).
+api.use('/dashboard', dashboardRoutes);
 
 app.use(env.API_PREFIX, api);
 
