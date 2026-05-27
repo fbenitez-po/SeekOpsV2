@@ -50,3 +50,84 @@ El recurso `seekers` SHALL implementarse en un módulo paraguas `dashboard` inde
 - **WHEN** se implementa el recurso `seekers`
 - **THEN** los módulos `users`, `projects`, `commercial` y `clients` no se modifican
 
+### Requirement: Listado público de clientes
+El sistema SHALL exponer `GET /api/dashboard/clients` como un endpoint **abierto** (sin token) que devuelve **todos** los clientes como un **array plano JSON**, sin paginación ni envoltorio, replicando `GET /api/client/` de v1.
+
+#### Scenario: Acceso sin autenticación
+- **WHEN** un cliente hace `GET /api/dashboard/clients` sin cabecera `Authorization`
+- **THEN** el sistema responde `200 OK` con el listado (no `401`)
+
+#### Scenario: Forma de array plano
+- **WHEN** un cliente solicita el listado de clientes
+- **THEN** el cuerpo es un array JSON de objetos, sin la forma `{ data, pagination }`
+
+### Requirement: Contrato de clientes heredado de v1
+Cada elemento SHALL contener exactamente las claves del `ClientModelSerializer` de v1: `id`, `business_reason`, `business_name`, `business_number`, `fiscal_address`, `legal_address`, `segmentation`, `sector`. La traducción desde el schema de v2 SHALL ocurrir en el `mapper`.
+
+#### Scenario: Claves y traducción de campos
+- **WHEN** un cliente recibe un elemento del listado
+- **THEN** el objeto expone `business_reason` (= `legal_name`), `business_name` (= `trade_name`), `business_number` (= `ruc`)
+- **AND** no aparecen claves internas de v2 (`legal_name`, `trade_name`, `ruc`) ni claves en español
+
+#### Scenario: Campos sin equivalente exacto en v2
+- **WHEN** un cliente recibe un elemento del listado
+- **THEN** las claves `fiscal_address` y `legal_address` están presentes, cubiertas por el único `address` de v2 según el reparto definido (una de ellas puede ser `null`)
+- **AND** `segmentation` y `sector` exponen el identificador de la relación (uuid en v2)
+
+### Requirement: Listado público de registros comerciales
+El sistema SHALL exponer `GET /api/dashboard/commercial` como un endpoint **abierto** (sin token) que devuelve **todos** los registros comerciales como un **array plano JSON desnormalizado**, sin paginación, ordenado por fecha de creación descendente, replicando `GET /api/commercial/` de v1.
+
+#### Scenario: Acceso sin autenticación
+- **WHEN** un cliente hace `GET /api/dashboard/commercial` sin cabecera `Authorization`
+- **THEN** el sistema responde `200 OK` (no `401`)
+
+#### Scenario: Forma de array plano
+- **WHEN** un cliente solicita el listado
+- **THEN** el cuerpo es un array JSON de objetos, sin la forma `{ data, pagination }`
+
+### Requirement: Contrato comercial desnormalizado con claves de v1
+Cada elemento SHALL contener exactamente las claves del `.values(...)` de v1, **preservando los paths con doble guion bajo** (`project__client__business_name`, `responsible__first_name`, etc.). La traducción desde el schema de v2 SHALL ocurrir en el `mapper`.
+
+#### Scenario: Claves desnormalizadas preservadas
+- **WHEN** un cliente recibe un elemento del listado
+- **THEN** el objeto contiene las claves con `__` idénticas a v1 (incluyendo `project__client__sector__name`, `project__manager__first_name`, `responsible__document_number`)
+
+#### Scenario: Traducción de campos renombrados
+- **WHEN** se serializa un registro comercial
+- **THEN** `date` = `record_date`, `coin` = `currency`, `status` = `has_contract`, `billing` = `is_billed`
+- **AND** `responsible__*` proviene del `owner` del registro
+
+#### Scenario: Campos sin equivalente en v2
+- **WHEN** se serializa un registro comercial
+- **THEN** las claves `type`, `division__name` y `duration` están presentes con valor `null`
+
+### Requirement: Listado público de proyectos
+El sistema SHALL exponer `GET /api/dashboard/project` como un endpoint **abierto** (sin token) que devuelve **todos** los proyectos como un **array plano JSON desnormalizado**, sin paginación, ordenado por fecha de creación descendente, replicando `GET /api/project/` de v1.
+
+#### Scenario: Acceso sin autenticación
+- **WHEN** un cliente hace `GET /api/dashboard/project` sin cabecera `Authorization`
+- **THEN** el sistema responde `200 OK` (no `401`)
+
+#### Scenario: Forma de array plano
+- **WHEN** un cliente solicita el listado
+- **THEN** el cuerpo es un array JSON de objetos, sin la forma `{ data, pagination }`
+
+### Requirement: Contrato de proyectos desnormalizado con claves de v1
+Cada elemento SHALL contener exactamente las claves del `.values(...)` de v1, **preservando los paths con doble guion bajo** (`client__business_name`, `manager__document_number`, `layer_productivity__name`, etc.). La traducción desde el schema de v2 SHALL ocurrir en el `mapper`.
+
+#### Scenario: Claves desnormalizadas y campos directos
+- **WHEN** un cliente recibe un elemento del listado
+- **THEN** el objeto contiene `code`, `name`, `created_at`, `start_date`, `end_date`, las claves `client__*`, `manager__*` y `layer_productivity__name` con los datos correspondientes de v2
+
+#### Scenario: Traducción de fechas reales
+- **WHEN** se serializa un proyecto
+- **THEN** `real_start_date` = `actual_start_date` y `real_end_date` = `actual_end_date`
+
+#### Scenario: Campos sin equivalente en v2 expuestos como null
+- **WHEN** se serializa un proyecto
+- **THEN** las claves `status`, `tier`, `evaluation_internal`, `evaluation_external`, `image`, `flag_poll`, `comments_date` y `category__iframe_poll` están presentes con valor `null`
+
+#### Scenario: Claves de categoría presentes
+- **WHEN** se serializa un proyecto
+- **THEN** las claves `category__name` y `category_extension__name` están presentes con valor `null` mientras la ambigüedad de mapeo v1↔v2 esté diferida (ver Q2/Q3 del design); su resolución posterior solo modifica el `mapper`
+

@@ -703,6 +703,36 @@
             "description": "Endpoint ABIERTO (sin token). Replica GET /seekers/ de v1: array plano de usuarios con claves en inglés.",
             "url": { "raw": "{{base_url}}/dashboard/seekers", "host": ["{{base_url}}"], "path": ["dashboard", "seekers"] }
           }
+        },
+        {
+          "name": "List clients",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "Endpoint ABIERTO (sin token). Replica GET /api/client/ de v1: array plano de clientes con claves en inglés (id, business_reason, business_name, business_number, fiscal_address, legal_address, segmentation, sector).",
+            "url": { "raw": "{{base_url}}/dashboard/clients", "host": ["{{base_url}}"], "path": ["dashboard", "clients"] }
+          }
+        },
+        {
+          "name": "List commercial",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "Endpoint ABIERTO (sin token). Replica GET /api/commercial/ de v1: array plano desnormalizado con claves `__` de Django. Gaps de v2 en null: type, division__name, duration.",
+            "url": { "raw": "{{base_url}}/dashboard/commercial", "host": ["{{base_url}}"], "path": ["dashboard", "commercial"] }
+          }
+        },
+        {
+          "name": "List project",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "description": "Endpoint ABIERTO (sin token). Replica GET /api/project/ de v1: array plano desnormalizado con claves `__` de Django. Gaps de v2 en null: status, tier, evaluation_internal/external, image, flag_poll, comments_date, category__iframe_poll, y las categorías (category__name, category_extension__name) mientras el mapeo v1↔v2 esté diferido.",
+            "url": { "raw": "{{base_url}}/dashboard/project", "host": ["{{base_url}}"], "path": ["dashboard", "project"] }
+          }
         }
       ]
     }
