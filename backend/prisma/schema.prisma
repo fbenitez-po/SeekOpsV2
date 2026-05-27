@@ -368,7 +368,6 @@ model projects {
   project_segmentation     project_segmentation?      @relation(fields: [project_segmentation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_types            service_types?             @relation(fields: [service_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   revenues                 revenues[]
-  time_entry_approvals     time_entry_approvals[]
   time_entry_lines         time_entry_lines[]
 
   @@index([area_id], map: "idx_projects_area_id")
@@ -488,25 +487,20 @@ model time_entries {
 model time_entry_approvals {
   id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   time_entry_line_id    String            @unique @db.Uuid
-  project_id            String?           @db.Uuid
   status                String            @default("PENDIENTE") @db.VarChar(50)
   comment               String?
   suggested_hours       Decimal?          @db.Decimal(6, 1)
   suggested_extra_hours Decimal?          @db.Decimal(4, 1)
-  rejection_reason      String?
-  can_resubmit          Boolean?          @default(false)
   created_at            DateTime          @default(now()) @db.Timestamp(6)
   created_by            String            @default("admin") @db.VarChar(50)
   reviewed_by           String?           @db.VarChar(50)
   reviewed_at           DateTime?         @db.Timestamp(6)
-  projects              projects?         @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   time_entry_lines      time_entry_lines  @relation(fields: [time_entry_line_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([status], map: "idx_time_entry_approvals_status")
   @@index([time_entry_line_id], map: "idx_time_entry_approvals_line_id")
   @@index([created_at], map: "idx_time_entry_approvals_created_at")
   @@index([created_by], map: "idx_time_entry_approvals_created_by")
-  @@index([project_id], map: "idx_time_entry_approvals_project_id")
 }
 
 model time_entry_lines {

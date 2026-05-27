@@ -382,30 +382,29 @@ CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_line
 
 ### time_entry_approvals
 
-**Fuente de verdad del estado de revisión.** Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar el seeker. El gestor la muta a `APROBADO | APROBADO_CON_OBSERVACION | RECHAZADO`. Auditoría mínima (`created_at`/`created_by` = momento de carga; `reviewed_by`/`reviewed_at` = acción del gestor).
+**Fuente de verdad del estado de revisión.** Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar el seeker. El gestor la muta a `APROBADO | APROBADO_CON_OBSERVACION | RECHAZADO`. Auditoría mínima (`created_at`/`created_by` = momento de carga; `reviewed_by`/`reviewed_at` = acción del gestor). El campo `comment` es el portador unificado del texto libre del gestor: observación en `APROBADO_CON_OBSERVACION`, motivo de rechazo en `RECHAZADO`.
 
-> **Decisión 2026-05-26:** `time_entry_approvals` pasa de log inmutable a registro 1:1 con la línea. `action` renombrado a `status`. Al observar, las horas sugeridas van **solo** a `suggested_hours`/`suggested_extra_hours` — nunca se modifican las `time_entry_lines`. `can_resubmit` default cambiado a `false`. `time_entry_id` eliminado (redundante — alcanzable vía `time_entry_line_id → time_entry_lines.time_entry_id`).
+> **Decisión 2026-05-26:** `time_entry_approvals` pasa de log inmutable a registro 1:1 con la línea. `action` renombrado a `status`. Al observar, las horas sugeridas van **solo** a `suggested_hours`/`suggested_extra_hours` — nunca se modifican las `time_entry_lines`. `time_entry_id` eliminado (redundante — alcanzable vía `time_entry_line_id → time_entry_lines.time_entry_id`).
+>
+> **Decisión 2026-05-27:** Eliminadas tres columnas redundantes: `rejection_reason` (unificada en `comment`), `can_resubmit` (el re-envío lo determina el estado `RECHAZADO`, no este campo), `project_id` (redundante — alcanzable vía `time_entry_line_id → time_entry_lines.project_id`).
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_line_id    UUID UNIQUE NOT NULL REFERENCES time_entry_lines(id) ON DELETE CASCADE,  -- 1:1; time_entry alcanzable vía línea
-  project_id            UUID REFERENCES projects(id),
   status                VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE',  -- PENDIENTE|APROBADO|APROBADO_CON_OBSERVACION|RECHAZADO
-  comment               TEXT,
+  comment               TEXT,                -- observación (APROBADO_CON_OBSERVACION) o motivo de rechazo (RECHAZADO)
   suggested_hours       NUMERIC(6,1),        -- solo en APROBADO_CON_OBSERVACION
   suggested_extra_hours NUMERIC(4,1),        -- solo en APROBADO_CON_OBSERVACION
-  rejection_reason      TEXT,                -- solo en RECHAZADO
-  can_resubmit          BOOLEAN DEFAULT false,
   reviewed_by           VARCHAR(50),         -- email del gestor que actuó
   reviewed_at           TIMESTAMP,           -- cuándo actuó el gestor
   created_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
   created_by            VARCHAR(50) NOT NULL DEFAULT 'admin'
 );
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id       ON time_entry_approvals(time_entry_line_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status        ON time_entry_approvals(status);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id  ON time_entry_approvals(time_entry_line_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status   ON time_entry_approvals(status);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at ON time_entry_approvals(created_at);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by ON time_entry_approvals(created_by);
 ```
 
 ### refresh_tokens / password_reset_tokens
@@ -690,8 +689,8 @@ Proyectos pueden o no pertenecer a un área. La UI lo controla con un checkbox.
 ### client_categories renombrada a work_categories (migración 021)
 Contenía tipos de trabajo, no categorías de cliente. Se eliminó la FK `clients.client_category_id` y `hour_projections` usa `work_category_id`.
 
-### time_entry_approvals como fuente de verdad (2026-05-26)
-Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar. El gestor la muta al estado terminal. Las horas sugeridas del gestor van a `suggested_hours`/`suggested_extra_hours` — nunca modifican `time_entry_lines`. Si se rechaza, el seeker puede re-cargar: se crea un par nuevo (línea + approval PENDIENTE); la vieja queda como histórico.
+### time_entry_approvals como fuente de verdad (2026-05-26, simplificado 2026-05-27)
+Una fila por línea (`time_entry_line_id` UNIQUE), creada en `PENDIENTE` al cargar. El gestor la muta al estado terminal. Las horas sugeridas del gestor van a `suggested_hours`/`suggested_extra_hours` — nunca modifican `time_entry_lines`. Si se rechaza, el seeker puede re-cargar: se crea un par nuevo (línea + approval PENDIENTE); la vieja queda como histórico. El campo `comment` porta el texto libre del gestor en cualquier acción (observación o motivo de rechazo). `project_id`, `rejection_reason` y `can_resubmit` fueron eliminados por ser redundantes.
 
 ### Acceso del Gestor a proyectos
 Un Gestor tiene acceso a todos los proyectos donde figura como `manager_id`, independientemente de si tiene fila en `project_user`. Validado en tres puntos del backend.

@@ -305,9 +305,8 @@ Una fila por cada `time_entry_lines` creada en el paso anterior (incluyendo lín
 | Campo new | Origen |
 |-----------|--------|
 | `time_entry_line_id` | JOIN a `time_entry_lines` por `(time_entry_id, project_id, income_category_id)` |
-| `project_id` | proyecto de la línea |
 | `status` | `all_approved` + ajuste → `APROBADO_CON_OBSERVACION`; `all_approved` sin ajuste → `APROBADO`; `all_rejected` → `RECHAZADO`; resto → `PENDIENTE` |
-| `comment` | `justification` (la justificación del aprobador, `string_agg`) |
+| `comment` | `justification` (la justificación del aprobador, `string_agg`). En RECHAZADO, también es el motivo de rechazo. |
 | `suggested_hours` / `suggested_extra_hours` | `SUM(validated_*)` solo cuando difiere de `SUM(hours)` (horas ajustadas por el gestor) |
 | `reviewed_by` / `reviewed_at` | email del `manager_id` / `max(updated_at)` de líneas aprobadas/rechazadas |
 | `created_by` | `'migration'` |

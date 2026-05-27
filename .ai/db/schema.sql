@@ -340,25 +340,25 @@ CREATE INDEX IF NOT EXISTS idx_time_entry_lines_project_id    ON time_entry_line
 
 -- Fuente de verdad del estado de revisión: 1 fila por línea, creada PENDIENTE, mutada por el gestor (2026-05-26)
 -- time_entry alcanzable vía time_entry_line_id → time_entry_lines.time_entry_id
+-- project alcanzable vía time_entry_line_id → time_entry_lines.project_id (2026-05-27: project_id eliminado)
+-- comment = portador unificado: observación o motivo de rechazo (2026-05-27: rejection_reason eliminado)
+-- re-envío determinado por status=RECHAZADO (2026-05-27: can_resubmit eliminado)
 CREATE TABLE IF NOT EXISTS time_entry_approvals (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   time_entry_line_id    UUID         UNIQUE NOT NULL REFERENCES time_entry_lines(id) ON DELETE CASCADE,
-  project_id            UUID         REFERENCES projects(id),
   status                VARCHAR(50)  NOT NULL DEFAULT 'PENDIENTE',  -- PENDIENTE|APROBADO|APROBADO_CON_OBSERVACION|RECHAZADO
-  comment               TEXT,
+  comment               TEXT,                -- observación o motivo de rechazo
   suggested_hours       NUMERIC(6,1),        -- solo en APROBADO_CON_OBSERVACION
   suggested_extra_hours NUMERIC(4,1),        -- solo en APROBADO_CON_OBSERVACION
-  rejection_reason      TEXT,                -- solo en RECHAZADO
-  can_resubmit          BOOLEAN      DEFAULT false,
   reviewed_by           VARCHAR(50),         -- email del gestor
   reviewed_at           TIMESTAMP,
   created_at            TIMESTAMP    NOT NULL DEFAULT NOW(),
   created_by            VARCHAR(50)  NOT NULL DEFAULT 'admin'
 );
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_time_entry_id ON time_entry_approvals(time_entry_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_project_id    ON time_entry_approvals(project_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id       ON time_entry_approvals(time_entry_line_id);
-CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status        ON time_entry_approvals(status);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_line_id    ON time_entry_approvals(time_entry_line_id);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_status     ON time_entry_approvals(status);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_at ON time_entry_approvals(created_at);
+CREATE INDEX IF NOT EXISTS idx_time_entry_approvals_created_by ON time_entry_approvals(created_by);
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

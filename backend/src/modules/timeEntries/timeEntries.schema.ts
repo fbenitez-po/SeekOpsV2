@@ -67,7 +67,6 @@ export const RejectSchema = z.object({
   linea_id: z.string().uuid('La línea indicada no es válida'),
   proyecto_id: z.string().uuid('El proyecto indicado no es válido'),
   razon_rechazo: z.string().min(1, 'La razón de rechazo es requerida'),
-  permitir_reenvio: z.boolean().optional(),
 });
 
 export type CreateTimeEntryInput = z.infer<typeof CreateTimeEntrySchema>;

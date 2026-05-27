@@ -17,8 +17,6 @@ export interface ApprovalRow {
   comentario: string | null;
   sugerencia_horas: string | null;
   sugerencia_extras: string | null;
-  razon_rechazo: string | null;
-  permitir_reenvio: boolean | null;
   fecha: Date;
   realizado_por_id: string | null;
   nombres: string | null;
@@ -126,13 +124,11 @@ export async function findApprovals(timeEntryId: string): Promise<ApprovalRow[]>
     SELECT tea.id,
            tea.status         AS accion,
            tea.time_entry_line_id AS line_id,
-           tea.project_id     AS proyecto_id,
+           tel.project_id     AS proyecto_id,
            p.name             AS proyecto_nombre,
            tea.comment        AS comentario,
            tea.suggested_hours AS sugerencia_horas,
            tea.suggested_extra_hours AS sugerencia_extras,
-           tea.rejection_reason AS razon_rechazo,
-           tea.can_resubmit   AS permitir_reenvio,
            tea.created_at     AS fecha,
            u.id               AS realizado_por_id,
            u.first_name       AS nombres,
@@ -140,7 +136,7 @@ export async function findApprovals(timeEntryId: string): Promise<ApprovalRow[]>
     FROM time_entry_approvals tea
     JOIN time_entry_lines tel ON tel.id = tea.time_entry_line_id
     LEFT JOIN users u ON u.email = tea.reviewed_by
-    LEFT JOIN projects p ON p.id = tea.project_id
+    JOIN projects p ON p.id = tel.project_id
     WHERE tel.time_entry_id = ${timeEntryId}
     ORDER BY tea.created_at ASC
   `;
@@ -269,7 +265,6 @@ export async function create(
   await prisma.time_entry_approvals.createMany({
     data: createdLines.map((line) => ({
       time_entry_line_id: line.id,
-      project_id: line.project_id,
       status: 'PENDIENTE',
       created_by: params.email ?? 'admin',
     })),
@@ -280,7 +275,6 @@ export async function create(
 
 export async function recordApproval(params: {
   lineaId: string;
-  projectId: string;
   action: 'APROBAR' | 'APROBAR_CON_OBSERVACION' | 'RECHAZAR';
   email: string | null;
   data: Partial<ApproveWithObservationInput & RejectInput>;
@@ -303,8 +297,6 @@ export async function recordApproval(params: {
       comment: observeData.comentario_observacion ?? rejectData.razon_rechazo ?? null,
       suggested_hours: params.action === 'APROBAR_CON_OBSERVACION' ? (observeData.sugerencia_horas ?? null) : null,
       suggested_extra_hours: params.action === 'APROBAR_CON_OBSERVACION' ? (observeData.sugerencia_extras ?? null) : null,
-      rejection_reason: rejectData.razon_rechazo ?? null,
-      can_resubmit: rejectData.permitir_reenvio ?? false,
     },
   });
 

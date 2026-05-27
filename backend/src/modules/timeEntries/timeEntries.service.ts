@@ -129,7 +129,7 @@ export async function approve(id: string, body: ApproveInput, userId: string, em
     throw new ForbiddenError('La línea indicada no está pendiente de aprobación');
   }
 
-  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'APROBAR', email, data: {} });
+  await repo.recordApproval({ lineaId: body.linea_id, action: 'APROBAR', email, data: {} });
   return { id, proyecto_id: body.proyecto_id, linea_id: body.linea_id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
@@ -154,7 +154,7 @@ export async function observe(
     throw new ForbiddenError('La línea indicada no está pendiente de aprobación');
   }
 
-  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
+  await repo.recordApproval({ lineaId: body.linea_id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
   return {
     id,
     proyecto_id: body.proyecto_id,
@@ -186,7 +186,7 @@ export async function reject(
     throw new ForbiddenError('La línea indicada no está pendiente de rechazo');
   }
 
-  await repo.recordApproval({ lineaId: body.linea_id, projectId: body.proyecto_id, action: 'RECHAZAR', email, data: body });
+  await repo.recordApproval({ lineaId: body.linea_id, action: 'RECHAZAR', email, data: body });
   return {
     id,
     proyecto_id: body.proyecto_id,
@@ -194,7 +194,6 @@ export async function reject(
     estado: 'RECHAZADO',
     rechazado_en: new Date().toISOString(),
     razon_rechazo: body.razon_rechazo,
-    permitir_reenvio: body.permitir_reenvio ?? false,
   };
 }
 

@@ -492,14 +492,13 @@ ON CONFLICT DO NOTHING;
 -- 7.3 — Aprobaciones (una por línea activa; APROBADO_CON_OBSERVACION cuando
 --        el gestor ajustó las horas originales del seeker)
 INSERT INTO time_entry_approvals (
-  time_entry_line_id, project_id, status, comment,
+  time_entry_line_id, status, comment,
   suggested_hours, suggested_extra_hours,
   reviewed_by, reviewed_at,
   created_at, created_by
 )
 SELECT
   tel.id,
-  p.id,
   CASE
     WHEN src.all_approved
          AND ( src.sum_validated_hours <> src.sum_hours

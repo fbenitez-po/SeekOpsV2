@@ -86,9 +86,6 @@ export function buildTimeEntryDetail(
       id: a.id,
       accion: a.accion,
       linea_id: a.line_id,
-      proyecto: a.proyecto_id
-        ? { id: a.proyecto_id, nombre: a.proyecto_nombre }
-        : null,
       comentario: a.comentario,
       sugerencia_horas: a.sugerencia_horas !== null ? Number(a.sugerencia_horas) : null,
       sugerencia_extras: a.sugerencia_extras !== null ? Number(a.sugerencia_extras) : null,

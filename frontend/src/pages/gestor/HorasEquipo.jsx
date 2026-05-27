@@ -133,7 +133,7 @@ function ModalRechazar({ solicitud, onCerrar, onConfirmar }) {
             className="flex-1"
             disabled={!razon}
             onClick={() =>
-              onConfirmar({ linea_id: solicitud.linea_id, proyecto_id: solicitud.proyecto_id, razon_rechazo: razon, permitir_reenvio: true })
+              onConfirmar({ linea_id: solicitud.linea_id, proyecto_id: solicitud.proyecto_id, razon_rechazo: razon })
             }
           >
             Rechazar

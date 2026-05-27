@@ -97,7 +97,7 @@ export default function TodasLasHoras() {
 
   const mutRechazar = useMutation({
     mutationFn: ({ id, linea_id, proyecto_id, comentario }) =>
-      timeEntryApi.rechazar(id, { linea_id, proyecto_id, razon_rechazo: comentario, permitir_reenvio: true }),
+      timeEntryApi.rechazar(id, { linea_id, proyecto_id, razon_rechazo: comentario }),
     onSuccess: () => { setModal(null); queryClient.invalidateQueries({ queryKey: ['todas-horas'] }); },
   });
 
