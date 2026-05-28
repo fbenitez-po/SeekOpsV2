@@ -1,5 +1,5 @@
 {
-  "name": "seekops-backend",
+  "name": "seekops-api",
   "version": "1.0.0",
   "description": "Seekops — API REST para registro de horas",
   "main": "dist/index.js",

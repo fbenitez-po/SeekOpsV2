@@ -17,18 +17,18 @@ Al inicio de cada sesión, **leer `docs/context.md`** (fuente de verdad del proy
 
 | Carpeta | Contenido |
 |---------|-----------|
-| `backend/` | API Node + Express + TypeScript + Prisma. Código en `src/modules/<dominio>/` y `src/shared/`. Schema y migraciones en `backend/prisma/`. |
-| `frontend/` | App React + Vite + shadcn/ui + Tailwind. |
-| `docs/` | Documentación: `context.md` (fuente de verdad), `decisions.md`, `brief.md`, `stories/`, `ux/`, `preview/`, `api/`. |
-| `database/` | Espejos SQL: `schema.sql`, `seeds.sql`, `schema.md`, `legacy-migration/`. |
+| `apps/api/` | API Node + Express + TypeScript + Prisma. Código en `src/modules/<dominio>/` y `src/shared/`. Schema y migraciones en `apps/api/prisma/`. |
+| `apps/ui/` | App React + Vite + shadcn/ui + Tailwind. |
+| `docs/` | Documentación: `context.md` (fuente de verdad), `decisions.md`, `brief.md`, `stories/`, `ux/`, `preview/`, `api/`, `db/`, `postman/`. |
+| `docs/db/` | Espejos SQL: `schema.sql`, `seeds.sql`, `schema.md`, `legacy-migration/`. |
+| `docs/postman/` | Colección Postman de la API. |
 | `openspec/` | Cambios dirigidos por especificación (skills `openspec-*`). |
-| `postman/` | Colección Postman de la API. |
 
 ## Comandos
 
 **Levantar todo en local:** `docker compose up` (postgres + backend + frontend).
 
-**Backend** (en `backend/`):
+**Backend** (en `apps/api/`):
 | Acción | Comando |
 |--------|---------|
 | Dev (watch) | `npm run dev` |
@@ -37,7 +37,7 @@ Al inicio de cada sesión, **leer `docs/context.md`** (fuente de verdad del proy
 | Lint | `npm run lint` · autofix: `npm run lint:fix` |
 | Reset BD (borra + migra + seedea) | `npm run db:reset` |
 
-**Frontend** (en `frontend/`): dev `npm run dev` · build `npm run build`.
+**Frontend** (en `apps/ui/`): dev `npm run dev` · build `npm run build`.
 
 ---
 
@@ -92,7 +92,7 @@ Al generar código de UI, el estilo debe coincidir **exactamente** con los previ
 
 ## ⚠️ Regla crítica — Base de datos
 
-**Fuente de verdad canónica:** `backend/prisma/schema.prisma` + `backend/prisma/migrations/`. Prisma gestiona el ciclo de vida del schema. Los scripts SQL de `database/` son **espejos** que deben sincronizarse en el mismo cambio (si divergen, manda Prisma).
+**Fuente de verdad canónica:** `apps/api/prisma/schema.prisma` + `apps/api/prisma/migrations/`. Prisma gestiona el ciclo de vida del schema. Los scripts SQL de `docs/db/` son **espejos** que deben sincronizarse en el mismo cambio (si divergen, manda Prisma).
 
 ### Convenciones del schema (no negociables)
 
@@ -111,20 +111,20 @@ Al generar código de UI, el estilo debe coincidir **exactamente** con los previ
 
 ### Archivos
 
-- **`backend/prisma/schema.prisma`** — Fuente de verdad. Editar aquí, luego `prisma migrate dev`.
-- **`backend/prisma/migrations/`** — Migraciones generadas por Prisma. No editar manualmente.
-- **`backend/prisma/seed.ts`** — Datos iniciales (catálogos + admin). `prisma db seed` o `prisma migrate reset`.
-- **`database/schema.sql`** — Espejo SQL del DDL completo (un único script, sin migraciones incrementales). Sincronizar con `schema.prisma` en el mismo cambio.
-- **`database/seeds.sql`** — Espejo SQL de los datos iniciales (`prisma/seed.ts`). Sincronizar cuando cambien los seeds.
-- **`database/legacy-migration/legacy-migration.sql`** — Migración de datos v1→v2. Sincronizar si un cambio de schema afecta las tablas/columnas que toca.
-- **`database/schema.md`** — Documentación del schema. Mantener al día cuando cambie `schema.prisma`.
+- **`apps/api/prisma/schema.prisma`** — Fuente de verdad. Editar aquí, luego `prisma migrate dev`.
+- **`apps/api/prisma/migrations/`** — Migraciones generadas por Prisma. No editar manualmente.
+- **`apps/api/prisma/seed.ts`** — Datos iniciales (catálogos + admin). `prisma db seed` o `prisma migrate reset`.
+- **`docs/db/schema.sql`** — Espejo SQL del DDL completo (un único script, sin migraciones incrementales). Sincronizar con `schema.prisma` en el mismo cambio.
+- **`docs/db/seeds.sql`** — Espejo SQL de los datos iniciales (`prisma/seed.ts`). Sincronizar cuando cambien los seeds.
+- **`docs/db/legacy-migration/legacy-migration.sql`** — Migración de datos v1→v2. Sincronizar si un cambio de schema afecta las tablas/columnas que toca.
+- **`docs/db/schema.md`** — Documentación del schema. Mantener al día cuando cambie `schema.prisma`.
 
 ### Cómo agregar un cambio de schema
 
-1. Editar `backend/prisma/schema.prisma`.
+1. Editar `apps/api/prisma/schema.prisma`.
 2. Ejecutar `prisma migrate dev --name <descripcion>` (Prisma genera el SQL y aplica).
-3. Sincronizar los espejos SQL en el mismo cambio: `database/schema.sql`, `database/seeds.sql` y, si aplica, `database/legacy-migration/legacy-migration.sql`.
-4. Actualizar `database/schema.md` con la tabla/columna afectada.
+3. Sincronizar los espejos SQL en el mismo cambio: `docs/db/schema.sql`, `docs/db/seeds.sql` y, si aplica, `docs/db/legacy-migration/legacy-migration.sql`.
+4. Actualizar `docs/db/schema.md` con la tabla/columna afectada.
 
 **Nunca** modificar migraciones generadas ni aplicar SQL directo a la BD sin registrarlo en Prisma.
 

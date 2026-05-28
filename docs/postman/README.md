@@ -25,6 +25,6 @@ Esta colección debe mantenerse **sincronizada con la API** a medida que evoluci
 
 - Se agrega/quita/renombra un endpoint o cambia su método o path.
 - Cambia el body o los query params de un request (revisar el `*.schema.ts` del módulo).
-- Se monta un módulo nuevo en `backend/src/app.ts`.
+- Se monta un módulo nuevo en `apps/api/src/app.ts`.
 
 Pendientes conocidos (se agregarán cuando se implementen): recursos del módulo **Dashboard** → `clients`, `commercial`, `project` (changes OpenSpec `migrate-dashboard-*`).

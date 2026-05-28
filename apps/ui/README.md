@@ -5,7 +5,7 @@ App web del cliente: React + Vite + shadcn/ui + Tailwind CSS. Consume la API del
 ## Estructura
 
 ```
-frontend/src/
+apps/ui/src/
 ├── components/   # componentes reutilizables (incluye UI shadcn)
 ├── pages/        # vistas/pantallas (una por route)
 ├── services/     # cliente axios y llamadas a la API

@@ -13,9 +13,9 @@ Plataforma web para registro de horas trabajadas de empleados (seekers) en proye
 
 ```
 SeekOpsV2/
-├── backend/          # API Node + Express + TS + Prisma (src/modules/, src/shared/, prisma/)
-├── frontend/         # App React + Vite + shadcn/ui + Tailwind
-├── database/         # Espejos SQL: schema.sql, seeds.sql, schema.md, legacy-migration/
+├── apps/
+│   ├── api/          # API Node + Express + TS + Prisma (src/modules/, src/shared/, prisma/)
+│   └── ui/           # App React + Vite + shadcn/ui + Tailwind
 ├── docs/             # Documentación del proyecto
 │   ├── context.md    # Fuente de verdad (leer primero cada sesión)
 │   ├── decisions.md  # Historial cronológico de decisiones
@@ -23,9 +23,10 @@ SeekOpsV2/
 │   ├── stories/      # Historias de usuario por epic
 │   ├── ux/           # Design system, flows y screens
 │   ├── preview/      # Previews HTML (contrato visual)
-│   └── api/          # Contratos REST + mocks JSON
+│   ├── api/          # Contratos REST + mocks JSON
+│   ├── db/           # Espejos SQL: schema.sql, seeds.sql, schema.md, legacy-migration/
+│   └── postman/      # Colección Postman de la API
 ├── openspec/         # Cambios dirigidos por especificación
-├── postman/          # Colección Postman de la API
 ├── docker-compose.yml
 └── CLAUDE.md         # Instrucciones para agentes
 ```
@@ -40,7 +41,7 @@ docker compose up
 
 Levanta PostgreSQL + backend + frontend. El backend aplica migraciones y seedea automáticamente al arrancar.
 
-### Backend (en `backend/`)
+### Backend (en `apps/api/`)
 
 | Acción | Comando |
 |--------|---------|
@@ -50,7 +51,7 @@ Levanta PostgreSQL + backend + frontend. El backend aplica migraciones y seedea 
 | Lint | `npm run lint` · autofix: `npm run lint:fix` |
 | Reset BD (borra + migra + seedea) | `npm run db:reset` |
 
-### Frontend (en `frontend/`)
+### Frontend (en `apps/ui/`)
 
 ```bash
 npm run dev      # servidor de desarrollo
@@ -59,7 +60,7 @@ npm run build    # build de producción
 
 ## Base de datos
 
-La fuente de verdad del schema es `backend/prisma/schema.prisma` + `backend/prisma/migrations/`. Los scripts SQL de `database/` son espejos que deben mantenerse sincronizados. Ver `CLAUDE.md` → "Regla crítica — Base de datos" para el workflow de cambios.
+La fuente de verdad del schema es `apps/api/prisma/schema.prisma` + `apps/api/prisma/migrations/`. Los scripts SQL de `docs/db/` son espejos que deben mantenerse sincronizados. Ver `CLAUDE.md` → "Regla crítica — Base de datos" para el workflow de cambios.
 
 ## Roles
 

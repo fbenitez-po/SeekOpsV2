@@ -18,11 +18,11 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
 
-  backend:
+  api:
     build:
-      context: ./backend
-    container_name: seekops-backend
-    env_file: ./backend/.env
+      context: ./apps/api
+    container_name: seekops-api
+    env_file: ./apps/api/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/seekops
       FRONTEND_URL: http://localhost
@@ -35,14 +35,14 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
 
-  frontend:
+  ui:
     build:
-      context: ./frontend
-    container_name: seekops-frontend
+      context: ./apps/ui
+    container_name: seekops-ui
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - api
     restart: unless-stopped
     mem_limit: 512m
     mem_reservation: 256m

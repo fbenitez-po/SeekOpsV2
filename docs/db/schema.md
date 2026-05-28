@@ -1,11 +1,11 @@
 # Schema de Base de Datos — Seekops
 
 > Documento **conceptual**: relaciones, convenciones y decisiones de diseño.
-> **Fuente de verdad canónica:** `backend/prisma/schema.prisma` + `backend/prisma/migrations/` — es lo que construye y migra la BD vía `prisma migrate`.
+> **Fuente de verdad canónica:** `apps/api/prisma/schema.prisma` + `apps/api/prisma/migrations/` — es lo que construye y migra la BD vía `prisma migrate`.
 > **Espejos SQL** (deben mantenerse sincronizados con Prisma en el mismo cambio; si divergen, manda Prisma):
-> · `database/schema.sql` — DDL completo en un único script para crear la BD entera de una vez (bootstrap de dev).
-> · `database/seeds.sql` — datos iniciales/catálogos (espejo de `seed.ts`).
-> · `database/legacy-migration/legacy-migration.sql` — migración de datos v1→v2.
+> · `docs/db/schema.sql` — DDL completo en un único script para crear la BD entera de una vez (bootstrap de dev).
+> · `docs/db/seeds.sql` — datos iniciales/catálogos (espejo de `seed.ts`).
+> · `docs/db/legacy-migration/legacy-migration.sql` — migración de datos v1→v2.
 > Identificadores en inglés · Auditoría tiered · Tablas puente con PK compuesta.
 > **Última actualización:** 28 de Mayo 2026
 
@@ -226,26 +226,29 @@ Un Gestor tiene acceso a todos los proyectos donde figura como `manager_id`, ind
 
 ## Archivos y Workflow
 
-El schema tiene **doble fuente de verdad** que debe mantenerse equivalente: el script unificado `database/schema.sql` y el par Prisma `schema.prisma` + `migrations/`. Cualquier cambio de schema debe reflejarse en **ambos**.
+**Fuente de verdad canónica:** `apps/api/prisma/schema.prisma` + `apps/api/prisma/migrations/` — es lo que construye y migra la BD. Los scripts SQL de `docs/db/` son **espejos** que deben sincronizarse en el mismo cambio. Si divergen, manda Prisma.
 
 | Archivo | Rol |
 |---------|-----|
-| **`database/schema.sql`** | DDL unificado: crea la BD completa (30 tablas, índices, constraints, CHECKs) en una sola corrida, en cualquier ambiente. Estructura exacta de referencia. |
-| **`database/seeds.sql`** | Datos iniciales para correr junto al script unificado (catálogos, períodos, admin). |
-| **`backend/prisma/schema.prisma`** | Schema de Prisma para trabajo local. Editar aquí, luego `prisma migrate dev`. |
-| **`backend/prisma/migrations/`** | Historial generado por Prisma. No editar manualmente. |
-| **`backend/prisma/seed.ts`** | Datos iniciales vía Prisma. `prisma db seed` / `prisma migrate reset`. |
+| **`apps/api/prisma/schema.prisma`** | **Fuente de verdad.** Editar aquí, luego `prisma migrate dev`. |
+| **`apps/api/prisma/migrations/`** | Historial generado por Prisma. No editar manualmente. |
+| **`apps/api/prisma/seed.ts`** | Datos iniciales vía Prisma. `prisma db seed` / `prisma migrate reset`. |
+| **`docs/db/schema.sql`** | Espejo SQL del DDL completo (30 tablas, índices, constraints) en un único script. Bootstrap de dev (dropea y recrea el schema); no para producción. |
+| **`docs/db/seeds.sql`** | Espejo SQL de los datos iniciales (catálogos, períodos, admin). |
+| **`docs/db/legacy-migration/legacy-migration.sql`** | Migración de datos v1→v2. |
 
-### Al cambiar el schema (mantener ambos en sync)
-1. Editar `backend/prisma/schema.prisma` y correr `prisma migrate dev --name <descripcion>`.
-2. Replicar el mismo cambio en `database/schema.sql` (y en `seeds.sql` si aplica).
+### Al cambiar el schema
+1. Editar `apps/api/prisma/schema.prisma` y correr `prisma migrate dev --name <descripcion>`.
+2. Sincronizar los espejos SQL: `docs/db/schema.sql`, `docs/db/seeds.sql` y, si aplica, `legacy-migration.sql`.
 3. Actualizar este documento si cambian relaciones, convenciones o decisiones.
 
-> **Gap conocido — CHECK constraints:** los CHECK documentados aquí (múltiplos de 0.5, `amount >= 0`, rangos de fechas) están en `database/schema.sql`, pero Prisma no los expresa de forma declarativa y **no se generan en las migraciones**. Una BD levantada desde Prisma no los tendrá hasta agregarlos vía SQL crudo en una migración. Esto rompe la equivalencia entre ambas fuentes.
+> **Divergencia conocida y aceptada — CHECK constraints:** los CHECK documentados aquí (múltiplos de 0.5, `amount >= 0`, rangos de fechas) viven en `docs/db/schema.sql`, pero Prisma no los expresa de forma declarativa y **no se generan en las migraciones**. Una BD levantada desde Prisma (el camino canónico) **no los tiene**, y por ahora **no se re-agregan** vía SQL crudo. Es la única divergencia esperada entre Prisma y el espejo `schema.sql`.
 
-| Situación | Levantar con schema.sql | Levantar con Prisma |
-|-----------|-------------------------|---------------------|
-| Nueva BD desde cero | `psql <conn> -f database/schema.sql` + `-f database/seeds.sql` | `prisma migrate deploy` + `prisma db seed` |
-| BD existente con datos | — | `prisma migrate dev --name <descripcion>` |
-| Tests locales | — | `prisma migrate reset` |
-| Producción | script unificado, o → | `prisma migrate deploy` |
+| Situación | Comando (Prisma, canónico) |
+|-----------|----------------------------|
+| Nueva BD desde cero | `prisma migrate deploy` + `prisma db seed` |
+| BD existente con datos | `prisma migrate dev --name <descripcion>` |
+| Tests locales | `prisma migrate reset` |
+| Producción | `prisma migrate deploy` |
+
+> Para levantar una BD desde el espejo SQL (sin Prisma): `psql <conn> -f docs/db/schema.sql` + `-f docs/db/seeds.sql`.

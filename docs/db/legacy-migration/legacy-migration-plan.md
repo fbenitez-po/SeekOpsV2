@@ -10,11 +10,11 @@ La migración usa la extensión `dblink` para leer `seekops_legacy` directamente
 
 **Cómo ejecutar:**
 ```bash
-psql -U postgres -d seekops -f database/legacy-migration/legacy-migration.sql
+psql -U postgres -d seekops -f docs/db/legacy-migration/legacy-migration.sql
 ```
 Si las bases están en Docker:
 ```bash
-docker exec -i <container> psql -U postgres -d seekops < database/legacy-migration/legacy-migration.sql
+docker exec -i <container> psql -U postgres -d seekops < docs/db/legacy-migration/legacy-migration.sql
 ```
 
 ---
@@ -351,8 +351,8 @@ El paso arranca con `DELETE FROM time_entries WHERE created_by='migration'`; el 
 
 | Archivo | Descripción |
 |---------|-------------|
-| `database/schema.sql` | DDL completo de seekops (fuente de verdad) |
-| `database/seeds.sql` | Seeds: catálogos + usuario admin |
-| `database/schema.md` | Documentación del schema |
-| `database/legacy-migration/legacy-migration-plan.md` | Este archivo |
-| `database/legacy-migration/legacy-migration.sql` | Script unificado pasos |
+| `docs/db/schema.sql` | DDL completo de seekops (fuente de verdad) |
+| `docs/db/seeds.sql` | Seeds: catálogos + usuario admin |
+| `docs/db/schema.md` | Documentación del schema |
+| `docs/db/legacy-migration/legacy-migration-plan.md` | Este archivo |
+| `docs/db/legacy-migration/legacy-migration.sql` | Script unificado pasos |

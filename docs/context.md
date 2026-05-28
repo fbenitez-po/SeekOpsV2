@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Describe el estado *vigente*. Actualizar cada vez que se tome una decisión relevante.
 > Es lo primero que lee Claude al inicio de cada sesión.
-> El historial cronológico de decisiones vive en [`decisions.md`](decisions.md). La fuente de verdad del **schema** es `backend/prisma/schema.prisma`; los scripts SQL de `database/` son espejos que deben mantenerse sincronizados (ver "Base de datos: Prisma + espejos SQL").
+> El historial cronológico de decisiones vive en [`decisions.md`](decisions.md). La fuente de verdad del **schema** es `apps/api/prisma/schema.prisma`; los scripts SQL de `docs/db/` son espejos que deben mantenerse sincronizados (ver "Base de datos: Prisma + espejos SQL").
 
 ---
 
@@ -75,7 +75,7 @@ Para el detalle de cómo se llegó aquí, ver [`decisions.md`](decisions.md).
 ## Decisiones de arquitectura (vigentes)
 
 - **Autenticación:** JWT stateless. El JWT incluye `email`, que se propaga route → service → repository para auditoría.
-- **Patrón estándar de módulo:** `backend/src/modules/<dominio>/` sigue `routes.ts` (declarativo) → `controller.ts` (handlers finos) → `service.ts` (reglas de negocio + errores semánticos) → `repository.ts` (Prisma) → `schema.ts` (Zod, si hay inputs) → `mapper.ts` (DB → DTO, si hay transformación). Compartido en `src/shared/{db,config,http,middlewares,services}`.
+- **Patrón estándar de módulo:** `apps/api/src/modules/<dominio>/` sigue `routes.ts` (declarativo) → `controller.ts` (handlers finos) → `service.ts` (reglas de negocio + errores semánticos) → `repository.ts` (Prisma) → `schema.ts` (Zod, si hay inputs) → `mapper.ts` (DB → DTO, si hay transformación). Compartido en `src/shared/{db,config,http,middlewares,services}`.
 - **Versionado / context path:** todas las rutas de negocio bajo `env.API_PREFIX` (default `/api/v1`, configurable por env). `/health` queda en la raíz.
 - **Jerarquía de errores:** `AppError` + subclases `ValidationError(400, details?)`, `UnauthorizedError(401)`, `ForbiddenError(403)`, `NotFoundError(404)`, `ConflictError(409)`. Los servicios lanzan la subclase; las rutas no devuelven errores con `res.status(...)` directo.
 - **Contrato API en español:** las claves JSON se exponen en español vía la capa `mapper`, aunque los identificadores internos (DB, código) sean en inglés. **Única excepción:** el módulo `dashboard` expone claves en inglés (compatibilidad v1).
@@ -96,14 +96,14 @@ Para el detalle de cómo se llegó aquí, ver [`decisions.md`](decisions.md).
 
 ## Infraestructura / Deploy
 
-### Docker startup (backend)
+### Docker startup (servicio `api`)
 El CMD del Dockerfile ejecuta: `prisma migrate deploy` → `tsx prisma/seed.ts` → `node dist/index.js`.
 - `tsx` se invoca con ruta explícita (`node_modules/.bin/tsx`) — Prisma corre el seed vía `sh -c` sin agregar `.bin` al PATH.
 - El seed es idempotente (`createMany skipDuplicates: true`).
 - El seed usa `PrismaPg` con `connectionString: process.env.DATABASE_URL`. Prisma 7 requiere el adapter; no usar `new PrismaClient()` sin él.
 
-### Nginx proxy (frontend)
-`proxy_pass http://backend:3000;` **sin** trailing slash, para preservar la URI completa. Con barra final, Nginx reemplaza `/api/` por `/` y el backend recibe `/v1/...` → 404.
+### Nginx proxy (servicio `ui`)
+`proxy_pass http://api:3000;` **sin** trailing slash, para preservar la URI completa. Con barra final, Nginx reemplaza `/api/` por `/` y la API recibe `/v1/...` → 404. El host `api` es el nombre del servicio en `docker-compose.yml`.
 
 ### Prisma client — import correcto
 El generador `provider = "prisma-client"` (Prisma 7) no genera `index.ts`; el entry point es `client.ts`:
@@ -116,13 +116,13 @@ import { PrismaClient } from '../src/generated/prisma';          // ✗ MODULE_N
 
 ## Base de datos: Prisma + espejos SQL
 
-**`backend/prisma/schema.prisma` es la fuente de verdad canónica** — es lo que construye y migra la BD vía `prisma migrate`. Los scripts SQL de `database/` **no** son referencia congelada: son **espejos mantenidos** que deben reflejar el mismo cambio en el mismo PR. Si divergen, manda Prisma.
+**`apps/api/prisma/schema.prisma` es la fuente de verdad canónica** — es lo que construye y migra la BD vía `prisma migrate`. Los scripts SQL de `docs/db/` **no** son referencia congelada: son **espejos mantenidos** que deben reflejar el mismo cambio en el mismo PR. Si divergen, manda Prisma.
 
 Espejos a sincronizar ante cualquier cambio de schema:
-- `database/schema.sql` — DDL completo en un único script (drops + recrea el schema; bootstrap de dev, no para producción). Sin migraciones incrementales: este archivo siempre representa el schema actual entero.
-- `database/seeds.sql` — datos iniciales/catálogos (espejo SQL de `seed.ts`). Se corre después de `schema.sql`.
-- `database/legacy-migration/legacy-migration.sql` — migración de datos v1→v2. Si un cambio de schema afecta tablas/columnas que toca esta migración, actualizarla también.
-- `database/schema.md` — documentación del schema.
+- `docs/db/schema.sql` — DDL completo en un único script (drops + recrea el schema; bootstrap de dev, no para producción). Sin migraciones incrementales: este archivo siempre representa el schema actual entero.
+- `docs/db/seeds.sql` — datos iniciales/catálogos (espejo SQL de `seed.ts`). Se corre después de `schema.sql`.
+- `docs/db/legacy-migration/legacy-migration.sql` — migración de datos v1→v2. Si un cambio de schema afecta tablas/columnas que toca esta migración, actualizarla también.
+- `docs/db/schema.md` — documentación del schema.
 
 ### Workflow de migraciones (Prisma)
 
@@ -133,7 +133,7 @@ Espejos a sincronizar ante cualquier cambio de schema:
 | Tests locales | `prisma migrate reset` |
 | Producción | `prisma migrate deploy` (no interactivo, no resetea) |
 
-**Checklist al cambiar el schema:** (1) editar `schema.prisma` → (2) `prisma migrate dev --name <desc>` → (3) sincronizar `database/schema.sql`, `database/seeds.sql` y, si aplica, `legacy-migration.sql` → (4) actualizar `database/schema.md`. **Nunca** editar migraciones generadas ni aplicar SQL directo sin registrarlo en Prisma.
+**Checklist al cambiar el schema:** (1) editar `schema.prisma` → (2) `prisma migrate dev --name <desc>` → (3) sincronizar `docs/db/schema.sql`, `docs/db/seeds.sql` y, si aplica, `legacy-migration.sql` → (4) actualizar `docs/db/schema.md`. **Nunca** editar migraciones generadas ni aplicar SQL directo sin registrarlo en Prisma.
 
 ---
 
@@ -221,13 +221,13 @@ Componentes: Button, Input, Select, Dialog, Table, Badge, Alert, Card. Tipograf�
 | Archivo | Contenido |
 |---------|-----------|
 | [`decisions.md`](decisions.md) | Historial cronológico de decisiones (ADR) |
-| `backend/prisma/schema.prisma` | **Fuente de verdad del schema** — editar aquí, luego `prisma migrate dev` |
-| `backend/prisma/migrations/` | Historial de migraciones Prisma (no editar a mano) |
-| `backend/prisma/seed.ts` | Seeds iniciales (catálogos + admin) |
-| `database/schema.sql` | Espejo SQL del DDL completo (sincronizar con `schema.prisma`) |
-| `database/seeds.sql` | Espejo SQL de los datos iniciales (sincronizar con `seed.ts`) |
-| `database/schema.md` | Documentación del schema (mantener al día con `schema.prisma`) |
-| `database/legacy-migration/` | Plan y SQL de migración v1→v2 (sincronizar si cambia el schema) |
+| `apps/api/prisma/schema.prisma` | **Fuente de verdad del schema** — editar aquí, luego `prisma migrate dev` |
+| `apps/api/prisma/migrations/` | Historial de migraciones Prisma (no editar a mano) |
+| `apps/api/prisma/seed.ts` | Seeds iniciales (catálogos + admin) |
+| `docs/db/schema.sql` | Espejo SQL del DDL completo (sincronizar con `schema.prisma`) |
+| `docs/db/seeds.sql` | Espejo SQL de los datos iniciales (sincronizar con `seed.ts`) |
+| `docs/db/schema.md` | Documentación del schema (mantener al día con `schema.prisma`) |
+| `docs/db/legacy-migration/` | Plan y SQL de migración v1→v2 (sincronizar si cambia el schema) |
 | `docs/brief.md` | Brief del producto |
 | `docs/stories/README.md` | Índice de las 30 historias |
 | `docs/ux/design-system.md` | Design System |

@@ -10,7 +10,7 @@
 
 ## 2026-05-27 — Módulo `dashboard` (API de integración externa)
 
-Nuevo módulo paraguas `backend/src/modules/dashboard/` que migra la "API Dashboard" de v1: endpoints **read-only, abiertos (sin auth), sin paginación, array plano** que alimentan BI. Sigue el patrón de sub-módulos de `finance/`: `dashboard.routes.ts` monta un sub-router por recurso.
+Nuevo módulo paraguas `apps/api/src/modules/dashboard/` que migra la "API Dashboard" de v1: endpoints **read-only, abiertos (sin auth), sin paginación, array plano** que alimentan BI. Sigue el patrón de sub-módulos de `finance/`: `dashboard.routes.ts` monta un sub-router por recurso.
 
 **Decisiones clave:**
 - **Excepción consciente al contrato en español:** este módulo expone **claves en inglés** heredadas de v1 para preservar compatibilidad byte-a-byte con el consumidor BI. La traducción v2→v1 vive en el `mapper` de cada sub-recurso. Es la única excepción a la convención de claves JSON en español.
@@ -107,7 +107,7 @@ La unidad de aprobación pasó de "semana completa" a **(seeker × semana × pro
 - Validación con **Zod** (reemplaza express-validator).
 - Contrato API congelado: claves JSON en español vía mapper; status codes y formato `{ error }` invariantes.
 - Paths anglicizados: `/periodos→/periods`, `/ingresos→/revenues`, `/gastos-admin→/admin-expenses`, etc.; verbos `/aprobar→/approve`, `/observar→/observe`, `/rechazar→/reject`.
-- Impacto frontend: solo `frontend/src/services/api.js`.
+- Impacto frontend: solo `apps/ui/src/services/api.js`.
 - Módulos migrados: clients, config, users, projects, timeEntries, projections, finance (periods, revenues, adminExpenses, salesCosts, personnelCosts), commercial, auth.
 
 ### Adaptación backend al schema en inglés (mismo día)

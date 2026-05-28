@@ -1,4 +1,4 @@
-# Backend — Seekops
+# API — Seekops (backend)
 
 Node.js + Express + TypeScript + Prisma + Zod.
 
@@ -7,7 +7,7 @@ Node.js + Express + TypeScript + Prisma + Zod.
 ## Estructura
 
 ```
-backend/
+apps/api/
 ├── src/
 │   ├── modules/             ← un directorio por dominio
 │   │   ├── auth/            ← routes, service, repository

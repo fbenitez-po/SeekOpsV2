@@ -1,8 +1,8 @@
 # Contratos de API REST — Seekops
 
 > Contratos completos de todos los endpoints: método, ruta, request, responses, validaciones y errores.  
-> **Basado en:** historias de usuario + `backend/prisma/schema.prisma`.
-> ⚠️ **El contrato real lo definen los schemas Zod (`backend/src/modules/*/**.schema.ts`) + la capa mapper.** Ante cualquier discrepancia, manda el código.
+> **Basado en:** historias de usuario + `apps/api/prisma/schema.prisma`.
+> ⚠️ **El contrato real lo definen los schemas Zod (`apps/api/src/modules/*/**.schema.ts`) + la capa mapper.** Ante cualquier discrepancia, manda el código.
 
 > ⚠️ **Prefijo de API:** Todas las rutas listadas abajo (excepto `/health`) se sirven bajo `env.API_PREFIX`, default **`/api/v1`** (configurable por env). Ej.: `POST /auth/login` se invoca como `POST /api/v1/auth/login`. Los verbos están anglicizados: `/approve`, `/observe`, `/reject`, `/import`, `/document-types` (ver `docs/decisions.md` → 2026-05-19).
 
