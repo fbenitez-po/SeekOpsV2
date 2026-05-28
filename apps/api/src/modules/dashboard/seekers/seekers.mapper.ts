@@ -1,3 +1,5 @@
+import type { DashboardSeeker } from './seekers.schema';
+
 // Capa anti-corrupción: traduce el schema interno de v2 al contrato congelado
 // de v1 (claves en inglés del `SeekerSerializer`). Es una excepción consciente
 // a la regla del spec `api-contract` (claves en español), documentada en el
@@ -13,7 +15,7 @@ interface SeekerRow {
   teams?: { name: string } | null;
 }
 
-export function toSeeker(u: SeekerRow) {
+export function toSeeker(u: SeekerRow): DashboardSeeker {
   return {
     email: u.email,
     first_name: u.first_name,

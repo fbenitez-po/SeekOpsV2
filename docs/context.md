@@ -21,6 +21,7 @@ Escala: 50-200 usuarios activos. Idioma del producto: español latino (neutro).
 - **Base de datos:** PostgreSQL
 - **Autenticación:** JWT (access + refresh tokens)
 - **Logging:** pino + pino-http (estructurado, request-id por petición, nivel por `LOG_LEVEL`)
+- **Documentación API:** OpenAPI 3.1 autogenerada desde Zod (`zod-openapi`) + UI Scalar en `/docs`
 - **Deploy:** Vercel (backend serverless) / docker-compose (local)
 
 ---
@@ -93,6 +94,7 @@ Para el detalle de cómo se llegó aquí, ver [`decisions.md`](decisions.md).
 - **Módulo Comercial:** tablas `document_types` y `commercial_records` (vinculan propuestas/contratos a proyectos y `owner_id`; `price`, `currency`, `document_type_id`, `has_contract`, `is_billed`).
 - **Módulo Dashboard (BI):** endpoints read-only, abiertos, array plano con claves en inglés de v1 (`/api/dashboard/{seekers,clients,commercial,project}`).
 - **Logging (pino):** logger central en `src/shared/logging/` (`logger.ts` + `httpLogger.ts`). `pino-http` loguea cada petición con un `x-request-id` correlacionado (reusa el header entrante o genera UUID). Nivel por `LOG_LEVEL` (default `info`), `silent` en test, `pino-pretty` en dev / JSON en prod. Redacta password/tokens/`authorization`. **Los logs de negocio van en la capa `service`** (mutaciones y eventos de seguridad; nunca lecturas ni repositories), con actor (`email`) + id del recurso y mensaje estable en inglés. El `errorHandler` loguea el 500 vía `req.log` sin alterar el contrato de error.
+- **Documentación OpenAPI:** infra en `src/shared/openapi/` (`router.ts` helper `documentedRouter`, `registry.ts`, `document.ts`, `errors.ts`, `serve.ts`). La **fuente de verdad de cada respuesta es un schema Zod**; el `mapper` tipa su retorno con `z.infer` y `tsc` falla si diverge. El helper monta la ruta Express (auth + validación) **y** registra la operación OpenAPI en una sola llamada. UI Scalar en `GET /docs`, documento en `GET /docs/openapi.json` (raíz, fuera de `API_PREFIX`). `servers` se deriva de `API_PREFIX`; security scheme `bearerAuth` global. **Cobertura actual: solo el módulo `dashboard`** (superficie de terceros, público); `auth` y CRUD se documentarán después reutilizando el patrón. Scalar es ESM-only → mockeado en Jest vía `moduleNameMapper`.
 
 ---
 

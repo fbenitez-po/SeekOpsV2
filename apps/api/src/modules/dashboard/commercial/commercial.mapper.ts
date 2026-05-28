@@ -1,3 +1,5 @@
+import type { DashboardCommercial } from './commercial.schema';
+
 // Capa anti-corrupción: traduce `commercial_records` de v2 al contrato congelado
 // de v1, preservando las claves con doble guion bajo (`__`) que produce el
 // `.values(...)` de Django. Excepción documentada a la regla de claves en
@@ -31,7 +33,7 @@ interface CommercialRow {
   };
 }
 
-export function toDashboardCommercial(c: CommercialRow) {
+export function toDashboardCommercial(c: CommercialRow): DashboardCommercial {
   const client = c.projects.clients;
   return {
     date: c.record_date.toISOString().slice(0, 10),

@@ -4,6 +4,8 @@
 > **Basado en:** historias de usuario + `apps/api/prisma/schema.prisma`.
 > ⚠️ **El contrato real lo definen los schemas Zod (`apps/api/src/modules/*/**.schema.ts`) + la capa mapper.** Ante cualquier discrepancia, manda el código.
 
+> 📖 **Documentación viva autogenerada:** la API expone OpenAPI 3.1 generado desde los schemas Zod en **`GET /docs`** (UI Scalar) y **`GET /docs/openapi.json`**. A medida que cada módulo se migra al patrón `documentedRouter`, su contrato vive ahí y **`/docs` supersede a este archivo** para ese módulo. **Ya migrado: módulo `dashboard`** (no documentado en este archivo). El resto se sigue describiendo aquí hasta su migración.
+
 > ⚠️ **Prefijo de API:** Todas las rutas listadas abajo (excepto `/health`) se sirven bajo `env.API_PREFIX`, default **`/api/v1`** (configurable por env). Ej.: `POST /auth/login` se invoca como `POST /api/v1/auth/login`. Los verbos están anglicizados: `/approve`, `/observe`, `/reject`, `/import`, `/document-types` (ver `docs/decisions.md` → 2026-05-19).
 
 > ℹ️ **Errores de validación:** además de `{ error: string }`, los 400 por validación de Zod incluyen un campo aditivo `details: [{ field, message }]` con todos los issues. Los consumidores que leen `error` siguen funcionando.

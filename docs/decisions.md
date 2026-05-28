@@ -8,6 +8,24 @@
 
 ---
 
+## 2026-05-28 — Documentación OpenAPI autogenerada desde Zod (piloto `dashboard`)
+
+Se agregó documentación OpenAPI 3.1 **generada desde el código** y una UI navegable en `/docs`. Mejora de DX/superficie de integración, sin user story (documenta endpoints que ya tienen la suya). Primer módulo documentado: `dashboard` (la superficie de terceros).
+
+**Decisiones clave:**
+- **Fuente de verdad = schema Zod de response.** Cada respuesta documentada tiene un schema Zod; el `mapper` tipa su retorno con `z.infer<typeof Schema>`. Si el mapper diverge del contrato documentado, **`tsc` falla** (verificado quitando un campo: error `TS2741`). La doc no puede mentir.
+- **Librería `zod-openapi` v5** (compatible con Zod 4 vía `.meta({ id })` nativo). Se descartó `@asteasolutions/zod-to-openapi` (registry paralelo que re-declara rutas).
+- **Helper `documentedRouter`** en `src/shared/openapi/`: en una sola llamada monta la ruta Express (con middlewares de auth y validación Zod) **y** registra la operación OpenAPI. El `routes.ts` sigue siendo la única declaración de cada ruta.
+- **UI = Scalar** (`@scalar/express-api-reference`), servida en `GET /docs`; el documento crudo en `GET /docs/openapi.json` (raíz, fuera de `API_PREFIX`, como `/health`). Se eligió por tener "Try it out" gratuito y funcionar en cualquier deploy. Se descartó `swagger-ui-express` (assets estáticos) y Redoc OSS (sin "Try it out").
+- **`servers` desde `API_PREFIX`:** los paths se registran relativos al server, de modo que "Try it out" resuelve a `/api/v1/...`. Security scheme `bearerAuth` (JWT) registrado a nivel global; **no se ejercita en el piloto** porque el `dashboard` es público read-only (queda listo para `auth` + CRUD).
+- **Scalar es ESM-only:** rompe ts-jest (CommonJS) al importar `app.ts`. Se mockea vía `moduleNameMapper` en la config de Jest (`tests/mocks/scalar-express-api-reference.ts`); los tests no ejercitan la UI.
+
+**Pendiente (cambios futuros):** documentar `auth` (ejercita rutas autenticadas + request body) y los módulos CRUD, reutilizando el mismo patrón. Decidir entonces si `/docs` completo va abierto o detrás de auth.
+
+Cambio OpenSpec: `add-openapi-docs` (capability `api-documentation`).
+
+---
+
 ## 2026-05-28 — Logging estructurado (pino) + instrumentación de negocio
 
 Se reemplazó el logging por `console.*` (6 sitios) por **pino + pino-http**. Mejora técnica, sin user story.

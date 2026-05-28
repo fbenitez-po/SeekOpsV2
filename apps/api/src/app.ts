@@ -17,6 +17,7 @@ import personnelCostsRoutes from './modules/finance/personnelCosts/personnelCost
 import commercialRoutes from './modules/commercial/commercial.routes';
 import authRoutes from './modules/auth/auth.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import { mountDocs } from './shared/openapi';
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use(express.json());
 app.use(httpLogger);
 
 app.get('/health', (_req, res) => res.json({ estado: 'ok' }));
+
+mountDocs(app);
 
 const api = express.Router();
 

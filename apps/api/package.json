@@ -18,6 +18,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@scalar/express-api-reference": "^0.9.19",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,7 +29,8 @@
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "uuid": "^10.0.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-openapi": "^5.4.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -59,6 +61,9 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@scalar/express-api-reference$": "<rootDir>/tests/mocks/scalar-express-api-reference.ts"
+    },
     "transform": {
       "^.+\\.tsx?$": [
         "ts-jest",

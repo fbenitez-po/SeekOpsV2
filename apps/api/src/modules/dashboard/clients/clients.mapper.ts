@@ -1,3 +1,5 @@
+import type { DashboardClient } from './clients.schema';
+
 // Capa anti-corrupción: traduce `clients` de v2 al contrato congelado de v1
 // (claves en inglés del `ClientModelSerializer`). Excepción documentada a la
 // regla de claves en español (spec `api-contract`), ver `migrate-dashboard-clients`.
@@ -16,7 +18,7 @@ interface ClientRow {
   sector_id: string | null;
 }
 
-export function toDashboardClient(c: ClientRow) {
+export function toDashboardClient(c: ClientRow): DashboardClient {
   return {
     id: c.id,
     business_reason: c.legal_name,

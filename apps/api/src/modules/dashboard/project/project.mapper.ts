@@ -1,3 +1,5 @@
+import type { DashboardProject } from './project.schema';
+
 // Capa anti-corrupción: traduce `projects` de v2 al contrato congelado de v1,
 // preservando las claves con doble guion bajo (`__`) del `.values(...)` de Django.
 // Excepción documentada a la regla de claves en español (spec `api-contract`).
@@ -30,7 +32,7 @@ interface ProjectRow {
 
 const dateOnly = (date: Date | null) => (date ? date.toISOString().slice(0, 10) : null);
 
-export function toDashboardProject(p: ProjectRow) {
+export function toDashboardProject(p: ProjectRow): DashboardProject {
   const client = p.clients;
   const manager = p.users;
   return {
