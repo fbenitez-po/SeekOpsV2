@@ -1,4 +1,5 @@
 import { NotFoundError } from '../../../shared/http/errorHandler';
+import { logger } from '../../../shared/logging/logger';
 import * as repo from './adminExpenses.repository';
 import type { AdminExpenseBody, ListAdminExpensesQuery } from './adminExpenses.schema';
 
@@ -13,7 +14,7 @@ export async function getById(id: string) {
 }
 
 export async function create(data: AdminExpenseBody, email: string | null) {
-  return repo.create(
+  const expense = await repo.create(
     {
       period_id: data.periodo_id,
       codigo: data.codigo,
@@ -22,6 +23,8 @@ export async function create(data: AdminExpenseBody, email: string | null) {
     },
     email,
   );
+  logger.info({ actor: email, periodo_id: data.periodo_id, codigo: data.codigo }, 'admin expense created');
+  return expense;
 }
 
 export async function update(id: string, data: AdminExpenseBody, email: string | null) {

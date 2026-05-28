@@ -8,6 +8,22 @@
 
 ---
 
+## 2026-05-28 — Logging estructurado (pino) + instrumentación de negocio
+
+Se reemplazó el logging por `console.*` (6 sitios) por **pino + pino-http**. Mejora técnica, sin user story.
+
+**Decisiones clave:**
+- **pino sobre winston:** más liviano, JSON por defecto, request logging listo con `pino-http`. Deploy productivo es proceso Node de larga vida (ya no serverless), por lo que JSON a stdout es el formato natural para un agregador.
+- **Logger central en `apps/api/src/shared/logging/`** (`logger.ts` + `httpLogger.ts`): único punto de configuración. Nivel vía `LOG_LEVEL` (env validado por Zod, default `info`); `silent` forzado en `NODE_ENV=test`; `pino-pretty` solo en `development`, JSON en `production`.
+- **request-id por petición:** `pino-http` reusa el header `x-request-id` entrante si existe (correlación entre servicios) o genera un UUID, y lo ecoa en la respuesta. El `errorHandler` loguea vía `req.log` para correlacionar el error 500 con su request. **No cambia el contrato de errores.**
+- **Redacción** de `password`, `*.password`, tokens (`access_token`/`refresh_token`) y header `authorization` como red de seguridad.
+- **Política de instrumentación:** los logs de negocio viven en la capa `service` (no en controller/repository); solo mutaciones y eventos de seguridad (las lecturas las cubre pino-http). Cada log lleva actor (`email`) + id del recurso, nunca el payload completo. Mensajes en inglés, estables, sin interpolar datos (el detalle va en campos). Módulos instrumentados: `auth`, `timeEntries`, `users`, `clients`, `projects`, `finance/*`, `commercial`, `email.service`.
+- **Excepción pre-logger:** el `console.error` de `env.ts` se conserva porque el logger se configura *desde* env y aún no existe en ese punto.
+
+Cambio OpenSpec: `add-structured-logging` (capability `observability-logging`).
+
+---
+
 ## 2026-05-27 — Módulo `dashboard` (API de integración externa)
 
 Nuevo módulo paraguas `apps/api/src/modules/dashboard/` que migra la "API Dashboard" de v1: endpoints **read-only, abiertos (sin auth), sin paginación, array plano** que alimentan BI. Sigue el patrón de sub-módulos de `finance/`: `dashboard.routes.ts` monta un sub-router por recurso.

@@ -20,6 +20,7 @@ Escala: 50-200 usuarios activos. Idioma del producto: español latino (neutro).
 - **Backend:** Node.js + Express + TypeScript strict + Prisma 7 (ORM) + Zod
 - **Base de datos:** PostgreSQL
 - **Autenticación:** JWT (access + refresh tokens)
+- **Logging:** pino + pino-http (estructurado, request-id por petición, nivel por `LOG_LEVEL`)
 - **Deploy:** Vercel (backend serverless) / docker-compose (local)
 
 ---
@@ -91,6 +92,7 @@ Para el detalle de cómo se llegó aquí, ver [`decisions.md`](decisions.md).
 - **Módulo Finanzas:** tablas `periods` (mensuales, `is_closed`), `revenues` (por `project_id`+`period_id`), `admin_expenses`, `sales_costs`, `personnel_costs` (`compensation`, `business_days`, `hours_per_day`).
 - **Módulo Comercial:** tablas `document_types` y `commercial_records` (vinculan propuestas/contratos a proyectos y `owner_id`; `price`, `currency`, `document_type_id`, `has_contract`, `is_billed`).
 - **Módulo Dashboard (BI):** endpoints read-only, abiertos, array plano con claves en inglés de v1 (`/api/dashboard/{seekers,clients,commercial,project}`).
+- **Logging (pino):** logger central en `src/shared/logging/` (`logger.ts` + `httpLogger.ts`). `pino-http` loguea cada petición con un `x-request-id` correlacionado (reusa el header entrante o genera UUID). Nivel por `LOG_LEVEL` (default `info`), `silent` en test, `pino-pretty` en dev / JSON en prod. Redacta password/tokens/`authorization`. **Los logs de negocio van en la capa `service`** (mutaciones y eventos de seguridad; nunca lecturas ni repositories), con actor (`email`) + id del recurso y mensaje estable en inglés. El `errorHandler` loguea el 500 vía `req.log` sin alterar el contrato de error.
 
 ---
 

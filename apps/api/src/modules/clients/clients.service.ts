@@ -1,4 +1,5 @@
 import { NotFoundError, ValidationError } from '../../shared/http/errorHandler';
+import { logger } from '../../shared/logging/logger';
 import * as repo from './clients.repository';
 import * as mapper from './clients.mapper';
 import type { CreateClientInput, UpdateClientInput, ListClientsQuery } from './clients.schema';
@@ -24,6 +25,7 @@ export async function create(data: CreateClientInput, createdBy: string | null) 
     throw new ValidationError('El RUC ya está registrado en otro cliente');
   }
   const client = await repo.create(data, createdBy);
+  logger.info({ actor: createdBy, client_id: client.id }, 'client created');
   return mapper.toClientCreated(client);
 }
 
@@ -36,6 +38,7 @@ export async function update(id: string, data: UpdateClientInput, updatedBy: str
   }
 
   const updated = await repo.update(id, data, updatedBy);
+  logger.info({ actor: updatedBy, client_id: id }, 'client updated');
   return mapper.toUpdateResult(updated);
 }
 
@@ -44,5 +47,6 @@ export async function toggleActive(id: string, updatedBy: string | null) {
   if (!exists) throw new NotFoundError('Cliente no encontrado');
 
   const result = await repo.toggleActive(id, updatedBy);
+  logger.info({ actor: updatedBy, client_id: id }, 'client active toggled');
   return mapper.toToggleResult(result!);
 }

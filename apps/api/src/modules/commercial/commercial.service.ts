@@ -1,4 +1,5 @@
 import { NotFoundError } from '../../shared/http/errorHandler';
+import { logger } from '../../shared/logging/logger';
 import * as repo from './commercial.repository';
 import type { CommercialBody, ListCommercialQuery } from './commercial.schema';
 
@@ -27,12 +28,15 @@ export async function getById(id: string) {
 }
 
 export async function create(data: CommercialBody, email: string | null) {
-  return repo.create(toRepoInput(data), email);
+  const record = await repo.create(toRepoInput(data), email);
+  logger.info({ actor: email, proyecto_id: data.proyecto_id, responsable_id: data.responsable_id }, 'commercial record created');
+  return record;
 }
 
 export async function update(id: string, data: CommercialBody, email: string | null) {
   const updated = await repo.update(id, toRepoInput(data), email);
   if (!updated) throw new NotFoundError('Registro no encontrado');
+  logger.info({ actor: email, commercial_id: id }, 'commercial record updated');
   return updated;
 }
 

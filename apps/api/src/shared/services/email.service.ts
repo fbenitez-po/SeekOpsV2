@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env';
+import { logger } from '../logging/logger';
 
 function createTransporter() {
   if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) return null;
@@ -23,18 +24,25 @@ async function send(opts: MailOptions): Promise<void> {
   const transporter = createTransporter();
 
   if (!transporter) {
-    console.log(`[EMAIL - DEV] Para: ${opts.to}`);
-    console.log(`[EMAIL - DEV] Asunto: ${opts.subject}`);
-    if (opts.link) console.log(`[EMAIL - DEV] Link: ${opts.link}`);
+    // SMTP not configured: dev fallback. The link is surfaced so devs can use it.
+    logger.warn(
+      { to: opts.to, subject: opts.subject, link: opts.link },
+      'SMTP not configured, email not sent (dev fallback)',
+    );
     return;
   }
 
-  await transporter.sendMail({
-    from: `"Seekops" <${env.EMAIL_FROM}>`,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-  });
+  try {
+    await transporter.sendMail({
+      from: `"Seekops" <${env.EMAIL_FROM}>`,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+    });
+  } catch (err) {
+    logger.error({ err, to: opts.to, subject: opts.subject }, 'email send failed');
+    throw err;
+  }
 }
 
 function baseTemplate(titulo: string, cuerpo: string): string {

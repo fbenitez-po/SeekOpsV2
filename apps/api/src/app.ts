@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './shared/config/env';
+import { httpLogger } from './shared/logging/httpLogger';
 import { errorHandler, notFoundHandler } from './shared/http/errorHandler';
 import clientRoutes from './modules/clients/clients.routes';
 import configRoutes from './modules/config/config.routes';
@@ -21,6 +22,7 @@ const app = express();
 
 app.use(cors({ origin: env.FRONTEND_URL }));
 app.use(express.json());
+app.use(httpLogger);
 
 app.get('/health', (_req, res) => res.json({ estado: 'ok' }));
 

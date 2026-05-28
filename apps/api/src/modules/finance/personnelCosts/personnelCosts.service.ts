@@ -1,4 +1,5 @@
 import { NotFoundError } from '../../../shared/http/errorHandler';
+import { logger } from '../../../shared/logging/logger';
 import * as repo from './personnelCosts.repository';
 import type { ListPersonnelCostsQuery, PersonnelCostBody } from './personnelCosts.schema';
 
@@ -23,7 +24,9 @@ export async function getById(id: string) {
 }
 
 export async function create(data: PersonnelCostBody, email: string | null) {
-  return repo.create(toRepoInput(data), email);
+  const cost = await repo.create(toRepoInput(data), email);
+  logger.info({ actor: email, periodo_id: data.periodo_id, user_id: data.user_id }, 'personnel cost created');
+  return cost;
 }
 
 export async function update(id: string, data: PersonnelCostBody, email: string | null) {
@@ -51,5 +54,6 @@ export async function importBatch(filas: PersonnelCostBody[], email: string | nu
     }
   }
 
+  logger.info({ actor: email, insertados, errores: errores.length }, 'personnel costs imported');
   return { insertados, errores };
 }

@@ -3,6 +3,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '../../shared/http/errorHandler';
+import { logger } from '../../shared/logging/logger';
 import * as repo from './timeEntries.repository';
 import * as mapper from './timeEntries.mapper';
 import type {
@@ -13,8 +14,6 @@ import type {
 } from './timeEntries.schema';
 
 import { sendHoursReminder } from '../../shared/services/email.service';
-
-const MS_DAY = 86400000;
 
 // Lunes (00:00 UTC) de la semana que contiene `fecha`. Semana = Lun–Dom.
 function lunesDeSemanaDe(fecha: Date): Date {
@@ -111,6 +110,10 @@ export async function create(body: CreateTimeEntryInput, userId: string, email: 
   }
 
   const entry = await repo.create({ userId, email, weekStart, weekEnd, lineas: body.lineas });
+  logger.info(
+    { actor: email, usuario_id: userId, time_entry_id: entry.id, semana_inicio: body.semana_inicio, lineas: body.lineas.length },
+    'time entry created',
+  );
   return mapper.buildTimeEntryDetail(entry, [], userId, []);
 }
 
@@ -130,6 +133,10 @@ export async function approve(id: string, body: ApproveInput, userId: string, em
   }
 
   await repo.recordApproval({ lineaId: body.linea_id, action: 'APROBAR', email, data: {} });
+  logger.info(
+    { actor: email, time_entry_id: id, linea_id: body.linea_id, estado: 'APROBADO' },
+    'time entry line approved',
+  );
   return { id, proyecto_id: body.proyecto_id, linea_id: body.linea_id, estado: 'APROBADO', aprobado_en: new Date().toISOString() };
 }
 
@@ -155,6 +162,10 @@ export async function observe(
   }
 
   await repo.recordApproval({ lineaId: body.linea_id, action: 'APROBAR_CON_OBSERVACION', email, data: body });
+  logger.info(
+    { actor: email, time_entry_id: id, linea_id: body.linea_id, estado: 'APROBADO_CON_OBSERVACION' },
+    'time entry line observed',
+  );
   return {
     id,
     proyecto_id: body.proyecto_id,
@@ -187,6 +198,10 @@ export async function reject(
   }
 
   await repo.recordApproval({ lineaId: body.linea_id, action: 'RECHAZAR', email, data: body });
+  logger.info(
+    { actor: email, time_entry_id: id, linea_id: body.linea_id, estado: 'RECHAZADO' },
+    'time entry line rejected',
+  );
   return {
     id,
     proyecto_id: body.proyecto_id,

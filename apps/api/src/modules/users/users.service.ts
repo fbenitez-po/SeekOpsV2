@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { NotFoundError, ValidationError } from '../../shared/http/errorHandler';
+import { logger } from '../../shared/logging/logger';
 import * as repo from './users.repository';
 import * as mapper from './users.mapper';
 import type { CreateUserInput, UpdateUserInput, ListUsersQuery } from './users.schema';
@@ -40,6 +41,7 @@ export async function create(data: CreateUserInput) {
   await repo.saveResetToken(user.id, token, expiresAt);
   await sendWelcome(user.email, user.first_name, token);
 
+  logger.info({ usuario_id: user.id, email: user.email }, 'user created');
   return mapper.toUserCreated(user);
 }
 
@@ -55,6 +57,7 @@ export async function update(id: string, data: UpdateUserInput) {
   }
 
   const updated = await repo.update(id, data);
+  logger.info({ usuario_id: id }, 'user updated');
   return mapper.toUserListItem(updated as Parameters<typeof mapper.toUserListItem>[0]);
 }
 
@@ -63,5 +66,6 @@ export async function toggleActive(id: string, updatedBy: string | null) {
   if (!exists) throw new NotFoundError('Usuario no encontrado');
 
   const result = await repo.toggleActive(id, updatedBy);
+  logger.info({ actor: updatedBy, usuario_id: id }, 'user active toggled');
   return mapper.toToggleResult(result!);
 }

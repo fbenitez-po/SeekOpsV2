@@ -1,4 +1,5 @@
 import { NotFoundError } from '../../../shared/http/errorHandler';
+import { logger } from '../../../shared/logging/logger';
 import * as repo from './revenues.repository';
 import type {
   CreateRevenueInput,
@@ -12,10 +13,15 @@ export async function list(query: ListRevenuesQuery) {
 }
 
 export async function create(data: CreateRevenueInput, email: string | null) {
-  return repo.create(
+  const revenue = await repo.create(
     { project_id: data.proyecto_id, period_id: data.periodo_id, amount: data.monto },
     email,
   );
+  logger.info(
+    { actor: email, proyecto_id: data.proyecto_id, periodo_id: data.periodo_id },
+    'revenue created',
+  );
+  return revenue;
 }
 
 export async function update(id: string, data: UpdateRevenueInput, email: string | null) {
@@ -82,5 +88,9 @@ export async function importBatch(filas: ImportRevenueRow[], email: string | nul
     else resultados.actualizados++;
   }
 
+  logger.info(
+    { actor: email, insertados: resultados.insertados, actualizados: resultados.actualizados, errores: resultados.errores.length },
+    'revenues imported',
+  );
   return resultados;
 }

@@ -3,6 +3,9 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(1),
@@ -21,6 +24,8 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
+  // Bootstrap failure: the logger is configured from env (LOG_LEVEL/NODE_ENV),
+  // so it does not exist yet here. This console.error is the only pre-logger sink.
   console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
   process.exit(1);
 }

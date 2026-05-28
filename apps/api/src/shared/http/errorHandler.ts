@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { logger } from '../logging/logger';
 
 export interface ValidationDetail {
   field: string;
@@ -52,7 +53,7 @@ export function notFoundHandler(_req: Request, _res: Response, next: NextFunctio
 
 export function errorHandler(
   err: AppError & { code?: string; details?: ValidationDetail[] },
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
@@ -70,7 +71,8 @@ export function errorHandler(
   const status = isAppError ? err.status : 500;
 
   if (!isAppError || status >= 500) {
-    console.error(err);
+    // req.log carries the request-id so this line correlates with the request.
+    (req.log ?? logger).error({ err }, 'unhandled error');
   }
 
   const message = status < 500 ? err.message : 'internal server error';

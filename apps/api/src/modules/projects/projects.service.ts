@@ -1,4 +1,5 @@
 import { ForbiddenError, NotFoundError, ValidationError } from '../../shared/http/errorHandler';
+import { logger } from '../../shared/logging/logger';
 import * as repo from './projects.repository';
 import * as mapper from './projects.mapper';
 import type { CreateProjectInput, UpdateProjectInput, AssignUsersInput, ListProjectsQuery } from './projects.schema';
@@ -35,6 +36,7 @@ export async function create(data: CreateProjectInput, createdBy: string | null)
   }
 
   const project = await repo.create(data, createdBy);
+  logger.info({ actor: createdBy, project_id: project.id }, 'project created');
   return mapper.toProjectCreated(project);
 }
 
@@ -53,6 +55,7 @@ export async function update(id: string, data: UpdateProjectInput, updatedBy: st
   }
 
   const updated = await repo.update(id, data, updatedBy);
+  logger.info({ actor: updatedBy, project_id: id }, 'project updated');
   return mapper.toProjectDetail(updated as Parameters<typeof mapper.toProjectDetail>[0]);
 }
 
@@ -61,6 +64,7 @@ export async function toggleActive(id: string, updatedBy: string | null) {
   if (!exists) throw new NotFoundError('Proyecto no encontrado');
 
   const result = await repo.toggleActive(id, updatedBy);
+  logger.info({ actor: updatedBy, project_id: id }, 'project active toggled');
   return mapper.toToggleResult(result!);
 }
 
@@ -69,10 +73,12 @@ export async function assignUsers(id: string, usuarios: AssignUsersInput['usuari
   if (!exists) throw new NotFoundError('Proyecto no encontrado');
 
   const result = await repo.assignUsers(id, usuarios.map((u) => ({ usuario_id: u.usuario_id, rol: u.rol })));
+  logger.info({ project_id: id, count: usuarios.length }, 'project users assigned');
   return { proyecto_id: id, ...result };
 }
 
 export async function removeUser(projectId: string, userId: string) {
   const removed = await repo.removeUser(projectId, userId);
   if (!removed) throw new NotFoundError('El usuario no está asignado a este proyecto');
+  logger.info({ project_id: projectId, usuario_id: userId }, 'project user removed');
 }
