@@ -3,6 +3,7 @@ name: "OPSX: Explore"
 description: "Enter explore mode - think through ideas, investigate problems, clarify requirements"
 category: Workflow
 tags: [workflow, explore, experimental, thinking]
+model: opus
 ---
 
 Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
